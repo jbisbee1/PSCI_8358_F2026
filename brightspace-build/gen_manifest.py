@@ -203,6 +203,33 @@ WEEKS = [
          note="Students present and orally defend their independent causal audits. The defense emphasizes methodological judgment: why the original design does or does not identify its claimed effect, defense of reanalysis choices, and how strongly the evidence supports the original causal claim."),
 ]
 
+
+# ---------------------------------------------------------------------------
+# 2b. Weekly student presentations (Weeks 2-12). One designated reading per
+#     week; Weeks 13/15/16 are reserved for the workshop and audit defenses.
+# ---------------------------------------------------------------------------
+PRESENTATIONS = {
+    2: "Cinelli, Forney & Pearl (2022)",
+    3: "King & Nielsen (2019)",
+    4: "Glynn & Quinn (2010)",
+    5: "Angrist, Imbens & Rubin (1996)",
+    6: "Goldsmith-Pinkham, Sorkin & Swift (2020)",
+    7: "Manski (1990)",
+    8: "Roth, Sant'Anna, Bilinski & Poe (2023)",
+    9: "Goodman-Bacon (2021)",
+    10: "Abadie, Diamond & Hainmueller (2010)",
+    11: "Cattaneo & Titiunik (2022)",
+    12: "Stommes, Aronow & Sävje (2023)",
+}
+
+for _w in WEEKS:
+    if _w["n"] in PRESENTATIONS:
+        _w["present"] = (
+            f'Designated reading: {PRESENTATIONS[_w["n"]]}. '
+            "Twenty-minute presentation followed by ten minutes of presenter-led discussion. "
+            "Maximum six slides. Circulate a discussion question at least twenty-four hours in advance."
+        )
+
 # ---------------------------------------------------------------------------
 # 3. Reading -> week map. Keys are filename substrings (unique enough to
 #    match exactly one file each); value is a list of week numbers (usually
@@ -434,6 +461,8 @@ for w in WEEKS:
         body.append("</ul>")
     if w["app"]:
         body.append(f'<h2>Application emphasis</h2><p>{html.escape(w["app"])}</p>')
+    if w.get("present"):
+        body.append(f'<h2>Student presentation</h2><p>{html.escape(w["present"])}</p>')
     if w["note"]:
         body.append(f'<h2>Notes</h2><p>{html.escape(w["note"])}</p>')
 

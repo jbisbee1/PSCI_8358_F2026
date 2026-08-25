@@ -74,6 +74,8 @@ The final project is an **independent causal audit** of a published observationa
 
 **Replication Problem Set 1 assigned: Conditioning and selection on observables**
 
+**Student presentation:** Cinelli, Forney & Pearl (2022)
+
 ---
 
 ## September 9 — Matching, Weighting, and Overlap
@@ -93,6 +95,8 @@ The final project is an **independent causal audit** of a published observationa
 **Central question:** When does making treated and control observations "look alike" create a credible causal comparison?
 
 **Application emphasis:** Compare regression adjustment, matching, and weighting for the same published causal claim and examine which observations actually identify the reported effect.
+
+**Student presentation:** King & Nielsen (2019)
 
 ---
 
@@ -117,6 +121,8 @@ The final project is an **independent causal audit** of a published observationa
 
 **Optional technical extension:** Orthogonal scores and the intuition behind root-N inference with estimated nuisance functions.
 
+**Student presentation:** Glynn & Quinn (2010)
+
 ---
 
 ## September 23 — Instrumental Variables: Identification Beyond the Textbook Model
@@ -134,6 +140,8 @@ The final project is an **independent causal audit** of a published observationa
 **Central question:** Whose causal effect does an instrument identify, and why?
 
 **Replication Problem Set 2 assigned: Instrumental variables**
+
+**Student presentation:** Angrist, Imbens & Rubin (1996)
 
 ---
 
@@ -153,6 +161,8 @@ The final project is an **independent causal audit** of a published observationa
 **Application emphasis:** Reconstruct the identifying variation in a published IV design and determine which observations or shocks drive the estimate.
 
 **Optional technical extension:** Instrumental inequalities and formal tests of IV validity.
+
+**Student presentation:** Goldsmith-Pinkham, Sorkin & Swift (2020)
 
 ---
 
@@ -176,6 +186,8 @@ The final project is an **independent causal audit** of a published observationa
 
 **Application emphasis:** Replace a strong point-identifying assumption in an empirical study with weaker assumptions and examine the resulting identified set.
 
+**Student presentation:** Manski (1990)
+
 ---
 
 ## October 14 — Difference-in-Differences and Event Studies
@@ -193,6 +205,8 @@ The final project is an **independent causal audit** of a published observationa
 - Sensitivity to violations of parallel trends
 
 **Central question:** What counterfactual trend is a DiD design constructing?
+
+**Student presentation:** Roth, Sant'Anna, Bilinski & Poe (2023)
 
 ---
 
@@ -217,6 +231,8 @@ The final project is an **independent causal audit** of a published observationa
 
 **Replication Problem Set 3 assigned: Difference-in-differences**
 
+**Student presentation:** Goodman-Bacon (2021)
+
 ---
 
 ## October 28 — Synthetic Control
@@ -235,6 +251,8 @@ The final project is an **independent causal audit** of a published observationa
 - Interactive fixed effects and matrix completion
 
 **Central question:** When can a weighted combination of untreated units provide a credible counterfactual?
+
+**Student presentation:** Abadie, Diamond & Hainmueller (2010)
 
 ---
 
@@ -257,6 +275,8 @@ The final project is an **independent causal audit** of a published observationa
 
 **Replication Problem Set 4 assigned: Synthetic control and panel counterfactuals**
 
+**Student presentation:** Cattaneo & Titiunik (2022)
+
 ---
 
 ## November 11 — Regression Discontinuity II: Diagnostics and Extensions
@@ -274,6 +294,8 @@ The final project is an **independent causal audit** of a published observationa
 - External validity and extrapolation
 
 **Application emphasis:** Replicate a published RD result, conduct contemporary diagnostics, and assess whether the design supports the published causal interpretation.
+
+**Student presentation:** Stommes, Aronow & Sävje (2023)
 
 ---
 
@@ -334,9 +356,9 @@ The defense emphasizes methodological judgment rather than presentation polish. 
 
 # Major Assessments
 
-### Replication Problem Sets — 60%
+### Replication Problem Sets — 55%
 
-Six replication-based assignments, approximately 10% each. Assignment 0, a short reading-based exercise due in Week 2, is graded within the participation component rather than as a sixth problem set.
+Six replication-based assignments, approximately 9% each. Assignment 0, a short reading-based exercise due in Week 2, is graded within the participation component rather than as a sixth problem set.
 
 Each assignment combines implementation and critical evaluation. A typical assignment begins with a published article and replication dataset and asks students to reproduce a central table or figure before interrogating the design with tools developed in class.
 
@@ -347,7 +369,7 @@ Grading should place approximately equal weight on:
 
 Correct code with an incorrect causal interpretation is not a successful analysis. Conversely, a persuasive conceptual critique without the ability to demonstrate the issue empirically is incomplete.
 
-### Independent Causal Audit — 30%
+### Independent Causal Audit — 25%
 
 Students select a published observational causal study outside the papers used for the replication problem sets. The final submission includes:
 
@@ -362,6 +384,29 @@ Students select a published observational causal study outside the papers used f
 9. a final judgment stating the strongest causal conclusion supported by the evidence.
 
 Students also complete a short oral defense.
+
+### Seminar Presentation — 10%
+
+Beginning in Week 2, one student each week presents the designated reading. Presentations run through Week 12; Weeks 13, 15, and 16 are reserved for the design workshop and the causal audit.
+
+Each presentation is twenty minutes, followed by ten minutes of discussion that the presenter leads. It is not a summary. A presentation that walks through the paper section by section has not done the assignment.
+
+Organize the presentation around the four questions that structure this course:
+
+- What is the causal quantity the paper is concerned with?
+- What variation is supposed to identify it?
+- Under what assumptions does that variation identify it?
+- What evidence bears on whether those assumptions hold?
+
+Every presentation must also include:
+
+- **one worked example you reconstructed independently** — a derivation, a numerical illustration, or a DAG that you produced rather than reproduced;
+- **one objection** you take seriously, stated as a claim you are prepared to defend; and
+- **one discussion question** for the class, circulated at least twenty-four hours in advance.
+
+Use no more than six slides. The constraint is deliberate: a paper cannot be summarized in six slides, which forces a decision about what the paper is actually for.
+
+The course AI policy applies in full. You may use AI tools to prepare, but you must be able to answer questions about the paper without them, and the discussion period is where that becomes apparent.
 
 ### Participation and In-Class Causal Reasoning — 10%
 
