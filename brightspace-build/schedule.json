@@ -1,0 +1,16 @@
+{
+  "Week 01 (2026-08-26): From Potential Outcomes to Identification": "2026-08-26T05:00:00.000Z",
+  "Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls": "2026-09-02T05:00:00.000Z",
+  "Week 03 (2026-09-09): Matching, Weighting, and Overlap": "2026-09-09T05:00:00.000Z",
+  "Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning": "2026-09-16T05:00:00.000Z",
+  "Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model": "2026-09-23T05:00:00.000Z",
+  "Week 06 (2026-09-30): Modern Instrumental-Variables Designs": "2026-09-30T05:00:00.000Z",
+  "Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?": "2026-10-07T05:00:00.000Z",
+  "Week 08 (2026-10-14): Difference-in-Differences and Event Studies": "2026-10-14T05:00:00.000Z",
+  "Week 09 (2026-10-21): Staggered Adoption and Modern DiD": "2026-10-21T05:00:00.000Z",
+  "Week 10 (2026-10-28): Synthetic Control": "2026-10-28T05:00:00.000Z",
+  "Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation": "2026-11-04T06:00:00.000Z",
+  "Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions": "2026-11-11T06:00:00.000Z",
+  "Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence": "2026-11-18T06:00:00.000Z",
+  "Supplementary / Reference Readings": "2026-08-26T05:00:00.000Z"
+}

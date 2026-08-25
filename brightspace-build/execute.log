@@ -1,0 +1,324 @@
+﻿Manifest: 18 modules, 18 pages, 116 files, 0 videos, 0 quizzes, 1 assignments, 0 announcements; 290.3MB to upload
+
+Valid — complete for this profile.
+
+Apply plan for ou=648878 on brightspace.vanderbilt.edu:
+  CREATE module     Syllabus
+  CREATE page       Syllabus -> Syllabus
+  CREATE module     Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE page       Week 1 Overview -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Ding 2023 First Course Causal Inference -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Elwert Graphical Causal Models 2013 -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Greenland Pearl Causal Diagrams 2014 -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Imbens 2020 Potential Outcome Dag -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Morgan Winship -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Pearl 1995 Causal Diagrams -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Pearl Causality Ch3 -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE file       Samii 2016 Causal Empiricism Quantitative Research -> Week 01 (2026-08-26): From Potential Outcomes to Identification
+  CREATE module     Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE page       Week 2 Overview -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Acharya Blackwell Sen 2016 Direct Effects -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Angrist Hahn 2004 When To Control Covariates -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Blackwell Ma Opacic 2024 Assumption Smuggling -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Cinelli Forney Pearl 2022 -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Cinelli Hazlett Sensitivity 2020 -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Clarke 2009 Phantom Menace -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Imai Keele Tingley Yamamoto 2011 Unpacking Black Box -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Imai Keele Yamamoto 2010 Causal Mediation Sensitivity -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Mohan Pearl 2021 Graphical Models Missing Data -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       PS1: Conditioning & Matching — Assignment (AGG 2010) -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       Arceneaux, Gerber & Green (2010) — Cautionary Note (source article) -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE file       AGG 2010 Replication Package (data + code) -> Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls
+  CREATE module     Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE page       Week 3 Overview -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Chattopadhyay Hase Zubizareeta 2020 Balancing Vs Modeling -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       WangZubizarreta2020 Minimal Dispersion -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Abadie Imbens Bias Corrected -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Arbour Dimmery Sondhi 2021 Permutation Weighting -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Bruhn Mckenzie 2009 Pursuit Of Balance -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Busso Dinardo Mccracy 2014 New Evidence -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Diamon Sekhon 2013 Genetic Matching -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Hainmueller 2012 Entropy Balancing -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Hartman Hidalgo 2018 Equivalence Balance Placebo -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Hirano Imbens Ridder 2003 Efficient Estimation Propensity Score -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Iacus King Porro 2012 Cem -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Imai King Stuart 2008 Misunderstandings -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       King Nielsen 2019 Propensity Scores -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Lin Ding Han 2023 Nearest Neighbor Matching -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Marbach Hangartner 2020 Profiling -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Otsu Rai 2017 Bootstrap Matching Estimators -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Rosenbaum Rubin 1983 Propensity Score -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE file       Sekhon 2009 Opiates -> Week 03 (2026-09-09): Matching, Weighting, and Overlap
+  CREATE module     Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE page       Week 4 Overview -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE file       Ahrens Et Al 2026 Dml -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE file       Athey Imbens Wager 2018 Approximate Residual -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE file       Chern Et Al 2018 Dml Structural -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE file       Glynn Quinn 2010 Augmented Inverse Propensity -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE file       Kennedy 2024 Semiparametric Doubly Robust -> Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning
+  CREATE module     Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE page       Week 5 Overview -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE file       Abadie 2003 Semiparametric -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE file       Angrist Imbens Rubin 1996 Iv -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE file       Huber Mellace 2015 Testing Instrument Validity -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE file       Mercatanti Li 2014 Debit Cards Household Spending -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE file       Mogstad Santos Torgovitsky 2018 Policy Relevant Treatment Params -> Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model
+  CREATE module     Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE page       Week 6 Overview -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Andrew Stock Sun 2019 Weak Instruments -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Angrist Imbens Krueger 1999 Jackknife Iv -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Borusyak Hull Jaravel 2022 Shift Share -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Borusyak Hull Jaravel 2025 Formula Instruments -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Goldsmithpinkham Sorkin Swift 2020 Bartik Instruments -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Kitagawa 2015 A Test -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE file       Lee Et Al 2022 Valid T Ratio -> Week 06 (2026-09-30): Modern Instrumental-Variables Designs
+  CREATE module     Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE page       Week 7 Overview -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Balke Pearl 1997 Bounds Imperfect -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Chernozhukov Lee Rosen 2013 Intersection Bounds -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Coppock Gerber Green Kern 2017 Double Sampling Bounds -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Lee 2009 Training Wages Sample Selection -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Manski 1990 Nonparametric Bounds -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Manski 1997 Bounds -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Manski 2003 Partial Identification Excerpt -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Manski Pepper 2000 Monotone Iv Returns Schooling -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Molinari 2020 Partial Identification -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Samii Wang Zhou 2026 Trimming Bounds Random Forests -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE file       Swanson Et Al 2018 Partial -> Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?
+  CREATE module     Week 08 (2026-10-14): Difference-in-Differences and Event Studies
+  CREATE page       Week 8 Overview -> Week 08 (2026-10-14): Difference-in-Differences and Event Studies
+  CREATE file       Fernan Pinto 2019 Inference Did -> Week 08 (2026-10-14): Difference-in-Differences and Event Studies
+  CREATE file       Roth Santanna Bilinski Poe 2023 Did Trending -> Week 08 (2026-10-14): Difference-in-Differences and Event Studies
+  CREATE module     Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE page       Week 9 Overview -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Borusyak Jaravel Spiess 2024 Event Study -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Callaway Goodmanbacon Santanna 2024 Continuous Treatment Did -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Callaway Santanna 2021 Multiple Time Periods Did -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Cengiz Dube Lindner Zipperer 2019 Minimum Wages -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Chiu Lan Liu Xu 2023 Causal Panel Parallel Trends -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Dechaisemartin Dhaultfoeuille 2026 Did Book -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Dechaisemartin Dhaultfoeuille Vazquezbare 2024 Continuous Treatments No Stayers -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Dube Girardi Jorda Taylor 2023 Local Projections Did -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Goodmanbacon 2021 Did Variation Treatment Timing -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Liu Wang Xu 2024 Counterfactual Estimators -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Mackinnon Webb 2016 Did Few Treated Clusters -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Roth Rambachan 2022 Credible Approach Parallel Trends -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Sun Abraham 2021 Dynamic Treatment Effects Event Studies -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Xu Hazlett Trajectory Balancing -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE file       Xu Zhao Ding 2024 Factorial Did -> Week 09 (2026-10-21): Staggered Adoption and Modern DiD
+  CREATE module     Week 10 (2026-10-28): Synthetic Control
+  CREATE page       Week 10 Overview -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Abadie Diamond Hainmueller 2010 Synthetic Control -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Abadie Gardeazabal 2003 Basque Country -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Benmichael Feller Rothstein 2021 Augmented Synthetic Control -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Chernozhukov Wuthrich Zhu 2021 Conformal Inference Synthetic Control -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Firpo Possebom 2018 Synthetic Control Inference -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Hahn Shi 2017 Synthetic Control Inference -> Week 10 (2026-10-28): Synthetic Control
+  CREATE file       Kuosmanen Zhou Eskelinen Malo 2021 Synthetic Control Design Flaw -> Week 10 (2026-10-28): Synthetic Control
+  CREATE module     Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation
+  CREATE page       Week 11 Overview -> Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation
+  CREATE file       Cattaneo Idrobo Titiunik 2019 Rd Foundations -> Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation
+  CREATE file       Cattaneo Titiunik 2022 Rd Designs -> Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation
+  CREATE file       Kling 2006 Incarceration Length Employment -> Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation
+  CREATE module     Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE page       Week 12 Overview -> Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE file       Card Lee Pei Weber 2017 Regression Kink Design -> Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE file       Cattaneo Titiunik Yu 2025 Boundary Discontinuity -> Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE file       Dowd 2021 Donuts Distant Cates -> Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE file       Stommes Aronow Savje 2023 Rd Reliability Political Science -> Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions
+  CREATE module     Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence
+  CREATE page       Week 13 Overview -> Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence
+  CREATE file       Rambachan Roth 2025 Design Based Uncertainty Quasi Experiments -> Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence
+  CREATE module     Week 14 (2026-11-25): No Class / Thanksgiving Break
+  CREATE page       Week 14 Overview -> Week 14 (2026-11-25): No Class / Thanksgiving Break
+  CREATE module     Week 15 (2026-12-02): Causal Audit Workshop
+  CREATE page       Week 15 Overview -> Week 15 (2026-12-02): Causal Audit Workshop
+  CREATE module     Week 16 (2026-12-09): Causal Audit Defenses
+  CREATE page       Week 16 Overview -> Week 16 (2026-12-09): Causal Audit Defenses
+  CREATE module     Supplementary / Reference Readings
+  CREATE page       Supplementary Readings Overview -> Supplementary / Reference Readings
+  CREATE file       MHE -> Supplementary / Reference Readings
+  CREATE file       Abadie Athens Imbens Woolridge 2020 Sampling Design -> Supplementary / Reference Readings
+  CREATE file       Abadie Athey Imbens Wooldridge 2023 Clustering Se -> Supplementary / Reference Readings
+  CREATE file       Anderson 2008 Multiple Inference Gender -> Supplementary / Reference Readings
+  CREATE file       Aronow Eckles Samii Zonszein 2021 Spillover Effects -> Supplementary / Reference Readings
+  CREATE file       Aronow Samii 2017 General Interference -> Supplementary / Reference Readings
+  CREATE file       Aronow Samii Representative 2016 -> Supplementary / Reference Readings
+  CREATE file       Bloom 1995 Minimum Detectable Effects -> Supplementary / Reference Readings
+  CREATE file       Cameron Gelbach Miller 2008 Bootstrap Clustered Errors -> Supplementary / Reference Readings
+  CREATE file       Fogarty 2018 Finely Stratified Experiments -> Supplementary / Reference Readings
+  CREATE file       Gomila Clark 2022 Missing Data Experiments -> Supplementary / Reference Readings
+  CREATE file       Hainmueller Mummolo Xu 2019 Multiplicative Interaction -> Supplementary / Reference Readings
+  CREATE file       Hudgens Halloran 2008 Toward -> Supplementary / Reference Readings
+  CREATE file       Imai Jiang 2020 Contagion Effects -> Supplementary / Reference Readings
+  CREATE file       Muralidharan Romero Wuthrich 2025 Factorial Designs -> Supplementary / Reference Readings
+  CREATE file       Pustejovsky Tipton 2018 Cluster Robust Variance Small Sample -> Supplementary / Reference Readings
+  CREATE file       Samii Paler Daly 2016 Retrospective Causal Inference Ml -> Supplementary / Reference Readings
+  CREATE file       Staub 2014 Causal Interp -> Supplementary / Reference Readings
+  CREATE assignment Replication Problem Set 1: Conditioning and Selection on Observables (AGG 2010)
+  OK module 'Syllabus' (id 4424048)
+  OK page 'Syllabus' (topic 4424049)
+  OK module 'Week 01 (2026-08-26): From Potential Outcomes to Identification' (id 4424050)
+  OK page 'Week 1 Overview' (topic 4424051)
+  OK file 'Ding 2023 First Course Causal Inference' (topic 4424052)
+  OK file 'Elwert Graphical Causal Models 2013' (topic 4424053)
+  OK file 'Greenland Pearl Causal Diagrams 2014' (topic 4424054)
+  OK file 'Imbens 2020 Potential Outcome Dag' (topic 4424055)
+  OK file 'Morgan Winship' (topic 4424056)
+  OK file 'Pearl 1995 Causal Diagrams' (topic 4424057)
+  OK file 'Pearl Causality Ch3' (topic 4424058)
+  OK file 'Samii 2016 Causal Empiricism Quantitative Research' (topic 4424059)
+  OK module 'Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls' (id 4424060)
+  OK page 'Week 2 Overview' (topic 4424061)
+  OK file 'Acharya Blackwell Sen 2016 Direct Effects' (topic 4424062)
+  OK file 'Angrist Hahn 2004 When To Control Covariates' (topic 4424063)
+  OK file 'Blackwell Ma Opacic 2024 Assumption Smuggling' (topic 4424064)
+  OK file 'Cinelli Forney Pearl 2022' (topic 4424065)
+  OK file 'Cinelli Hazlett Sensitivity 2020' (topic 4424066)
+  OK file 'Clarke 2009 Phantom Menace' (topic 4424067)
+  OK file 'Imai Keele Tingley Yamamoto 2011 Unpacking Black Box' (topic 4424068)
+  OK file 'Imai Keele Yamamoto 2010 Causal Mediation Sensitivity' (topic 4424069)
+  OK file 'Mohan Pearl 2021 Graphical Models Missing Data' (topic 4424070)
+  OK file 'PS1: Conditioning & Matching — Assignment (AGG 2010)' (topic 4424071)
+  OK file 'Arceneaux, Gerber & Green (2010) — Cautionary Note (source article)' (topic 4424072)
+  OK file 'AGG 2010 Replication Package (data + code)' (topic 4424238)
+  OK module 'Week 03 (2026-09-09): Matching, Weighting, and Overlap' (id 4424239)
+  OK page 'Week 3 Overview' (topic 4424240)
+  OK file 'Chattopadhyay Hase Zubizareeta 2020 Balancing Vs Modeling' (topic 4424241)
+  OK file 'WangZubizarreta2020 Minimal Dispersion' (topic 4424242)
+  OK file 'Abadie Imbens Bias Corrected' (topic 4424243)
+  OK file 'Arbour Dimmery Sondhi 2021 Permutation Weighting' (topic 4424244)
+  OK file 'Bruhn Mckenzie 2009 Pursuit Of Balance' (topic 4424245)
+  OK file 'Busso Dinardo Mccracy 2014 New Evidence' (topic 4424246)
+  OK file 'Diamon Sekhon 2013 Genetic Matching' (topic 4424247)
+  OK file 'Hainmueller 2012 Entropy Balancing' (topic 4424248)
+  OK file 'Hartman Hidalgo 2018 Equivalence Balance Placebo' (topic 4424249)
+  OK file 'Hirano Imbens Ridder 2003 Efficient Estimation Propensity Score' (topic 4424251)
+  OK file 'Iacus King Porro 2012 Cem' (topic 4424252)
+  OK file 'Imai King Stuart 2008 Misunderstandings' (topic 4424253)
+  OK file 'King Nielsen 2019 Propensity Scores' (topic 4424254)
+  OK file 'Lin Ding Han 2023 Nearest Neighbor Matching' (topic 4424255)
+  OK file 'Marbach Hangartner 2020 Profiling' (topic 4424256)
+  OK file 'Otsu Rai 2017 Bootstrap Matching Estimators' (topic 4424257)
+  OK file 'Rosenbaum Rubin 1983 Propensity Score' (topic 4424258)
+  OK file 'Sekhon 2009 Opiates' (topic 4424259)
+  OK module 'Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning' (id 4424260)
+  OK page 'Week 4 Overview' (topic 4424261)
+  OK file 'Ahrens Et Al 2026 Dml' (topic 4424262)
+  OK file 'Athey Imbens Wager 2018 Approximate Residual' (topic 4424263)
+  OK file 'Chern Et Al 2018 Dml Structural' (topic 4424264)
+  OK file 'Glynn Quinn 2010 Augmented Inverse Propensity' (topic 4424265)
+  OK file 'Kennedy 2024 Semiparametric Doubly Robust' (topic 4424266)
+  OK module 'Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model' (id 4424267)
+  OK page 'Week 5 Overview' (topic 4424268)
+  OK file 'Abadie 2003 Semiparametric' (topic 4424269)
+  OK file 'Angrist Imbens Rubin 1996 Iv' (topic 4424270)
+  OK file 'Huber Mellace 2015 Testing Instrument Validity' (topic 4424271)
+  OK file 'Mercatanti Li 2014 Debit Cards Household Spending' (topic 4424272)
+  OK file 'Mogstad Santos Torgovitsky 2018 Policy Relevant Treatment Params' (topic 4424273)
+  OK module 'Week 06 (2026-09-30): Modern Instrumental-Variables Designs' (id 4424274)
+  OK page 'Week 6 Overview' (topic 4424275)
+  OK file 'Andrew Stock Sun 2019 Weak Instruments' (topic 4424276)
+  OK file 'Angrist Imbens Krueger 1999 Jackknife Iv' (topic 4424277)
+  OK file 'Borusyak Hull Jaravel 2022 Shift Share' (topic 4424278)
+  OK file 'Borusyak Hull Jaravel 2025 Formula Instruments' (topic 4424279)
+  OK file 'Goldsmithpinkham Sorkin Swift 2020 Bartik Instruments' (topic 4424280)
+  OK file 'Kitagawa 2015 A Test' (topic 4424281)
+  OK file 'Lee Et Al 2022 Valid T Ratio' (topic 4424282)
+  OK module 'Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?' (id 4424283)
+  OK page 'Week 7 Overview' (topic 4424284)
+  OK file 'Balke Pearl 1997 Bounds Imperfect' (topic 4424286)
+  OK file 'Chernozhukov Lee Rosen 2013 Intersection Bounds' (topic 4424287)
+  OK file 'Coppock Gerber Green Kern 2017 Double Sampling Bounds' (topic 4424288)
+  OK file 'Lee 2009 Training Wages Sample Selection' (topic 4424289)
+  OK file 'Manski 1990 Nonparametric Bounds' (topic 4424290)
+  OK file 'Manski 1997 Bounds' (topic 4424291)
+  OK file 'Manski 2003 Partial Identification Excerpt' (topic 4424292)
+  OK file 'Manski Pepper 2000 Monotone Iv Returns Schooling' (topic 4424293)
+  OK file 'Molinari 2020 Partial Identification' (topic 4424294)
+  OK file 'Samii Wang Zhou 2026 Trimming Bounds Random Forests' (topic 4424295)
+  OK file 'Swanson Et Al 2018 Partial' (topic 4424296)
+  OK module 'Week 08 (2026-10-14): Difference-in-Differences and Event Studies' (id 4424297)
+  OK page 'Week 8 Overview' (topic 4424299)
+  OK file 'Fernan Pinto 2019 Inference Did' (topic 4424300)
+  OK file 'Roth Santanna Bilinski Poe 2023 Did Trending' (topic 4424301)
+  OK module 'Week 09 (2026-10-21): Staggered Adoption and Modern DiD' (id 4424302)
+  OK page 'Week 9 Overview' (topic 4424303)
+  OK file 'Borusyak Jaravel Spiess 2024 Event Study' (topic 4424304)
+  OK file 'Callaway Goodmanbacon Santanna 2024 Continuous Treatment Did' (topic 4424305)
+  OK file 'Callaway Santanna 2021 Multiple Time Periods Did' (topic 4424306)
+  OK file 'Cengiz Dube Lindner Zipperer 2019 Minimum Wages' (topic 4424307)
+  OK file 'Chiu Lan Liu Xu 2023 Causal Panel Parallel Trends' (topic 4424308)
+  OK file 'Dechaisemartin Dhaultfoeuille 2026 Did Book' (topic 4424309)
+  OK file 'Dechaisemartin Dhaultfoeuille Vazquezbare 2024 Continuous Treatments No Stayers' (topic 4424310)
+  OK file 'Dube Girardi Jorda Taylor 2023 Local Projections Did' (topic 4424311)
+  OK file 'Goodmanbacon 2021 Did Variation Treatment Timing' (topic 4424312)
+  OK file 'Liu Wang Xu 2024 Counterfactual Estimators' (topic 4424313)
+  OK file 'Mackinnon Webb 2016 Did Few Treated Clusters' (topic 4424314)
+  OK file 'Roth Rambachan 2022 Credible Approach Parallel Trends' (topic 4424315)
+  OK file 'Sun Abraham 2021 Dynamic Treatment Effects Event Studies' (topic 4424316)
+  OK file 'Xu Hazlett Trajectory Balancing' (topic 4424317)
+  OK file 'Xu Zhao Ding 2024 Factorial Did' (topic 4424318)
+  OK module 'Week 10 (2026-10-28): Synthetic Control' (id 4424319)
+  OK page 'Week 10 Overview' (topic 4424320)
+  OK file 'Abadie Diamond Hainmueller 2010 Synthetic Control' (topic 4424321)
+  OK file 'Abadie Gardeazabal 2003 Basque Country' (topic 4424322)
+  OK file 'Benmichael Feller Rothstein 2021 Augmented Synthetic Control' (topic 4424323)
+  OK file 'Chernozhukov Wuthrich Zhu 2021 Conformal Inference Synthetic Control' (topic 4424324)
+  OK file 'Firpo Possebom 2018 Synthetic Control Inference' (topic 4424325)
+  OK file 'Hahn Shi 2017 Synthetic Control Inference' (topic 4424326)
+  OK file 'Kuosmanen Zhou Eskelinen Malo 2021 Synthetic Control Design Flaw' (topic 4424327)
+  OK module 'Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation' (id 4424328)
+  OK page 'Week 11 Overview' (topic 4424329)
+  OK file 'Cattaneo Idrobo Titiunik 2019 Rd Foundations' (topic 4424330)
+  OK file 'Cattaneo Titiunik 2022 Rd Designs' (topic 4424331)
+  OK file 'Kling 2006 Incarceration Length Employment' (topic 4424332)
+  OK module 'Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions' (id 4424333)
+  OK page 'Week 12 Overview' (topic 4424394)
+  OK file 'Card Lee Pei Weber 2017 Regression Kink Design' (topic 4424395)
+  OK file 'Cattaneo Titiunik Yu 2025 Boundary Discontinuity' (topic 4424396)
+  OK file 'Dowd 2021 Donuts Distant Cates' (topic 4424397)
+  OK file 'Stommes Aronow Savje 2023 Rd Reliability Political Science' (topic 4424398)
+  OK module 'Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence' (id 4424399)
+  OK page 'Week 13 Overview' (topic 4424400)
+  OK file 'Rambachan Roth 2025 Design Based Uncertainty Quasi Experiments' (topic 4424401)
+  OK module 'Week 14 (2026-11-25): No Class / Thanksgiving Break' (id 4424402)
+  OK page 'Week 14 Overview' (topic 4424403)
+  OK module 'Week 15 (2026-12-02): Causal Audit Workshop' (id 4424404)
+  OK page 'Week 15 Overview' (topic 4424405)
+  OK module 'Week 16 (2026-12-09): Causal Audit Defenses' (id 4424406)
+  OK page 'Week 16 Overview' (topic 4424407)
+  OK module 'Supplementary / Reference Readings' (id 4424408)
+  OK page 'Supplementary Readings Overview' (topic 4424410)
+  OK file 'MHE' (topic 4424411)
+  OK file 'Abadie Athens Imbens Woolridge 2020 Sampling Design' (topic 4424412)
+  OK file 'Abadie Athey Imbens Wooldridge 2023 Clustering Se' (topic 4424413)
+  OK file 'Anderson 2008 Multiple Inference Gender' (topic 4424414)
+  OK file 'Aronow Eckles Samii Zonszein 2021 Spillover Effects' (topic 4424415)
+  OK file 'Aronow Samii 2017 General Interference' (topic 4424416)
+  OK file 'Aronow Samii Representative 2016' (topic 4424417)
+  OK file 'Bloom 1995 Minimum Detectable Effects' (topic 4424418)
+  OK file 'Cameron Gelbach Miller 2008 Bootstrap Clustered Errors' (topic 4424419)
+  OK file 'Fogarty 2018 Finely Stratified Experiments' (topic 4424420)
+  OK file 'Gomila Clark 2022 Missing Data Experiments' (topic 4424421)
+  OK file 'Hainmueller Mummolo Xu 2019 Multiplicative Interaction' (topic 4424422)
+  OK file 'Hudgens Halloran 2008 Toward' (topic 4424423)
+  OK file 'Imai Jiang 2020 Contagion Effects' (topic 4424424)
+  OK file 'Muralidharan Romero Wuthrich 2025 Factorial Designs' (topic 4424425)
+  OK file 'Pustejovsky Tipton 2018 Cluster Robust Variance Small Sample' (topic 4424426)
+  OK file 'Samii Paler Daly 2016 Retrospective Causal Inference Ml' (topic 4424427)
+  OK file 'Staub 2014 Causal Interp' (topic 4424428)
+Plan: create assignment 'Replication Problem Set 1: Conditioning and Selection on Observables (AGG 2010)' in ou=648878 on brightspace.vanderbilt.edu
+{
+  "CategoryId": null,
+  "Name": "Replication Problem Set 1: Conditioning and Selection on Observables (AGG 2010)",
+  "CustomInstructions": {
+    "Content": "<h2>Replication Problem Set 1: Conditioning and Selection on Observables</h2>\n<p>Replicate and reanalyze <strong>Arceneaux, Gerber &amp; Green (2010)</strong>,\n\"A Cautionary Note on the Use of Matching to Estimate Causal Effects.\"</p>\n<p>Materials (article, full problem-set write-up, and replication package) are posted in the\n<strong>Week 02 (Conditioning, DAGs, and Good and Bad Controls)</strong> module.</p>\n<p>Submit your reproduction, identification-argument writeup, and reanalysis as described in the\nposted problem-set document.</p>",
+    "Type": "Html"
+  },
+  "Availability": null,
+  "GroupTypeId": null,
+  "DueDate": "202
+OK: assignment 404310 verified (due 2026-09-16T04:59:00.000Z)
+
+Apply complete. Re-run `map` to see the resulting structure.

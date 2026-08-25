@@ -1,0 +1,725 @@
+{
+  "course": {
+    "name": "PSCI 8358-01: Topics in Political Methodology (Advanced Observational Causal Inference)",
+    "term": "Fall 2026",
+    "template": "none",
+    "ou": 648878,
+    "keep_inactive": true,
+    "no_class_dates": [
+      "2026-11-25"
+    ]
+  },
+  "modules": [
+    {
+      "title": "Syllabus",
+      "pages": [
+        {
+          "title": "Syllabus",
+          "file": "pages/syllabus.html",
+          "kit": "raw"
+        }
+      ]
+    },
+    {
+      "title": "Week 01 (2026-08-26): From Potential Outcomes to Identification",
+      "pages": [
+        {
+          "title": "Week 1 Overview",
+          "file": "pages/week-01-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Ding 2023 First Course Causal Inference",
+          "file": "../Readings/ding_2023_first_course_causal_inference.pdf"
+        },
+        {
+          "title": "Elwert Graphical Causal Models 2013",
+          "file": "../Readings/elwert_graphical_causal_models_2013.pdf"
+        },
+        {
+          "title": "Greenland Pearl Causal Diagrams 2014",
+          "file": "../Readings/greenland_pearl_causal_diagrams_2014.pdf"
+        },
+        {
+          "title": "Imbens 2020 Potential Outcome Dag",
+          "file": "../Readings/imbens_2020_potential_outcome_dag.pdf"
+        },
+        {
+          "title": "Lundberg Et Al 2021 What Is Your Estimand",
+          "file": "../Readings/lundberg_et_al_2021_what_is_your_estimand.pdf"
+        },
+        {
+          "title": "Morgan Winship",
+          "file": "../Readings/morgan_winship.pdf"
+        },
+        {
+          "title": "Pearl 1995 Causal Diagrams",
+          "file": "../Readings/pearl_1995_causal_diagrams.pdf"
+        },
+        {
+          "title": "Pearl Causality Ch3",
+          "file": "../Readings/pearl_causality_ch3.pdf"
+        },
+        {
+          "title": "Samii 2016 Causal Empiricism Quantitative Research",
+          "file": "../Readings/samii_2016_causal_empiricism_quantitative_research.pdf"
+        },
+        {
+          "title": "Assignment 0: Naming the Estimand",
+          "file": "../Psets/PS0/PS0_naming_the_estimand.html"
+        }
+      ]
+    },
+    {
+      "title": "Week 02 (2026-09-02): Conditioning, DAGs, and Good and Bad Controls",
+      "pages": [
+        {
+          "title": "Week 2 Overview",
+          "file": "pages/week-02-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Acharya Blackwell Sen 2016 Direct Effects",
+          "file": "../Readings/acharya_blackwell_sen_2016_direct_effects.pdf"
+        },
+        {
+          "title": "Angrist Hahn 2004 When To Control Covariates",
+          "file": "../Readings/angrist_hahn_2004_when_to_control_covariates.pdf"
+        },
+        {
+          "title": "Blackwell Ma Opacic 2024 Assumption Smuggling",
+          "file": "../Readings/blackwell_ma_opacic_2024_assumption_smuggling.pdf"
+        },
+        {
+          "title": "Cinelli Forney Pearl 2022",
+          "file": "../Readings/cinelli_forney_pearl_2022.pdf"
+        },
+        {
+          "title": "Cinelli Hazlett Sensitivity 2020",
+          "file": "../Readings/cinelli_hazlett_sensitivity_2020.pdf"
+        },
+        {
+          "title": "Clarke 2009 Phantom Menace",
+          "file": "../Readings/clarke_2009_phantom_menace.pdf"
+        },
+        {
+          "title": "Imai Keele Tingley Yamamoto 2011 Unpacking Black Box",
+          "file": "../Readings/imai_keele_tingley_yamamoto_2011_unpacking_black_box.pdf"
+        },
+        {
+          "title": "Imai Keele Yamamoto 2010 Causal Mediation Sensitivity",
+          "file": "../Readings/imai_keele_yamamoto_2010_causal_mediation_sensitivity.pdf"
+        },
+        {
+          "title": "Mohan Pearl 2021 Graphical Models Missing Data",
+          "file": "../Readings/mohan_pearl_2021_graphical_models_missing_data.pdf"
+        },
+        {
+          "title": "PS1: Conditioning & Matching \u2014 Assignment (AGG 2010)",
+          "file": "../Psets/PS1/PS1_conditioning_matching_AGG2010.html"
+        },
+        {
+          "title": "Arceneaux, Gerber & Green (2010) \u2014 Cautionary Note (source article)",
+          "file": "../Psets/PS1/arceneux_gerber_green_2010_cautionary.pdf"
+        },
+        {
+          "title": "AGG 2010 Replication Package (data + code)",
+          "file": "../Psets/PS1/arceneux_gerber_green_2010_replication.zip"
+        }
+      ]
+    },
+    {
+      "title": "Week 03 (2026-09-09): Matching, Weighting, and Overlap",
+      "pages": [
+        {
+          "title": "Week 3 Overview",
+          "file": "pages/week-03-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Chattopadhyay Hase Zubizareeta 2020 Balancing Vs Modeling",
+          "file": "../Readings/Chattopadhyay_hase_zubizareeta_2020_balancing_vs_modeling.pdf"
+        },
+        {
+          "title": "WangZubizarreta2020 Minimal Dispersion",
+          "file": "../Readings/WangZubizarreta2020_minimal_dispersion.pdf"
+        },
+        {
+          "title": "Abadie Imbens Bias Corrected",
+          "file": "../Readings/abadie_imbens_bias_corrected.pdf"
+        },
+        {
+          "title": "Arbour Dimmery Sondhi 2021 Permutation Weighting",
+          "file": "../Readings/arbour_dimmery_sondhi_2021_permutation_weighting.pdf"
+        },
+        {
+          "title": "Bruhn Mckenzie 2009 Pursuit Of Balance",
+          "file": "../Readings/bruhn_mckenzie_2009_pursuit_of_balance.pdf"
+        },
+        {
+          "title": "Busso Dinardo Mccracy 2014 New Evidence",
+          "file": "../Readings/busso_dinardo_mccracy_2014_new_evidence.pdf"
+        },
+        {
+          "title": "Diamon Sekhon 2013 Genetic Matching",
+          "file": "../Readings/diamon_sekhon_2013_genetic_matching.pdf"
+        },
+        {
+          "title": "Hainmueller 2012 Entropy Balancing",
+          "file": "../Readings/hainmueller_2012_entropy_balancing.pdf"
+        },
+        {
+          "title": "Hartman Hidalgo 2018 Equivalence Balance Placebo",
+          "file": "../Readings/hartman_hidalgo_2018_equivalence_balance_placebo.pdf"
+        },
+        {
+          "title": "Hirano Imbens Ridder 2003 Efficient Estimation Propensity Score",
+          "file": "../Readings/hirano_imbens_ridder_2003_efficient_estimation_propensity_score.pdf"
+        },
+        {
+          "title": "Iacus King Porro 2012 Cem",
+          "file": "../Readings/iacus_king_porro_2012_cem.pdf"
+        },
+        {
+          "title": "Imai King Stuart 2008 Misunderstandings",
+          "file": "../Readings/imai_king_stuart_2008_misunderstandings.pdf"
+        },
+        {
+          "title": "King Nielsen 2019 Propensity Scores",
+          "file": "../Readings/king_nielsen_2019_propensity_scores.pdf"
+        },
+        {
+          "title": "Lin Ding Han 2023 Nearest Neighbor Matching",
+          "file": "../Readings/lin_ding_han_2023_nearest_neighbor_matching.pdf"
+        },
+        {
+          "title": "Marbach Hangartner 2020 Profiling",
+          "file": "../Readings/marbach_hangartner_2020_profiling.pdf"
+        },
+        {
+          "title": "Otsu Rai 2017 Bootstrap Matching Estimators",
+          "file": "../Readings/otsu_rai_2017_bootstrap_matching_estimators.pdf"
+        },
+        {
+          "title": "Rosenbaum Rubin 1983 Propensity Score",
+          "file": "../Readings/rosenbaum_rubin_1983_propensity_score.pdf"
+        },
+        {
+          "title": "Sekhon 2009 Opiates",
+          "file": "../Readings/sekhon_2009_opiates.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 04 (2026-09-16): Doubly Robust Estimation and Double Machine Learning",
+      "pages": [
+        {
+          "title": "Week 4 Overview",
+          "file": "pages/week-04-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Ahrens Et Al 2026 Dml",
+          "file": "../Readings/ahrens_et_al_2026_dml.pdf"
+        },
+        {
+          "title": "Athey Imbens Wager 2018 Approximate Residual",
+          "file": "../Readings/athey_imbens_wager_2018_approximate_residual.pdf"
+        },
+        {
+          "title": "Chern Et Al 2018 Dml Structural",
+          "file": "../Readings/chern_et_al_2018_dml_structural.pdf"
+        },
+        {
+          "title": "Glynn Quinn 2010 Augmented Inverse Propensity",
+          "file": "../Readings/glynn_quinn_2010_augmented_inverse_propensity.pdf"
+        },
+        {
+          "title": "Kennedy 2024 Semiparametric Doubly Robust",
+          "file": "../Readings/kennedy_2024_semiparametric_doubly_robust.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 05 (2026-09-23): Instrumental Variables: Identification Beyond the Textbook Model",
+      "pages": [
+        {
+          "title": "Week 5 Overview",
+          "file": "pages/week-05-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Abadie 2003 Semiparametric",
+          "file": "../Readings/abadie_2003_semiparametric.pdf"
+        },
+        {
+          "title": "Angrist Imbens Rubin 1996 Iv",
+          "file": "../Readings/angrist_imbens_rubin_1996_iv.pdf"
+        },
+        {
+          "title": "Huber Mellace 2015 Testing Instrument Validity",
+          "file": "../Readings/huber_mellace_2015_testing_instrument_validity.pdf"
+        },
+        {
+          "title": "Mercatanti Li 2014 Debit Cards Household Spending",
+          "file": "../Readings/mercatanti_li_2014_debit_cards_household_spending.pdf"
+        },
+        {
+          "title": "Mogstad Santos Torgovitsky 2018 Policy Relevant Treatment Params",
+          "file": "../Readings/mogstad_santos_torgovitsky_2018_policy_relevant_treatment_params.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 06 (2026-09-30): Modern Instrumental-Variables Designs",
+      "pages": [
+        {
+          "title": "Week 6 Overview",
+          "file": "pages/week-06-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Andrew Stock Sun 2019 Weak Instruments",
+          "file": "../Readings/andrew_stock_sun_2019_weak_instruments.pdf"
+        },
+        {
+          "title": "Angrist Imbens Krueger 1999 Jackknife Iv",
+          "file": "../Readings/angrist_imbens_krueger_1999_jackknife_iv.pdf"
+        },
+        {
+          "title": "Borusyak Hull Jaravel 2022 Shift Share",
+          "file": "../Readings/borusyak_hull_jaravel_2022_shift_share.pdf"
+        },
+        {
+          "title": "Borusyak Hull Jaravel 2025 Formula Instruments",
+          "file": "../Readings/borusyak_hull_jaravel_2025_formula_instruments.pdf"
+        },
+        {
+          "title": "Goldsmithpinkham Sorkin Swift 2020 Bartik Instruments",
+          "file": "../Readings/goldsmithpinkham_sorkin_swift_2020_bartik_instruments.pdf"
+        },
+        {
+          "title": "Kitagawa 2015 A Test",
+          "file": "../Readings/kitagawa_2015_a_test.pdf"
+        },
+        {
+          "title": "Lee Et Al 2022 Valid T Ratio",
+          "file": "../Readings/lee_et_al_2022_valid_t_ratio.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 07 (2026-10-07): Partial Identification: What Can We Learn When Point Identification Fails?",
+      "pages": [
+        {
+          "title": "Week 7 Overview",
+          "file": "pages/week-07-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Balke Pearl 1997 Bounds Imperfect",
+          "file": "../Readings/balke_pearl_1997_bounds_imperfect.pdf"
+        },
+        {
+          "title": "Chernozhukov Lee Rosen 2013 Intersection Bounds",
+          "file": "../Readings/chernozhukov_lee_rosen_2013_intersection_bounds.pdf"
+        },
+        {
+          "title": "Coppock Gerber Green Kern 2017 Double Sampling Bounds",
+          "file": "../Readings/coppock_gerber_green_kern_2017_double_sampling_bounds.pdf"
+        },
+        {
+          "title": "Lee 2009 Training Wages Sample Selection",
+          "file": "../Readings/lee_2009_training_wages_sample_selection.pdf"
+        },
+        {
+          "title": "Manski 1990 Nonparametric Bounds",
+          "file": "../Readings/manski_1990_nonparametric_bounds.pdf"
+        },
+        {
+          "title": "Manski 1997 Bounds",
+          "file": "../Readings/manski_1997_bounds.pdf"
+        },
+        {
+          "title": "Manski 2003 Partial Identification Excerpt",
+          "file": "../Readings/manski_2003_partial_identification_excerpt.pdf"
+        },
+        {
+          "title": "Manski Pepper 2000 Monotone Iv Returns Schooling",
+          "file": "../Readings/manski_pepper_2000_monotone_iv_returns_schooling.pdf"
+        },
+        {
+          "title": "Molinari 2020 Partial Identification",
+          "file": "../Readings/molinari_2020_partial_identification.pdf"
+        },
+        {
+          "title": "Samii Wang Zhou 2026 Trimming Bounds Random Forests",
+          "file": "../Readings/samii_wang_zhou_2026_trimming_bounds_random_forests.pdf"
+        },
+        {
+          "title": "Swanson Et Al 2018 Partial",
+          "file": "../Readings/swanson_et_al_2018_partial.pdf"
+        },
+        {
+          "title": "PS2B: Partial Identification Assignment (AGG 2010)",
+          "file": "../Psets/PS2B/PS2B_partial_identification_AGG2010.html"
+        }
+      ]
+    },
+    {
+      "title": "Week 08 (2026-10-14): Difference-in-Differences and Event Studies",
+      "pages": [
+        {
+          "title": "Week 8 Overview",
+          "file": "pages/week-08-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Fernan Pinto 2019 Inference Did",
+          "file": "../Readings/fernan_pinto_2019_inference_did.pdf"
+        },
+        {
+          "title": "Roth Santanna Bilinski Poe 2023 Did Trending",
+          "file": "../Readings/roth_santanna_bilinski_poe_2023_did_trending.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 09 (2026-10-21): Staggered Adoption and Modern DiD",
+      "pages": [
+        {
+          "title": "Week 9 Overview",
+          "file": "pages/week-09-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Borusyak Jaravel Spiess 2024 Event Study",
+          "file": "../Readings/borusyak_jaravel_spiess_2024_event_study.pdf"
+        },
+        {
+          "title": "Callaway Goodmanbacon Santanna 2024 Continuous Treatment Did",
+          "file": "../Readings/callaway_goodmanbacon_santanna_2024_continuous_treatment_did.pdf"
+        },
+        {
+          "title": "Callaway Santanna 2021 Multiple Time Periods Did",
+          "file": "../Readings/callaway_santanna_2021_multiple_time_periods_did.pdf"
+        },
+        {
+          "title": "Cengiz Dube Lindner Zipperer 2019 Minimum Wages",
+          "file": "../Readings/cengiz_dube_lindner_zipperer_2019_minimum_wages.pdf"
+        },
+        {
+          "title": "Chiu Lan Liu Xu 2023 Causal Panel Parallel Trends",
+          "file": "../Readings/chiu_lan_liu_xu_2023_causal_panel_parallel_trends.pdf"
+        },
+        {
+          "title": "Dechaisemartin Dhaultfoeuille 2026 Did Book",
+          "file": "../Readings/dechaisemartin_dhaultfoeuille_2026_did_book.pdf"
+        },
+        {
+          "title": "Dechaisemartin Dhaultfoeuille Vazquezbare 2024 Continuous Treatments No Stayers",
+          "file": "../Readings/dechaisemartin_dhaultfoeuille_vazquezbare_2024_continuous_treatments_no_stayers.pdf"
+        },
+        {
+          "title": "Dube Girardi Jorda Taylor 2023 Local Projections Did",
+          "file": "../Readings/dube_girardi_jorda_taylor_2023_local_projections_did.pdf"
+        },
+        {
+          "title": "Goodmanbacon 2021 Did Variation Treatment Timing",
+          "file": "../Readings/goodmanbacon_2021_did_variation_treatment_timing.pdf"
+        },
+        {
+          "title": "Liu Wang Xu 2024 Counterfactual Estimators",
+          "file": "../Readings/liu_wang_xu_2024_counterfactual_estimators.pdf"
+        },
+        {
+          "title": "Mackinnon Webb 2016 Did Few Treated Clusters",
+          "file": "../Readings/mackinnon_webb_2016_did_few_treated_clusters.pdf"
+        },
+        {
+          "title": "Roth Rambachan 2022 Credible Approach Parallel Trends",
+          "file": "../Readings/roth_rambachan_2022_credible_approach_parallel_trends.pdf"
+        },
+        {
+          "title": "Sun Abraham 2021 Dynamic Treatment Effects Event Studies",
+          "file": "../Readings/sun_abraham_2021_dynamic_treatment_effects_event_studies.pdf"
+        },
+        {
+          "title": "Xu Hazlett Trajectory Balancing",
+          "file": "../Readings/xu_hazlett_trajectory_balancing.pdf"
+        },
+        {
+          "title": "Xu Zhao Ding 2024 Factorial Did",
+          "file": "../Readings/xu_zhao_ding_2024_factorial_did.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 10 (2026-10-28): Synthetic Control",
+      "pages": [
+        {
+          "title": "Week 10 Overview",
+          "file": "pages/week-10-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Abadie Diamond Hainmueller 2010 Synthetic Control",
+          "file": "../Readings/abadie_diamond_hainmueller_2010_synthetic_control.pdf"
+        },
+        {
+          "title": "Abadie Gardeazabal 2003 Basque Country",
+          "file": "../Readings/abadie_gardeazabal_2003_basque_country.pdf"
+        },
+        {
+          "title": "Benmichael Feller Rothstein 2021 Augmented Synthetic Control",
+          "file": "../Readings/benmichael_feller_rothstein_2021_augmented_synthetic_control.pdf"
+        },
+        {
+          "title": "Chernozhukov Wuthrich Zhu 2021 Conformal Inference Synthetic Control",
+          "file": "../Readings/chernozhukov_wuthrich_zhu_2021_conformal_inference_synthetic_control.pdf"
+        },
+        {
+          "title": "Firpo Possebom 2018 Synthetic Control Inference",
+          "file": "../Readings/firpo_possebom_2018_synthetic_control_inference.pdf"
+        },
+        {
+          "title": "Hahn Shi 2017 Synthetic Control Inference",
+          "file": "../Readings/hahn_shi_2017_synthetic_control_inference.pdf"
+        },
+        {
+          "title": "Kuosmanen Zhou Eskelinen Malo 2021 Synthetic Control Design Flaw",
+          "file": "../Readings/kuosmanen_zhou_eskelinen_malo_2021_synthetic_control_design_flaw.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 11 (2026-11-04): Regression Discontinuity I: Identification and Estimation",
+      "pages": [
+        {
+          "title": "Week 11 Overview",
+          "file": "pages/week-11-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Cattaneo Idrobo Titiunik 2019 Rd Foundations",
+          "file": "../Readings/cattaneo_idrobo_titiunik_2019_rd_foundations.pdf"
+        },
+        {
+          "title": "Cattaneo Titiunik 2022 Rd Designs",
+          "file": "../Readings/cattaneo_titiunik_2022_rd_designs.pdf"
+        },
+        {
+          "title": "Kling 2006 Incarceration Length Employment",
+          "file": "../Readings/kling_2006_incarceration_length_employment.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 12 (2026-11-11): Regression Discontinuity II: Diagnostics and Extensions",
+      "pages": [
+        {
+          "title": "Week 12 Overview",
+          "file": "pages/week-12-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Card Lee Pei Weber 2017 Regression Kink Design",
+          "file": "../Readings/card_lee_pei_weber_2017_regression_kink_design.pdf"
+        },
+        {
+          "title": "Cattaneo Titiunik Yu 2025 Boundary Discontinuity",
+          "file": "../Readings/cattaneo_titiunik_yu_2025_boundary_discontinuity.pdf"
+        },
+        {
+          "title": "Dowd 2021 Donuts Distant Cates",
+          "file": "../Readings/dowd_2021_donuts_distant_cates.pdf"
+        },
+        {
+          "title": "Stommes Aronow Savje 2023 Rd Reliability Political Science",
+          "file": "../Readings/stommes_aronow_savje_2023_rd_reliability_political_science.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 13 (2026-11-18): Comparing Designs and Triangulating Evidence",
+      "pages": [
+        {
+          "title": "Week 13 Overview",
+          "file": "pages/week-13-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "Rambachan Roth 2025 Design Based Uncertainty Quasi Experiments",
+          "file": "../Readings/rambachan_roth_2025_design_based_uncertainty_quasi_experiments.pdf"
+        }
+      ]
+    },
+    {
+      "title": "Week 14 (2026-11-25): No Class / Thanksgiving Break",
+      "pages": [
+        {
+          "title": "Week 14 Overview",
+          "file": "pages/week-14-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": []
+    },
+    {
+      "title": "Week 15 (2026-12-02): Causal Audit Workshop",
+      "pages": [
+        {
+          "title": "Week 15 Overview",
+          "file": "pages/week-15-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": []
+    },
+    {
+      "title": "Week 16 (2026-12-09): Causal Audit Defenses",
+      "pages": [
+        {
+          "title": "Week 16 Overview",
+          "file": "pages/week-16-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": []
+    },
+    {
+      "title": "Supplementary / Reference Readings",
+      "pages": [
+        {
+          "title": "Supplementary Readings Overview",
+          "file": "pages/supplementary-overview.html",
+          "kit": "raw"
+        }
+      ],
+      "files": [
+        {
+          "title": "MHE",
+          "file": "../Readings/MHE.pdf"
+        },
+        {
+          "title": "Abadie Athens Imbens Woolridge 2020 Sampling Design",
+          "file": "../Readings/abadie_athens_imbens_woolridge_2020_sampling_design.pdf"
+        },
+        {
+          "title": "Abadie Athey Imbens Wooldridge 2023 Clustering Se",
+          "file": "../Readings/abadie_athey_imbens_wooldridge_2023_clustering_se.pdf"
+        },
+        {
+          "title": "Anderson 2008 Multiple Inference Gender",
+          "file": "../Readings/anderson_2008_multiple_inference_gender.pdf"
+        },
+        {
+          "title": "Aronow Eckles Samii Zonszein 2021 Spillover Effects",
+          "file": "../Readings/aronow_eckles_samii_zonszein_2021_spillover_effects.pdf"
+        },
+        {
+          "title": "Aronow Samii 2017 General Interference",
+          "file": "../Readings/aronow_samii_2017_general_interference.pdf"
+        },
+        {
+          "title": "Aronow Samii Representative 2016",
+          "file": "../Readings/aronow_samii_representative_2016.pdf"
+        },
+        {
+          "title": "Bloom 1995 Minimum Detectable Effects",
+          "file": "../Readings/bloom_1995_minimum_detectable_effects.pdf"
+        },
+        {
+          "title": "Cameron Gelbach Miller 2008 Bootstrap Clustered Errors",
+          "file": "../Readings/cameron_gelbach_miller_2008_bootstrap_clustered_errors.pdf"
+        },
+        {
+          "title": "Fogarty 2018 Finely Stratified Experiments",
+          "file": "../Readings/fogarty_2018_finely_stratified_experiments.pdf"
+        },
+        {
+          "title": "Gomila Clark 2022 Missing Data Experiments",
+          "file": "../Readings/gomila_clark_2022_missing_data_experiments.pdf"
+        },
+        {
+          "title": "Hainmueller Mummolo Xu 2019 Multiplicative Interaction",
+          "file": "../Readings/hainmueller_mummolo_xu_2019_multiplicative_interaction.pdf"
+        },
+        {
+          "title": "Hudgens Halloran 2008 Toward",
+          "file": "../Readings/hudgens_halloran_2008_toward.pdf"
+        },
+        {
+          "title": "Imai Jiang 2020 Contagion Effects",
+          "file": "../Readings/imai_jiang_2020_contagion_effects.pdf"
+        },
+        {
+          "title": "Muralidharan Romero Wuthrich 2025 Factorial Designs",
+          "file": "../Readings/muralidharan_romero_wuthrich_2025_factorial_designs.pdf"
+        },
+        {
+          "title": "Pustejovsky Tipton 2018 Cluster Robust Variance Small Sample",
+          "file": "../Readings/pustejovsky_tipton_2018_cluster_robust_variance_small_sample.pdf"
+        },
+        {
+          "title": "Samii Paler Daly 2016 Retrospective Causal Inference Ml",
+          "file": "../Readings/samii_paler_daly_2016_retrospective_causal_inference_ml.pdf"
+        },
+        {
+          "title": "Staub 2014 Causal Interp",
+          "file": "../Readings/staub_2014_causal_interp.pdf"
+        }
+      ]
+    }
+  ],
+  "assignments": [
+    {
+      "title": "Replication Problem Set 1: Conditioning and Selection on Observables (AGG 2010)",
+      "due": "2026-09-16T04:59:00.000Z",
+      "out_of": 100,
+      "hidden": false,
+      "instructions": "<h2>Replication Problem Set 1: Conditioning and Selection on Observables</h2>\n<p>Replicate and reanalyze <strong>Arceneaux, Gerber &amp; Green (2010)</strong>,\n\"A Cautionary Note on the Use of Matching to Estimate Causal Effects.\"</p>\n<p>Materials (article, full problem-set write-up, and replication package) are posted in the\n<strong>Week 02 (Conditioning, DAGs, and Good and Bad Controls)</strong> module.</p>\n<p>Submit your reproduction, identification-argument writeup, and reanalysis as described in the\nposted problem-set document.</p>"
+    },
+    {
+      "title": "Assignment 0: Naming the Estimand",
+      "due": "2026-09-02T04:59:00.000Z",
+      "out_of": 50,
+      "hidden": false,
+      "instructions": "<h2>Assignment 0: Naming the Estimand</h2>\n<p>Read Lundberg, Johnson &amp; Stewart (2021), \"What Is Your Estimand?\", and apply its\nframework to <strong>Arceneaux, Gerber &amp; Green (2010)</strong>, the article you will\nreplicate in Problem Set 1.</p>\n<p>This assignment involves <strong>no data and no code</strong>. Two pages maximum.</p>\n<p>Materials are posted in the <strong>Week 01 (From Potential Outcomes to Identification)</strong> module.</p>"
+    },
+    {
+      "title": "Replication Problem Set 2B: Partial Identification (AGG 2010)",
+      "due": "2026-10-21T04:59:00.000Z",
+      "out_of": 100,
+      "hidden": false,
+      "instructions": "<h2>Replication Problem Set 2B: Partial Identification</h2>\n<p>Return to <strong>Arceneaux, Gerber &amp; Green (2010)</strong> and ask what the data\nstill rule out once the assumptions required for a point estimate are set aside.</p>\n<p>Reuses the Problem Set 1 data and variables; no new data preparation is required.</p>\n<p>Materials are posted in the <strong>Week 07 (Partial Identification)</strong> module.</p>"
+    }
+  ],
+  "announcements": []
+}

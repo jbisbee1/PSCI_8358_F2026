@@ -1,0 +1,795 @@
+---
+title: "Lecture 3: Matching, Weighting, and Overlap"
+author: "Advanced Observational Causal Inference"
+date: "September 9"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+execute:
+  enabled: false
+---
+
+## Where we are going
+
+Last time, we asked **which variables should we condition on?**
+
+Today, assume we have defended an adjustment set $X$.
+
+Now we ask:
+
+> **How should we construct the treated-versus-control comparison empirically?**
+
+We will focus on:
+
+- matching;
+- weighting;
+- balance;
+- overlap; and
+- the target population implied by the design.
+
+---
+
+## Today's learning objectives
+
+By the end of today, you should be able to:
+
+1. connect matching and weighting to conditional identification;
+2. explain matching as construction of a comparison population;
+3. explain weighting as construction of a pseudo-population;
+4. diagnose balance and overlap;
+5. connect matching and weighting choices to the estimand; and
+6. explain why excellent observed balance does **not** establish ignorability.
+
+---
+
+## Start with identification
+
+Suppose our adjustment set $X$ satisfies conditional ignorability:
+
+$$
+(Y(1),Y(0)) \perp D \mid X,
+$$
+
+with overlap:
+
+$$
+0<P(D=1\mid X)<1.
+$$
+
+Then observed untreated units can provide information about treated units' untreated counterfactuals.
+
+For example,
+
+$$
+E[Y(0)\mid D=1,X]=E[Y\mid D=0,X].
+$$
+
+**Matching and weighting are ways to use this identification result. They do not create it.**
+
+---
+
+## Three separate questions
+
+It is useful to keep three problems distinct.
+
+| Question | Problem |
+|---|---|
+| **Identification** | Is $X$ sufficient to remove confounding? |
+| **Design** | Are there treated and control observations that can actually be compared at similar $X$? |
+| **Estimation** | How should those observations be compared or weighted? |
+
+Matching and weighting can improve the second and third.
+
+They cannot rescue a failure of the first.
+
+---
+
+## The basic matching idea
+
+Suppose treated unit $i$ has covariates $X_i$.
+
+We would like to find an untreated unit $j$ such that
+
+$$
+X_j \approx X_i.
+$$
+
+Then we use $Y_j$ as information about the missing counterfactual $Y_i(0)$.
+
+Conceptually:
+
+$$
+\text{treated unit}
+\longrightarrow
+\text{comparable untreated unit(s)}
+\longrightarrow
+\text{counterfactual comparison}.
+$$
+
+The difficult questions are what counts as **comparable** and what happens when no comparable unit exists.
+
+---
+
+## Exact matching
+
+Suppose $X$ is discrete.
+
+For each treated unit, find controls with exactly the same $X$:
+
+$$
+X_j=X_i.
+$$
+
+Within each stratum $s$, compare treated and untreated outcomes:
+
+$$
+\widehat{\tau}_s
+=
+\bar Y_{1s}-\bar Y_{0s}.
+$$
+
+For the ATT, aggregate using the distribution of treated units across strata:
+
+$$
+\widehat{ATT}
+=
+\sum_s p(s\mid D=1)\widehat{\tau}_s.
+$$
+
+---
+
+## Exact matching as design
+
+Exact matching makes the comparison transparent.
+
+Within a matched stratum, the comparison is simply:
+
+$$
+\underbrace{E[Y\mid D=1,X=x]}_{\text{treated}}
+-
+\underbrace{E[Y\mid D=0,X=x]}_{\text{controls}}.
+$$
+
+The treated and controls have the same measured $X$ by construction.
+
+But exact matching becomes difficult as the number of covariates grows or covariates become continuous.
+
+This is one version of the **curse of dimensionality**.
+
+---
+
+## Coarsening and approximate matching
+
+When exact matching is impossible, we can relax what counts as similar.
+
+Examples include:
+
+- coarsened exact matching;
+- nearest-neighbor matching;
+- Mahalanobis-distance matching;
+- caliper matching; and
+- propensity-score matching.
+
+All introduce a tradeoff:
+
+$$
+\text{more matches}
+\quad\leftrightarrow\quad
+\text{less similar matches}.
+$$
+
+That tradeoff should be diagnosed, not hidden inside an algorithm.
+
+---
+
+## Nearest-neighbor matching
+
+For each treated unit $i$, choose the control unit whose covariates are closest according to a distance measure:
+
+$$
+j(i)=\arg\min_{j:D_j=0} d(X_i,X_j).
+$$
+
+Questions immediately arise:
+
+- Which distance measure?
+- Matching with or without replacement?
+- How many neighbors?
+- How far away is too far?
+- What happens to treated units with no good match?
+
+The algorithm does not answer these causal-design questions for us.
+
+---
+
+## The propensity score
+
+Define
+
+$$
+e(X)=P(D=1\mid X).
+$$
+
+Rosenbaum and Rubin's key result is that if treatment is ignorable conditional on $X$, then it is also ignorable conditional on the true propensity score:
+
+$$
+(Y(1),Y(0))\perp D\mid e(X).
+$$
+
+This makes $e(X)$ a **balancing score**.
+
+It reduces a potentially high-dimensional covariate vector to a scalar for purposes of adjustment.
+
+---
+
+## What the propensity score does not do
+
+Estimating $e(X)$ does **not** make treatment assignment ignorable.
+
+If
+
+$$
+(Y(1),Y(0))\not\perp D\mid X,
+$$
+
+then estimating a propensity score from $X$ does not fix the problem.
+
+The propensity score addresses how to adjust for **observed** $X$ under an identification assumption already justified on substantive grounds.
+
+::: {.callout-important}
+A good propensity-score model cannot compensate for a bad causal model.
+:::
+
+---
+
+## Why propensity-score matching is not automatically attractive
+
+A common workflow is:
+
+$$
+X \rightarrow \widehat e(X) \rightarrow \text{nearest-neighbor matching}.
+$$
+
+But reducing multidimensional covariates to one score can produce matches that are close in propensity score while remaining meaningfully different on individual covariates.
+
+This motivates the warning in King and Nielsen (2019): propensity scores can be useful for adjustment and weighting without implying that nearest-neighbor propensity-score matching is the preferred matching procedure.
+
+The design criterion remains **covariate balance and substantive comparability**.
+
+---
+
+## Weighting takes a different approach
+
+Instead of selecting matched controls, weighting changes how much each observation contributes.
+
+For an estimator of the form
+
+$$
+\widehat\tau_w
+=
+\frac{\sum_i w_iD_iY_i}{\sum_i w_iD_i}
+-
+\frac{\sum_i w_i(1-D_i)Y_i}{\sum_i w_i(1-D_i)},
+$$
+
+the choice of $w_i$ determines which observations contribute most to the comparison.
+
+The goal is to create a weighted comparison in which the covariate distributions are appropriate for the target estimand.
+
+---
+
+## Inverse-probability weighting for the ATE
+
+Let
+
+$$
+e_i=e(X_i).
+$$
+
+ATE weights are
+
+$$
+w_i=
+\frac{D_i}{e_i}
++
+\frac{1-D_i}{1-e_i}.
+$$
+
+Intuition:
+
+- treated observations unlikely to be treated receive more weight;
+- control observations unlikely to be controls receive more weight.
+
+The weighted sample reconstructs the covariate distribution of the target population under both treatment states.
+
+---
+
+## Weighting for the ATT
+
+If the target is the ATT, treated observations can remain at weight 1:
+
+$$
+w_i^{ATT}
+=
+D_i+(1-D_i)\frac{e_i}{1-e_i}.
+$$
+
+The controls are reweighted to resemble the treated population.
+
+So the estimand changes the weighting scheme.
+
+::: {.callout-note}
+Do not choose the weights first and ask what they estimate afterward. Choose the estimand first.
+:::
+
+---
+
+## Overlap weights
+
+Another target emphasizes observations with substantial treatment uncertainty.
+
+One common overlap-weighting scheme uses
+
+$$
+w_i^{OW}=D_i(1-e_i)+(1-D_i)e_i.
+$$
+
+Units with $e(X)$ near 0 or 1 receive little weight.
+
+Units with $e(X)$ near $0.5$ receive more weight.
+
+The resulting estimand pertains to an **overlap population** rather than necessarily the original ATE or ATT population.
+
+---
+
+## Why overlap matters
+
+Identification by conditioning requires more than ignorability.
+
+We also need comparable treated and untreated observations:
+
+$$
+0<P(D=1\mid X=x)<1.
+$$
+
+Suppose instead that for some $x$,
+
+$$
+P(D=1\mid X=x)=1.
+$$
+
+Then there are no untreated observations at that $X$ from which to learn
+
+$$
+E[Y(0)\mid X=x].
+$$
+
+No estimator can manufacture the missing comparison from the observed data without extrapolation.
+
+---
+
+## Visualizing overlap
+
+A useful diagnostic is to compare the treatment and control propensity-score distributions.
+
+Conceptually:
+
+```text
+Density
+  |
+  | Treated                 ______
+  |                    ____/      \___
+  | Control      _____/               \__
+  |         ____/
+  +------------------------------------------ e(X)
+          0              .5                1
+```
+
+We worry about regions occupied almost entirely by one treatment condition.
+
+The question is not merely whether the distributions overlap somewhere, but **where the target population lies relative to that overlap**.
+
+---
+
+## What should we do with poor overlap?
+
+Possible responses include:
+
+- restrict the sample;
+- impose a caliper;
+- trim extreme propensity scores;
+- change the weighting scheme;
+- redefine the target population; or
+- acknowledge that the desired estimand is not well supported by the data.
+
+These are not innocuous technical choices.
+
+Removing or downweighting observations can change **who the causal effect is about**.
+
+---
+
+## Balance: what are we trying to achieve?
+
+After matching or weighting, treated and comparison groups should have similar distributions of the adjustment covariates.
+
+For a covariate $X_k$, a common diagnostic is the standardized mean difference:
+
+$$
+SMD_k
+=
+\frac{\bar X_{1k}-\bar X_{0k}}
+{s_k}.
+$$
+
+After weighting, replace ordinary means with weighted means.
+
+We generally want the absolute standardized differences to become small across the adjustment set.
+
+---
+
+## Balance should be examined directly
+
+Do not use the significance of a treatment-prediction model as the primary balance diagnostic.
+
+Instead inspect quantities such as:
+
+- standardized mean differences;
+- variance ratios;
+- empirical distributions;
+- higher moments where substantively relevant; and
+- balance plots / Love plots.
+
+The goal is not to obtain a large $p$-value.
+
+The goal is to understand whether the resulting comparison actually resembles the design you intended to construct.
+
+---
+
+## Balance is not ignorability
+
+This distinction is central.
+
+Observed balance means something like:
+
+$$
+D \perp X
+$$
+
+in the matched or weighted comparison.
+
+The causal assumption requires something about potential outcomes:
+
+$$
+(Y(1),Y(0))\perp D\mid X.
+$$
+
+These are not the same statement.
+
+::: {.callout-important}
+**Balance is a property of the observed data. Ignorability is an assumption about counterfactual outcomes.**
+:::
+
+---
+
+## Perfect balance can coexist with hidden bias
+
+Suppose an unobserved variable $U$ affects treatment and the outcome:
+
+```{mermaid}
+flowchart LR
+  X[X] --> D[D]
+  X --> Y[Y]
+  U[U] --> D
+  U --> Y
+  D --> Y
+```
+
+We can achieve perfect balance on $X$.
+
+But the backdoor path
+
+$$
+D \leftarrow U \rightarrow Y
+$$
+
+remains open.
+
+No amount of balance on $X$ demonstrates that this path is absent.
+
+---
+
+## Arceneaux, Gerber, and Green: an unusually strong test
+
+AGG study the effect of actually receiving a GOTV phone call on turnout.
+
+Their data are unusually favorable to matching:
+
+- nearly 2.8 million experimental subjects;
+- detailed prior voting history and demographics;
+- treatment and controls from the same setting;
+- identical outcome measurement; and
+- enough controls to obtain exact matches.
+
+They can match each contacted subject to **40 controls with identical observed covariates**.
+
+---
+
+## What AGG's exact matching accomplishes
+
+The matching variables include:
+
+- voting in 2000, 2001, 2002, and 2003;
+- age;
+- sex;
+- major-party registration;
+- new-registration status; and
+- missingness indicators.
+
+Within exact-match strata, treated and comparison observations are perfectly balanced on these measured attributes.
+
+If matching fails here, the failure cannot easily be blamed on a poor matching algorithm or residual imbalance in the matched variables.
+
+---
+
+## The question AGG forces us to confront
+
+Imagine we only had the observational comparison.
+
+We observe:
+
+$$
+\text{excellent data}
++\text{exact matching}
++\text{perfect observed balance}.
+$$
+
+Should we believe the resulting causal estimate?
+
+The answer depends on whether
+
+$$
+E[Y(0)\mid D=1,X]
+=
+E[Y(0)\mid D=0,X]
+$$
+
+is credible.
+
+**Matching cannot test that equality.**
+
+---
+
+## Matching and weighting change the comparison, not the causal model
+
+Suppose we estimate the same effect using:
+
+- regression adjustment;
+- exact matching;
+- propensity-score weighting; and
+- balancing weights.
+
+If all four produce similar estimates, what have we learned?
+
+We have evidence that the result is not especially sensitive to those particular **estimation choices**.
+
+We have not established that the common identifying assumption is true.
+
+$$
+\text{Estimator robustness} \neq \text{Identification robustness}.
+$$
+
+---
+
+## Matching can also change the estimand
+
+Suppose some treated observations have no comparable controls and are discarded.
+
+Then the matched analysis may no longer estimate the ATT for **all treated units**.
+
+Instead, it estimates an effect for something like:
+
+$$
+\text{treated units for whom suitable matches exist}.
+$$
+
+This can be a scientifically sensible target.
+
+But it must be stated explicitly.
+
+---
+
+## Weighting can reveal the effective comparison
+
+Extreme weights tell us that a small number of observations are being asked to represent many others.
+
+For example, under ATE IPW:
+
+$$
+w_i=\frac{1}{e_i}
+$$
+
+for treated units.
+
+If $e_i=0.02$, then
+
+$$
+w_i=50.
+$$
+
+That is both a statistical and a design warning: the data contain little treated information for units like this.
+
+---
+
+## Effective sample size
+
+A simple summary of weight concentration is
+
+$$
+ESS
+=
+\frac{\left(\sum_i w_i\right)^2}
+{\sum_i w_i^2}.
+$$
+
+If all weights are equal, the ESS is close to the nominal sample size.
+
+If a few observations dominate, the ESS can be much smaller.
+
+A dataset with $N=10{,}000$ can therefore contain far less than 10,000 observations' worth of information for a particular weighted comparison.
+
+---
+
+## A practical workflow
+
+Once an adjustment set has been justified:
+
+$$
+\boxed{
+\text{Adjustment set}
+\rightarrow
+\text{Overlap}
+\rightarrow
+\text{Target population}
+\rightarrow
+\text{Matching/weighting}
+\rightarrow
+\text{Balance}
+\rightarrow
+\text{Estimate}
+}
+$$
+
+Then ask what assumptions remain unsupported by these diagnostics.
+
+This ordering matters.
+
+---
+
+## In-class exercise: what is the target?
+
+Suppose treatment prevalence varies strongly with $X$.
+
+For each design, describe **which population the comparison is trying to represent**:
+
+1. ATE inverse-probability weighting;
+2. ATT weighting;
+3. overlap weighting;
+4. matching that drops treated observations without close controls.
+
+Then answer:
+
+> Could these procedures all be correctly implemented and still estimate different causal effects?
+
+---
+
+## In-class exercise: diagnose the design
+
+Consider three hypothetical results after weighting:
+
+### Design A
+Excellent balance; strong overlap; moderate weights.
+
+### Design B
+Excellent balance; poor overlap; several enormous weights.
+
+### Design C
+Excellent balance; strong overlap; plausible unobserved confounding remains.
+
+For each design:
+
+1. What has the analysis demonstrated?
+2. What remains uncertain?
+3. Which problem is identification, design, or estimation?
+
+---
+
+## What PS1 will ask you to do
+
+In the AGG replication, you will:
+
+- identify the ATT and the required ignorability assumption;
+- reconstruct the observational comparison;
+- reproduce exact matching;
+- assess observed balance;
+- examine what the matched design does and does not establish;
+- use placebo diagnostics to probe hidden bias; and
+- compare the observational estimate with an experimental benchmark.
+
+The matching calculation is not the intellectual endpoint.
+
+The endpoint is deciding **whether the matched comparison deserves a causal interpretation**.
+
+---
+
+## What you should be able to do after today
+
+Given an observational adjustment strategy, you should be able to:
+
+- explain what matching is constructing;
+- explain what weighting is constructing;
+- distinguish ATE, ATT, and overlap targets;
+- diagnose common support and extreme weights;
+- evaluate covariate balance;
+- explain how trimming or matching can change the estimand;
+- distinguish balance from ignorability; and
+- distinguish estimator robustness from identification robustness.
+
+---
+
+## What comes next
+
+Next week we keep the **same identification strategy** and ask whether more flexible estimation can help.
+
+Topics include:
+
+- outcome regression;
+- inverse-probability weighting;
+- augmented IPW;
+- double robustness;
+- machine-learning nuisance models; and
+- double/debiased machine learning.
+
+The central question will be:
+
+> **What can flexible estimation repair, and what identification failures remain untouched?**
+
+---
+
+## Core readings
+
+- Morgan, S. L. and C. Winship. 2015. *Counterfactuals and Causal Inference*, Ch. 5.
+- King, G. and R. Nielsen. 2019. “Why Propensity Scores Should Not Be Used for Matching.” *Political Analysis*.
+
+### Recommended
+
+- Rosenbaum, P. R. and D. B. Rubin. 1983. “The Central Role of the Propensity Score in Observational Studies for Causal Effects.” *Biometrika* 70(1): 41–55.
+- Hainmueller, J. 2012. “Entropy Balancing for Causal Effects.” *Political Analysis* 20(1): 25–46.
+- Chattopadhyay, A., C. H. Hase, and J. R. Zubizarreta. 2020. “Balancing vs Modeling Approaches to Weighting in Practice.” *Statistics in Medicine* 39(24): 3227–3254.
+
+---
+
+## The central lesson
+
+::: {.callout-important}
+### Matching and weighting can improve the observed comparison.
+
+They cannot establish that the variables we failed to observe are irrelevant.
+:::
+
+$$
+\boxed{
+\text{Balance on observed }X
+\not\Rightarrow
+\text{conditional ignorability}
+}
+$$

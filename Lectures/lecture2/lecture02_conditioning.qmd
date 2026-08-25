@@ -1,0 +1,484 @@
+---
+title: "Lecture 2: Conditioning to Identify Causal Effects"
+author: "Jim Bisbee"
+date: "September 2, 2026"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    preview-links: false
+    html-math-method: mathjax
+---
+
+
+## Where we are going
+
+Last time, we separated four things:
+
+1. the causal question;
+2. the causal estimand;
+3. the identifying assumptions; and
+4. the estimator.
+
+Today: **when can conditioning on observed variables make an observational comparison causal?**
+
+The answer is graphical: choose variables that block noncausal paths while leaving the causal paths of interest intact.
+
+::: {.callout-note}
+**Central question:** When does conditioning remove bias, and when does conditioning create or increase bias?
+:::
+
+## The basic observational problem
+
+Suppose we want the effect of $D$ on $Y$.
+
+```{mermaid}
+flowchart LR
+  D[D] --> Y[Y]
+  X[X] --> D
+  X --> Y
+```
+
+The observed comparison,
+
+$$
+E[Y\mid D=1]-E[Y\mid D=0],
+$$
+
+need not equal the causal effect.
+
+A common source of trouble is a backdoor path:
+
+$$
+D \leftarrow X \rightarrow Y.
+$$
+
+Conditioning on the right $X$ can block this path.
+
+## Toward conditional identification
+
+Under strong ignorability,
+
+$$
+(Y(1),Y(0)) \perp D \mid X,
+$$
+
+and with overlap,
+
+$$
+0 < P(D=1\mid X) < 1,
+$$
+
+we can recover counterfactual means from observed conditional means.
+
+For example,
+
+$$
+E[Y(0)\mid D=1,X] = E[Y\mid D=0,X].
+$$
+
+This is the bridge from observed comparisons to counterfactual quantities.
+
+**The difficult part is not writing this assumption. It is deciding whether it is credible.**
+
+## Conditioning is a causal operation
+
+Conditioning changes the graph.
+
+Consider candidate variable $V$:
+
+- if $V$ is a **non-collider** on a path, conditioning can block that path;
+- if $V$ is a **collider**, conditioning can *open* that path;
+    - conditioning on descendants of a collider can also open a path;
+    - conditioning on descendants of treatment can block or distort causal pathways.
+
+. . .
+
+So the question is never simply “Is $V$ related to treatment?”
+
+It is:
+
+> **“If I condition on $V$, which paths are blocked, which are opened, and which are truncated?”**
+
+
+## The backdoor criterion
+
+A path from $D$ to $Y$ is a **backdoor path** if it begins with an arrow into $D$.
+
+A set of variables $X$ satisfies the backdoor criterion when:
+
+1. it blocks every backdoor path between $D$ and $Y$; and
+2. it contains no descendant of $D$ that lies on a directed path from $D$ to $Y$.
+
+This provides a graphical recipe for identifying admissible adjustment sets.
+
+::: {.callout-important}
+The objective is **not** to control for everything.
+
+The objective is to block the noncausal paths without disturbing the causal paths.
+:::
+
+## A simple good-control case
+
+Suppose:
+
+```{mermaid}
+flowchart LR
+  X[X] --> D[D]
+  X --> Y[Y]
+  D --> Y
+```
+
+The path
+
+$$
+D \leftarrow X \rightarrow Y
+$$
+
+is noncausal.
+
+Conditioning on $X$ blocks that path.
+
+If the graph is correct and the overlap condition holds, adjustment for $X$ identifies the causal effect of $D$ on $Y$.
+
+## A complicated good-control
+
+Consider:
+
+```{mermaid}
+flowchart LR
+  X[X] --> A[A]
+  A --> D[D]
+  X --> Y[Y]
+  D --> Y
+```
+
+There is a backdoor path between $D$ and $Y$:
+
+$$
+D \leftarrow A \leftarrow X \rightarrow Y
+$$
+
+Conditioning on $A$ **blocks this backdoor path**, even though $A$ is not itself a cause of $Y$.
+
+This is the broader sense of a “good control” emphasized by Cinelli, Forney, and Pearl.
+
+## A bad control: collider bias
+
+Consider:
+
+```{mermaid}
+flowchart LR
+  D[D] --> Z[Z]
+  U[U] --> Z
+  U --> Y[Y]
+  D --> Y
+```
+
+$Z$ is a collider on
+
+$$
+D \rightarrow Z \leftarrow U \rightarrow Y.
+$$
+
+Without conditioning on $Z$, this path is closed.
+
+**BUT** conditioning on $Z$ induces a noncausal association between $D$ and $U$.
+
+The lesson:
+
+> **A pre-treatment variable can be a bad control.**
+
+## A bad control: M-bias
+
+A particularly important collider structure is:
+
+```{mermaid}
+flowchart LR
+  U1[U1] --> Z[Z]
+  U2[U2] --> Z
+  U1 --> D[D]
+  U2 --> Y[Y]
+  D --> Y
+```
+
+$Z$ is pre-treatment and related to both treatment and outcome, but conditioning on it can create bias by opening
+
+$$
+D \leftarrow U_1 \rightarrow Z \leftarrow U_2 \rightarrow Y.
+$$
+
+This is the classic **M-bias** structure.
+
+The practical implication is important: **“controls for predictors of treatment” is not a sufficient rule for selecting controls.**
+
+## A bad control: post-treatment
+
+Suppose:
+
+```{mermaid}
+flowchart LR
+  D[D] --> M[M]
+  M --> Y[Y]
+  D --> Y
+```
+
+If we want the **total effect** of $D$ on $Y$, conditioning on the mediator $M$ removes part of the causal pathway we are trying to estimate.
+
+This is often called **overcontrol** or post-treatment bias.
+
+The backdoor criterion therefore excludes descendants of treatment that lie on directed paths to the outcome.
+
+## Post-treatment can create colliders
+
+Consider:
+
+```{mermaid}
+flowchart LR
+  U[U] --> Y[Y]
+  U --> M[M]
+  D[D] --> M
+  M --> Y
+```
+
+Conditioning on $M$ can create an association between $D$ and the unobserved $U$.
+
+So post-treatment adjustment can be problematic for two different reasons:
+
+1. it can **block part of the causal effect**;
+2. it can **open a new noncausal path**.
+
+Which problem occurs depends on the causal structure.
+
+## Sample selection is a collider problem
+
+Let $S$ indicate being observed in the analytic sample.
+
+```{mermaid}
+flowchart LR
+  D[D] --> S[Observed]
+  Y[Y] --> S
+  D --> Y
+```
+
+If we restrict attention to $S=1$, we are conditioning on a collider.
+
+The restriction can induce an association between $D$ and $Y$ even when the corresponding relationship would not exist in the target population.
+
+This provides a graphical way to understand classic sample-selection problems.
+
+## What happens to the graph?
+
+For every proposed control $Z$, ask:
+
+1. Is $Z$ on a backdoor path?
+2. If so, does conditioning on $Z$ block that path?
+3. Is $Z$ a collider on another path?
+4. Does $Z$ have descendants that are being conditioned on?
+5. Is $Z$ downstream of treatment?
+6. What causal estimand are we trying to preserve?
+
+**The same variable can be appropriate for one estimand and inappropriate for another.**
+
+## Total effects versus direct effects
+
+Suppose:
+
+$$
+D \rightarrow M \rightarrow Y
+$$
+
+and we want the **total effect** of $D$ on $Y$.
+
+Controlling for $M$ generally blocks part of the effect.
+
+But a different estimand—the controlled direct effect—can make adjustment for a mediator substantively meaningful.
+
+Therefore:
+
+$$
+\text{“Should I control for }M\text{?”}
+$$
+
+cannot be answered without first specifying:
+
+$$
+\text{“Which causal effect am I trying to estimate?”}
+$$
+
+## Bias amplification
+
+Suppose we already have some residual confounding:
+
+```{mermaid}
+flowchart LR
+  U[U] --> D[D]
+  U --> Y[Y]
+  X[X] --> D
+  X --> Y
+  Z[Z] --> D
+```
+
+Adding $Z$ can make the remaining bias **larger**, even if $Z$ is not itself a confounder.
+
+- Conditioning concentrates remaining correlation between $D$ and $U$.
+
+- This is the phenomenon of **bias amplification** or **Z-bias**.
+
+> **Adding predictors is not automatically a strategy for reducing causal bias.**
+
+## Regression is one of many tools
+
+Everything  thus far is about **identification strategy**, not OLS specifically.
+
+The same adjustment set can be implemented through:
+
+- regression adjustment;
+- matching;
+- inverse-probability weighting;
+- covariate-balancing weights;
+- doubly robust estimators; or
+- other adjustment procedures.
+
+If the adjustment set does not satisfy the identification assumptions, changing the estimator does not solve the problem.
+
+## Good, bad, and neutral controls
+
+A useful classification is:
+
+| Type | What happens? |
+|---|---|
+| **Good control** | Blocks relevant noncausal paths without opening new ones or truncating the target causal effect |
+| **Bad control** | Opens a noncausal path, blocks part of the target effect, or can amplify remaining bias |
+| **Neutral control** | Does not change asymptotic bias; may affect precision |
+
+The classification is graphical before it is statistical.
+
+## Exercise: choose the adjustment set
+
+Choose the correct control and explain the relevant path
+
+**A**
+
+```{mermaid}
+flowchart LR
+  X[X] --> D[D]
+  X --> Y[Y]
+  D --> Y
+```
+
+## Exercise: choose the adjustment set
+
+Choose the correct control and explain the relevant path
+
+**B**
+
+```{mermaid}
+flowchart LR
+  D[D] --> M[M]
+  M --> Y[Y]
+  D --> Y
+```
+
+## Exercise: choose the adjustment set
+
+Choose the correct control and explain the relevant path
+
+**C**
+
+```{mermaid}
+flowchart LR
+  U1[U1] --> Z[Z]
+  U2[U2] --> Z
+  U1 --> D[D]
+  U2 --> Y[Y]
+  D --> Y
+```
+
+## Exercise: choose the adjustment set
+
+Choose the correct control and explain the relevant path
+
+**D**
+
+```{mermaid}
+flowchart LR
+  D[D] --> S[S]
+  U[U] --> S
+  U --> Y[Y]
+  D --> Y
+```
+
+
+
+## Replication
+
+Return to Arceneaux, Gerber, and Green (2010).
+
+The authors match on:
+
+- prior voting behavior;
+- age;
+- party registration;
+- sex;
+- registration timing; and
+- missingness indicators.
+
+## Replication
+
+Before seeing the matching results, ask:
+
+1. What assumptions does this adjustment strategy require?
+2. What unobserved characteristics could still confound contact and turnout?
+3. Which proposed covariates are clearly pre-treatment?
+4. What would it mean for a matching analysis to have excellent balance but poor identification?
+
+The paper is designed to make that distinction visible empirically.
+
+## Conclusion
+
+Given a proposed causal analysis, you should be able to:
+
+- state the causal estimand;
+- identify the relevant backdoor paths;
+- determine whether a proposed adjustment set satisfies the backdoor criterion;
+- identify colliders and explain collider bias;
+- identify post-treatment controls and explain why they can be problematic;
+- recognize sample selection as a conditioning problem;
+- understand the intuition behind bias amplification; and
+- distinguish identification problems from estimator problems.
+
+## Next: matching and weighting
+
+Once we have decided **what variables should be conditioned on**, the next question is:
+
+> **How should we construct the comparison empirically?**
+
+We will compare:
+
+- exact and coarsened exact matching;
+- nearest-neighbor matching;
+- propensity-score weighting;
+- covariate-balancing approaches; and
+- overlap diagnostics.
+
+
+## Optional technical extensions
+
+For students who want the formal machinery:
+
+- graphical proofs of the backdoor/adjustment criterion;
+- the equivalence between graphical adjustment and conditional ignorability;
+- formal omitted-variable-bias expressions;
+- FWL interpretations of regression adjustment;
+- bias-amplification algebra.
+
+These derivations are useful for understanding *why* the graphical statements correspond to regression behavior, but they are not prerequisites for the empirical work.
+
+## Core readings
+
+- Cinelli, C., A. Forney, and J. Pearl. 2022. “A Crash Course in Good and Bad Controls.” *Sociological Methods & Research*.
+- Elwert, F. 2013. “Graphical Causal Models.” In *Handbook of Causal Analysis for Social Research*, 245–273.
+- Pearl, J. 2009. *Causality*, Ch. 3. [Selected sections]
+

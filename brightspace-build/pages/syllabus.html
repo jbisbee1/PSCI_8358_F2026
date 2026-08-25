@@ -1,0 +1,313 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>PSCI 8358 — Syllabus: Advanced Observational Causal Inference</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, Helvetica, Arial, sans-serif;
+         line-height: 1.5; color: #1a1a1a; max-width: 900px; margin: 0 auto; padding: 1rem; }
+  h1, h2, h3 { line-height: 1.25; }
+  h1 { font-size: 1.6rem; border-bottom: 2px solid #333; padding-bottom: .3rem; }
+  h2 { font-size: 1.3rem; margin-top: 1.6rem; }
+  h3 { font-size: 1.1rem; }
+  table { border-collapse: collapse; margin: 1rem 0; }
+  th, td { border: 1px solid #ccc; padding: .4rem .7rem; text-align: left; }
+  code { background: #f2f2f2; padding: .1rem .3rem; border-radius: 3px; }
+  .central-q { background: #f5f7fa; border-left: 4px solid #4a6fa5; padding: .6rem 1rem; margin: 1rem 0; }
+  .readings { background: #fbf8f0; border-left: 4px solid #b58a2f; padding: .5rem 1rem; margin: .5rem 0 1rem; }
+  .readings ul { margin: .2rem 0 0; }
+  ul { margin-top: .3rem; }
+</style>
+</head><body>
+<h1>Advanced Observational Causal Inference</h1>
+<h2>Course Description</h2>
+<p>This course provides advanced training in the design, implementation, and evaluation of observational causal inference in the social sciences. The course assumes prior familiarity with the potential-outcomes framework, linear regression, robust and clustered inference, propensity scores, and basic instrumental variables.</p>
+<p>The central premise of the course is that causal inference is fundamentally a problem of <strong>research design and identification</strong>, rather than the mechanical application of statistical estimators. For each design, we will ask four recurring questions:</p>
+<ol>
+<li><strong>What is the causal quantity we want to learn?</strong></li>
+<li><strong>What variation in the data is supposed to identify it?</strong></li>
+<li><strong>Under what assumptions does that variation identify the causal quantity?</strong></li>
+<li><strong>What evidence can we use to assess the credibility of those assumptions?</strong></li>
+</ol>
+<p>Students will answer these questions both conceptually and empirically through repeated replication and reanalysis of published observational research.</p>
+<p>All empirical work will be conducted in <strong>R</strong> using reproducible workflows.</p>
+<h2>Course Structure</h2>
+<p>A typical class will combine conceptual instruction, discussion of one or more published applications, and hands-on analysis. Formal derivations and proofs will be provided as optional extensions where useful, but mastery of proofs is not required. Students are expected instead to understand the logic of identification results well enough to explain, apply, and critically evaluate them.</p>
+<p>Approximately every two to three weeks, students will complete a <strong>replication problem set</strong> based on a published social-science article and its replication data. Each problem set will require students to:</p>
+<ul>
+<li>reproduce a central published result;</li>
+<li>identify the causal estimand;</li>
+<li>reconstruct the paper's identification argument;</li>
+<li>implement the relevant estimator in R;</li>
+<li>conduct design-specific diagnostics;</li>
+<li>implement at least one meaningful reanalysis or alternative specification; and</li>
+<li>write a short assessment of what causal conclusion is justified by the evidence.</li>
+</ul>
+<p>The final project is an <strong>independent causal audit</strong> of a published observational study.</p>
+<h1>Semester Schedule</h1>
+<h2>August 26 — From Potential Outcomes to Identification</h2><div class="readings"><strong>Readings:</strong><ul><li>Ding 2023 First Course Causal Inference</li><li>Elwert Graphical Causal Models 2013</li><li>Greenland Pearl Causal Diagrams 2014</li><li>Imbens 2020 Potential Outcome Dag</li><li>Lundberg Et Al 2021 What Is Your Estimand</li><li>Morgan Winship</li><li>Pearl 1995 Causal Diagrams</li><li>Pearl Causality Ch3</li><li>Samii 2016 Causal Empiricism Quantitative Research</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Brief review of potential outcomes and causal estimands</li>
+<li>Identification versus estimation</li>
+<li>Identification versus statistical uncertainty</li>
+<li>Directed acyclic graphs</li>
+<li>d-separation and causal paths</li>
+<li>Confounders, mediators, and colliders</li>
+<li>Translating substantive theories into DAGs</li>
+<li>Identification strategies as arguments about the data-generating process</li>
+</ul>
+<p><strong>Central question:</strong> What would have to be true for an observed comparison to have a causal interpretation?</p>
+<p><strong>Optional technical extension:</strong> Nonparametric structural equation models and the formal relationship between DAGs and potential outcomes.</p>
+<p><strong>Assignment 0 assigned: Naming the Estimand (reading only; no data or code)</strong></p>
+<hr />
+<h2>September 2 — Conditioning, DAGs, and Good and Bad Controls</h2><div class="readings"><strong>Readings:</strong><ul><li>Acharya Blackwell Sen 2016 Direct Effects</li><li>Angrist Hahn 2004 When To Control Covariates</li><li>Blackwell Ma Opacic 2024 Assumption Smuggling</li><li>Cinelli Forney Pearl 2022</li><li>Cinelli Hazlett Sensitivity 2020</li><li>Clarke 2009 Phantom Menace</li><li>Imai Keele Tingley Yamamoto 2011 Unpacking Black Box</li><li>Imai Keele Yamamoto 2010 Causal Mediation Sensitivity</li><li>Mohan Pearl 2021 Graphical Models Missing Data</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Backdoor criterion</li>
+<li>Conditioning as a graph operation</li>
+<li>Covariate selection</li>
+<li>Collider bias</li>
+<li>Sample-selection bias</li>
+<li>Post-treatment bias</li>
+<li>Bias amplification</li>
+<li>Regression adjustment revisited as an identification strategy</li>
+<li>Sensitivity to unobserved confounding</li>
+</ul>
+<p><strong>Application emphasis:</strong> Reconstruct the implicit DAG behind a published regression-control strategy and determine whether the authors' controls help or harm identification.</p>
+<p><strong>Assignment 0 due</strong></p>
+<p><strong>Replication Problem Set 1 assigned: Conditioning and selection on observables</strong></p>
+<hr />
+<h2>September 9 — Matching, Weighting, and Overlap</h2><div class="readings"><strong>Readings:</strong><ul><li>Chattopadhyay Hase Zubizareeta 2020 Balancing Vs Modeling</li><li>WangZubizarreta2020 Minimal Dispersion</li><li>Abadie Imbens Bias Corrected</li><li>Arbour Dimmery Sondhi 2021 Permutation Weighting</li><li>Bruhn Mckenzie 2009 Pursuit Of Balance</li><li>Busso Dinardo Mccracy 2014 New Evidence</li><li>Diamon Sekhon 2013 Genetic Matching</li><li>Hainmueller 2012 Entropy Balancing</li><li>Hartman Hidalgo 2018 Equivalence Balance Placebo</li><li>Hirano Imbens Ridder 2003 Efficient Estimation Propensity Score</li><li>Iacus King Porro 2012 Cem</li><li>Imai King Stuart 2008 Misunderstandings</li><li>King Nielsen 2019 Propensity Scores</li><li>Lin Ding Han 2023 Nearest Neighbor Matching</li><li>Marbach Hangartner 2020 Profiling</li><li>Otsu Rai 2017 Bootstrap Matching Estimators</li><li>Rosenbaum Rubin 1983 Propensity Score</li><li>Sekhon 2009 Opiates</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Strong ignorability</li>
+<li>Exact and coarsened exact matching</li>
+<li>Nearest-neighbor matching</li>
+<li>Propensity-score weighting</li>
+<li>Covariate-balancing approaches</li>
+<li>Balance diagnostics</li>
+<li>Common support and overlap</li>
+<li>Estimand changes induced by trimming or matching</li>
+<li>Effective samples and treatment-effect heterogeneity</li>
+</ul>
+<p><strong>Central question:</strong> When does making treated and control observations "look alike" create a credible causal comparison?</p>
+<p><strong>Application emphasis:</strong> Compare regression adjustment, matching, and weighting for the same published causal claim and examine which observations actually identify the reported effect.</p>
+<hr />
+<h2>September 16 — Doubly Robust Estimation and Double Machine Learning</h2><div class="readings"><strong>Readings:</strong><ul><li>Ahrens Et Al 2026 Dml</li><li>Athey Imbens Wager 2018 Approximate Residual</li><li>Chern Et Al 2018 Dml Structural</li><li>Glynn Quinn 2010 Augmented Inverse Propensity</li><li>Kennedy 2024 Semiparametric Doubly Robust</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Outcome regression and propensity-score models</li>
+<li>Augmented inverse probability weighting</li>
+<li>Doubly robust estimation</li>
+<li>High-dimensional confounding</li>
+<li>Problems with naïve machine-learning plug-in estimators</li>
+<li>Cross-fitting</li>
+<li>Neyman orthogonality</li>
+<li>Double/debiased machine learning</li>
+</ul>
+<p><strong>Central question:</strong> What can flexible machine learning improve, and what identification problems can it not solve?</p>
+<p><strong>Application emphasis:</strong> Re-estimate a published selection-on-observables design using AIPW/DML and compare results with conventional specifications.</p>
+<p><strong>Replication Problem Set 1 due</strong></p>
+<p><strong>Optional technical extension:</strong> Orthogonal scores and the intuition behind root-N inference with estimated nuisance functions.</p>
+<hr />
+<h2>September 23 — Instrumental Variables: Identification Beyond the Textbook Model</h2><div class="readings"><strong>Readings:</strong><ul><li>Abadie 2003 Semiparametric</li><li>Angrist Imbens Rubin 1996 Iv</li><li>Huber Mellace 2015 Testing Instrument Validity</li><li>Mercatanti Li 2014 Debit Cards Household Spending</li><li>Mogstad Santos Torgovitsky 2018 Policy Relevant Treatment Params</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Review of conventional IV</li>
+<li>Potential-outcomes formulation</li>
+<li>Independence, exclusion, relevance, and monotonicity</li>
+<li>LATE and complier populations</li>
+<li>Characterizing compliers</li>
+<li>Weak instruments</li>
+<li>What exactly does 2SLS estimate?</li>
+</ul>
+<p><strong>Central question:</strong> Whose causal effect does an instrument identify, and why?</p>
+<p><strong>Replication Problem Set 2 assigned: Instrumental variables</strong></p>
+<hr />
+<h2>September 30 — Modern Instrumental-Variables Designs</h2><div class="readings"><strong>Readings:</strong><ul><li>Andrew Stock Sun 2019 Weak Instruments</li><li>Angrist Imbens Krueger 1999 Jackknife Iv</li><li>Borusyak Hull Jaravel 2022 Shift Share</li><li>Borusyak Hull Jaravel 2025 Formula Instruments</li><li>Goldsmithpinkham Sorkin Swift 2020 Bartik Instruments</li><li>Kitagawa 2015 A Test</li><li>Lee Et Al 2022 Valid T Ratio</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Empirical checks on IV assumptions</li>
+<li>Placebo outcomes and balance</li>
+<li>Testable implications of IV validity</li>
+<li>Judge/leniency instruments</li>
+<li>Leave-one-out construction and JIVE</li>
+<li>Shift-share/Bartik instruments</li>
+<li>Decomposing identifying variation in shift-share designs</li>
+<li>Distinguishing credible instruments from convenient instruments</li>
+</ul>
+<p><strong>Application emphasis:</strong> Reconstruct the identifying variation in a published IV design and determine which observations or shocks drive the estimate.</p>
+<p><strong>Optional technical extension:</strong> Instrumental inequalities and formal tests of IV validity.</p>
+<hr />
+<h2>October 7 — Partial Identification: What Can We Learn When Point Identification Fails?</h2><div class="readings"><strong>Readings:</strong><ul><li>Balke Pearl 1997 Bounds Imperfect</li><li>Chernozhukov Lee Rosen 2013 Intersection Bounds</li><li>Coppock Gerber Green Kern 2017 Double Sampling Bounds</li><li>Lee 2009 Training Wages Sample Selection</li><li>Manski 1990 Nonparametric Bounds</li><li>Manski 1997 Bounds</li><li>Manski 2003 Partial Identification Excerpt</li><li>Manski Pepper 2000 Monotone Iv Returns Schooling</li><li>Molinari 2020 Partial Identification</li><li>Samii Wang Zhou 2026 Trimming Bounds Random Forests</li><li>Swanson Et Al 2018 Partial</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Point versus set identification</li>
+<li>Manski worst-case bounds</li>
+<li>Strengthening assumptions and tightening bounds</li>
+<li>Monotone treatment response and monotone treatment selection</li>
+<li>Balke–Pearl IV bounds</li>
+<li>Lee bounds</li>
+<li>Sensitivity of conclusions to identifying assumptions</li>
+</ul>
+<p><strong>Central question:</strong> When assumptions required for point identification are not credible, what can the data still tell us?</p>
+<p><strong>Replication Problem Set 2 due</strong></p>
+<p><strong>Replication Problem Set 2B assigned: Partial identification</strong></p>
+<p><strong>Application emphasis:</strong> Replace a strong point-identifying assumption in an empirical study with weaker assumptions and examine the resulting identified set.</p>
+<hr />
+<h2>October 14 — Difference-in-Differences and Event Studies</h2><div class="readings"><strong>Readings:</strong><ul><li>Fernan Pinto 2019 Inference Did</li><li>Roth Santanna Bilinski Poe 2023 Did Trending</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Two-period DiD</li>
+<li>Potential-outcomes formulation of parallel trends</li>
+<li>Conditional parallel trends</li>
+<li>Pre-treatment trends</li>
+<li>Event studies</li>
+<li>Placebo tests</li>
+<li>Anticipation</li>
+<li>Triple differences</li>
+<li>Sensitivity to violations of parallel trends</li>
+</ul>
+<p><strong>Central question:</strong> What counterfactual trend is a DiD design constructing?</p>
+<hr />
+<h2>October 21 — Staggered Adoption and Modern DiD</h2><div class="readings"><strong>Readings:</strong><ul><li>Borusyak Jaravel Spiess 2024 Event Study</li><li>Callaway Goodmanbacon Santanna 2024 Continuous Treatment Did</li><li>Callaway Santanna 2021 Multiple Time Periods Did</li><li>Cengiz Dube Lindner Zipperer 2019 Minimum Wages</li><li>Chiu Lan Liu Xu 2023 Causal Panel Parallel Trends</li><li>Dechaisemartin Dhaultfoeuille 2026 Did Book</li><li>Dechaisemartin Dhaultfoeuille Vazquezbare 2024 Continuous Treatments No Stayers</li><li>Dube Girardi Jorda Taylor 2023 Local Projections Did</li><li>Goodmanbacon 2021 Did Variation Treatment Timing</li><li>Liu Wang Xu 2024 Counterfactual Estimators</li><li>Mackinnon Webb 2016 Did Few Treated Clusters</li><li>Roth Rambachan 2022 Credible Approach Parallel Trends</li><li>Sun Abraham 2021 Dynamic Treatment Effects Event Studies</li><li>Xu Hazlett Trajectory Balancing</li><li>Xu Zhao Ding 2024 Factorial Did</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Multiple treatment events</li>
+<li>Why conventional two-way fixed effects can fail</li>
+<li>Treatment-effect heterogeneity</li>
+<li>Goodman-Bacon decomposition</li>
+<li>Cohort/event-specific treatment effects</li>
+<li>Sun–Abraham and Callaway–Sant'Anna approaches</li>
+<li>Covariate adjustment</li>
+<li>Modern event-study estimation</li>
+</ul>
+<p><strong>Application emphasis:</strong> Reproduce a published TWFE result, diagnose the comparisons underlying it, and re-estimate the effect using a modern staggered-adoption estimator.</p>
+<p><strong>Optional technical extension:</strong> Weighting representations of TWFE estimators.</p>
+<p><strong>Replication Problem Set 2B due</strong></p>
+<p><strong>Replication Problem Set 3 assigned: Difference-in-differences</strong></p>
+<hr />
+<h2>October 28 — Synthetic Control</h2><div class="readings"><strong>Readings:</strong><ul><li>Abadie Diamond Hainmueller 2010 Synthetic Control</li><li>Abadie Gardeazabal 2003 Basque Country</li><li>Benmichael Feller Rothstein 2021 Augmented Synthetic Control</li><li>Chernozhukov Wuthrich Zhu 2021 Conformal Inference Synthetic Control</li><li>Firpo Possebom 2018 Synthetic Control Inference</li><li>Hahn Shi 2017 Synthetic Control Inference</li><li>Kuosmanen Zhou Eskelinen Malo 2021 Synthetic Control Design Flaw</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Comparative case-study logic</li>
+<li>Identification in synthetic-control designs</li>
+<li>Donor-pool construction</li>
+<li>Predictor and outcome balance</li>
+<li>Pre-treatment fit</li>
+<li>Placebo and permutation inference</li>
+<li>Sensitivity to donor-pool choices</li>
+<li>One treated unit versus multiple treated units</li>
+<li>Augmented synthetic control</li>
+<li>Interactive fixed effects and matrix completion</li>
+</ul>
+<p><strong>Central question:</strong> When can a weighted combination of untreated units provide a credible counterfactual?</p>
+<hr />
+<h2>November 4 — Regression Discontinuity I: Identification and Estimation</h2><div class="readings"><strong>Readings:</strong><ul><li>Cattaneo Idrobo Titiunik 2019 Rd Foundations</li><li>Cattaneo Titiunik 2022 Rd Designs</li><li>Kling 2006 Incarceration Length Employment</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Sharp regression discontinuity</li>
+<li>Potential-outcomes interpretation</li>
+<li>Continuity assumptions</li>
+<li>Local causal estimands</li>
+<li>Parametric versus local-polynomial estimation</li>
+<li>Bandwidth selection</li>
+<li>Robust bias-corrected inference</li>
+<li>Graphical presentation of RD evidence</li>
+</ul>
+<p><strong>Central question:</strong> Why does being just above versus just below a threshold approximate an experiment?</p>
+<p><strong>Replication Problem Set 3 due</strong></p>
+<p><strong>Replication Problem Set 4 assigned: Synthetic control and panel counterfactuals</strong></p>
+<hr />
+<h2>November 11 — Regression Discontinuity II: Diagnostics and Extensions</h2><div class="readings"><strong>Readings:</strong><ul><li>Card Lee Pei Weber 2017 Regression Kink Design</li><li>Cattaneo Titiunik Yu 2025 Boundary Discontinuity</li><li>Dowd 2021 Donuts Distant Cates</li><li>Stommes Aronow Savje 2023 Rd Reliability Political Science</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Manipulation and sorting</li>
+<li>Covariate continuity</li>
+<li>Placebo cutoffs and placebo outcomes</li>
+<li>Bandwidth sensitivity</li>
+<li>Fuzzy RD</li>
+<li>Regression kink designs</li>
+<li>Geographic RD</li>
+<li>Donut RD</li>
+<li>External validity and extrapolation</li>
+</ul>
+<p><strong>Application emphasis:</strong> Replicate a published RD result, conduct contemporary diagnostics, and assess whether the design supports the published causal interpretation.</p>
+<hr />
+<h2>November 18 — Comparing Designs and Triangulating Evidence</h2><div class="readings"><strong>Readings:</strong><ul><li>Rambachan Roth 2025 Design Based Uncertainty Quasi Experiments</li></ul></div>
+<p><strong>Core concepts</strong></p>
+<ul>
+<li>Comparing identifying assumptions across designs</li>
+<li>Selection on observables versus natural experiments</li>
+<li>Internal versus external validity</li>
+<li>Design diagnostics versus robustness checks</li>
+<li>Specification robustness versus identification robustness</li>
+<li>Sensitivity analysis across canonical designs</li>
+<li>What makes an observational design persuasive?</li>
+<li>Combining evidence from different identification strategies</li>
+</ul>
+<p><strong>Workshop:</strong> Students receive several short empirical research scenarios and must select and defend an identification strategy—or explain why none of the canonical designs supports a credible causal claim.</p>
+<p><strong>Replication Problem Set 4 due</strong></p>
+<p><strong>Replication Problem Set 5 assigned: Regression discontinuity</strong></p>
+<p><strong>Independent Causal Audit assigned</strong></p>
+<hr />
+<h2>November 25 — No Class / Thanksgiving Break</h2>
+<hr />
+<h2>December 2 — Causal Audit Workshop</h2>
+<p><strong>Replication Problem Set 5 due</strong></p>
+<p>Students workshop their independent causal audits.</p>
+<p>Each student must be able to explain, without relying on code or AI output:</p>
+<ul>
+<li>the substantive causal question;</li>
+<li>the estimand;</li>
+<li>the source of identifying variation;</li>
+<li>the identifying assumptions;</li>
+<li>the estimator;</li>
+<li>the most consequential threat to identification;</li>
+<li>which diagnostic evidence bears on that threat;</li>
+<li>what alternative analysis would be most informative; and</li>
+<li>the strongest causal conclusion they believe the evidence supports.</li>
+</ul>
+<p>Peer review will be structured as a mock journal-review process.</p>
+<hr />
+<h2>December 9 — Causal Audit Defenses</h2>
+<p>Students present and orally defend their independent causal audits.</p>
+<p>The defense emphasizes methodological judgment rather than presentation polish. Students should be prepared to explain why the original design does or does not identify its claimed effect, defend their reanalysis choices, distinguish identification problems from estimation or inference problems, and state precisely how strongly they believe the evidence supports the original causal claim.</p>
+<h1>Major Assessments</h1>
+<h3>Replication Problem Sets — 60%</h3>
+<p>Six replication-based assignments, approximately 10% each. Assignment 0, a short reading-based exercise due in Week 2, is graded within the participation component rather than as a sixth problem set.</p>
+<p>Each assignment combines implementation and critical evaluation. A typical assignment begins with a published article and replication dataset and asks students to reproduce a central table or figure before interrogating the design with tools developed in class.</p>
+<p>Grading should place approximately equal weight on:</p>
+<ul>
+<li><strong>implementation and reproducibility</strong>, and</li>
+<li><strong>identification analysis and methodological judgment</strong>.</li>
+</ul>
+<p>Correct code with an incorrect causal interpretation is not a successful analysis. Conversely, a persuasive conceptual critique without the ability to demonstrate the issue empirically is incomplete.</p>
+<h3>Independent Causal Audit — 30%</h3>
+<p>Students select a published observational causal study outside the papers used for the replication problem sets. The final submission includes:</p>
+<ol>
+<li>a concise reconstruction of the paper's causal argument;</li>
+<li>an explicit statement of the estimand;</li>
+<li>a DAG or other appropriate representation of the identification argument;</li>
+<li>reproduction of at least one central result;</li>
+<li>analysis of the identifying assumptions;</li>
+<li>appropriate design-specific diagnostics;</li>
+<li>at least one substantively motivated reanalysis;</li>
+<li>a comparison of the original and revised evidence; and</li>
+<li>a final judgment stating the strongest causal conclusion supported by the evidence.</li>
+</ol>
+<p>Students also complete a short oral defense.</p>
+<h3>Participation and In-Class Causal Reasoning — 10%</h3>
+<p>Short in-class exercises require students to diagnose designs, interpret estimands, critique empirical claims, or explain the logic of an estimator without relying on software.</p>
+<h1>AI Policy</h1>
+<p>Generative AI tools may be used for coding assistance, debugging, exploration of unfamiliar R packages, and clarification of course material. Students may also use AI as a critical interlocutor when working through an analysis.</p>
+<p>AI use does not alter the competencies assessed in the course. Students remain responsible for every analytical choice, line of code, statistical result, and causal claim they submit. They must be able to explain and defend their work independently.</p>
+<p>For replication problem sets and the causal audit, students should disclose substantive AI use. Assessment will emphasize whether students can explain:</p>
+<ul>
+<li>what the code is doing;</li>
+<li>why a particular estimator is appropriate;</li>
+<li>what assumptions are required;</li>
+<li>what the diagnostics establish and do not establish;</li>
+<li>what the reported estimand means; and</li>
+<li>how the evidence supports or fails to support the causal conclusion.</li>
+</ul>
+<p>AI can assist with implementation. It cannot substitute for methodological judgment.</p>
+</body></html>

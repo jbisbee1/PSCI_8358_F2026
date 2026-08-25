@@ -1,0 +1,583 @@
+---
+title: "From Causal Questions to Identification"
+subtitle: "Advanced Observational Causal Inference"
+author: "Jim Bisbee"
+date: "August 26, 2026"
+format:
+  revealjs:
+    slide-number: true
+    smaller: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+execute:
+  echo: false
+---
+
+## Today's goal
+
+You should be able to take a substantive causal claim and:
+
+  - define the treatment, outcome, and causal estimand;
+  - distinguish the estimand from an observable statistical contrast;
+  - explain why an observational comparison may be biased;
+  - represent a causal argument with a directed acyclic graph (DAG);
+  - identify simple causal and noncausal paths; and
+  - state the conditional ignorability assumption that can justify adjustment.
+
+. . .
+
+**The recurring question:** What must be true for the comparison in the data to answer the causal question we care about?
+
+---
+
+## The organizing framework
+
+::: {.callout-important}
+### Causal inference is not an estimator
+A statistical procedure only has a causal interpretation after we specify the causal quantity and justify an identification argument.
+:::
+
+$$
+\boxed{
+\text{Causal question}
+\rightarrow
+\text{Estimand}
+\rightarrow
+\text{Identification}
+\rightarrow
+\text{Estimator}
+\rightarrow
+\text{Diagnostics}
+\rightarrow
+\text{Causal claim}
+}
+$$
+
+We will use this sequence for every design in the course.
+
+---
+
+## Identification is not estimation
+
+Suppose $D_i\in\{0,1\}$ is a treatment and $Y_i(d)$ is the potential outcome under treatment status $d$.
+
+A causal estimand might be
+
+$$
+ATE = E[Y(1)-Y(0)].
+$$
+
+An observable contrast is
+
+$$
+E[Y\mid D=1]-E[Y\mid D=0].
+$$
+
+These are different objects.
+
+**Identification analysis asks:** Under what assumptions can a function of the observed-data distribution recover the causal estimand?
+
+---
+
+## More data isn't the solution
+
+Imagine observing an arbitrarily large sample.
+
+You could learn with essentially no sampling uncertainty:
+
+$$
+E[Y\mid D=1], \qquad E[Y\mid D=0].
+$$
+
+But you still would not observe
+
+$$
+E[Y(0)\mid D=1].
+$$
+
+The missing counterfactual is an **identification problem**, not a small-sample problem.
+
+::: {.callout-note}
+More observations can reduce statistical uncertainty. More of the same data cannot, by itself, repair a failed identification strategy.
+:::
+
+---
+
+## Start by naming the causal quantity
+
+Two common estimands:
+
+$$
+ATE = E[Y(1)-Y(0)]
+$$
+
+and
+
+$$
+ATT = E[Y(1)-Y(0)\mid D=1].
+$$
+
+The ATE asks about the average effect in the target population.
+
+The ATT asks about the average effect among those who actually receive treatment.
+
+**Why might these differ?**
+
+---
+
+## Estimands come before estimators
+
+Suppose treatment effects vary across units:
+
+$$
+\tau_i=Y_i(1)-Y_i(0).
+$$
+
+Then
+
+$$
+E[\tau_i] \neq E[\tau_i\mid D_i=1]
+$$
+
+in general.
+
+A method that identifies an ATT is not automatically estimating an ATE.
+
+A useful habit throughout the semester:
+
+> Before asking “Which estimator should I use?”, ask “Which causal quantity am I trying to learn?”
+
+---
+
+## Why the raw comparison can fail
+
+For the treated population,
+
+$$
+\begin{aligned}
+E[Y\mid D=1]-E[Y\mid D=0]
+&=E[Y(1)\mid D=1]-E[Y(0)\mid D=0]\\
+&=ATT + \underbrace{E[Y(0)\mid D=1]-E[Y(0)\mid D=0]}_{\text{selection bias}}.
+\end{aligned}
+$$
+
+The second term asks whether treated and untreated units would have had the same outcomes **in the absence of treatment**.
+
+---
+
+## The two estimands are not equally fragile
+
+The ATT is missing only **one** counterfactual:
+
+$$
+ATT = \underbrace{E[Y(1)\mid D=1]}_{\text{observed}} - \underbrace{E[Y(0)\mid D=1]}_{\text{missing}}
+$$
+
+so it needs only $\textbf{(A0)}: E[Y(0)\mid D=1]=E[Y(0)\mid D=0]$.
+
+. . .
+
+The ATE also needs the *untreated* group counterfactual $E[Y(1)\mid D=0]$, and so a second assumption
+
+$$
+\textbf{(A1)}: \quad E[Y(1)\mid D=0]=E[Y(1)\mid D=1].
+$$
+
+Note that $Y(1)$ never appears in (A0).
+
+---
+
+## A world where the ATT survives
+
+Let baseline outcomes be unrelated to take-up, and let only the *gain* drive it:
+
+$$
+\begin{aligned}
+Y_i(0) &= \mu+\varepsilon_i, &&\varepsilon_i \perp D_i\\
+Y_i(1) &= Y_i(0)+\tau_i, &&\tau_i \not\perp D_i
+\end{aligned}
+$$
+
+. . .
+
+Then $E[Y(0)\mid D=1]=\mu=E[Y(0)\mid D=0]$, so **(A0) holds**, and
+
+$$
+\Delta = \underbrace{(\mu + ATT)}_{E[Y\mid D=1]} - \underbrace{\mu\vphantom{(}}_{E[Y\mid D=0]} = ATT.
+$$
+
+Exactly---in a world where units select into treatment *entirely* on their own unobserved $\tau_i$.
+
+---
+
+## Which kind of selection is it?
+
+| Selection operates through | ATE | ATT |
+|---|---|---|
+| Levels: $D$ depends on $Y(0)$ | broken | broken |
+| Gains: $D$ depends on $Y_i(1)-Y_i(0)$ | broken | survives |
+
+Selection on **levels** violates (A0) and takes both estimands with it.
+
+Selection on **gains** violates only (A1): $E[Y(1)\mid D=0]=\mu+ATU \neq \mu+ATT$.
+
+::: {.callout-important}
+"Biased" is not a property of an estimator. It is a property of an estimator **relative to a named estimand**.
+:::
+
+---
+
+## A substantive example
+
+Suppose we want the effect of receiving a get-out-the-vote phone call on turnout.
+
+Let:
+
+- $D=1$: voter actually receives the phone call;
+- $Y=1$: voter turns out;
+- target: effect of the call among people who receive it.
+
+A naive comparison is
+
+$$
+E[Y\mid D=1]-E[Y\mid D=0].
+$$
+
+Why might people who answer a campaign phone call differ from people who do not?
+
+---
+
+## From prose to a causal model
+
+One hypothesis:
+
+> People with greater underlying political engagement may be more likely to answer the phone and more likely to vote.
+
+```{mermaid}
+flowchart LR
+  U[Political engagement U] --> D[Phone contact D]
+  U --> Y[Turnout Y]
+  D --> Y
+```
+
+The graph makes the problem explicit:
+
+- $D\rightarrow Y$ is the causal path of interest.
+- $D\leftarrow U\rightarrow Y$ is a noncausal path.
+
+---
+
+## What is a DAG?
+
+A **directed acyclic graph** represents assumptions about causal relationships.
+
+- **Nodes** represent variables.
+- **Arrows** represent causal relationships.
+- **Directed** means arrows have direction.
+- **Acyclic** means following arrows cannot bring you back to the same node.
+
+::: {.callout-warning}
+An arrow does not mean “these variables are correlated.” It asserts a causal relationship in the model.
+:::
+
+A DAG is therefore a representation of assumptions—not something mechanically discovered from the dataset.
+
+---
+
+## Three structures to recognize
+
+::: columns
+::: {.column width="33%"}
+### Confounder
+
+```{mermaid}
+flowchart LR
+  X --> D
+  X --> Y
+  D --> Y
+```
+
+$D\leftarrow X\rightarrow Y$
+:::
+
+::: {.column width="33%"}
+### Mediator
+
+```{mermaid}
+flowchart LR
+  D --> M
+  M --> Y
+```
+
+$D\rightarrow M\rightarrow Y$
+:::
+
+::: {.column width="33%"}
+### Collider
+
+```{mermaid}
+flowchart LR
+  D --> C
+  Y --> C
+```
+
+$D\rightarrow C\leftarrow Y$
+:::
+:::
+
+These structures behave differently when we condition on variables. We develop those rules next week.
+
+---
+
+## Paths
+
+A **path** is a sequence of connected edges, regardless of arrow direction.
+
+Consider:
+
+```{mermaid}
+flowchart LR
+  X --> D
+  X --> Y
+  D --> Y
+```
+
+There are two paths connecting $D$ and $Y$:
+
+1. $D\rightarrow Y$ — the causal path of interest.
+2. $D\leftarrow X\rightarrow Y$ — a noncausal path.
+
+The second path begins with an arrow pointing **into** treatment. We call it a **backdoor path**.
+
+---
+
+## Why backdoor paths matter
+
+If both paths are open, the observed association between $D$ and $Y$ can reflect:
+
+$$
+\text{causal effect} + \text{noncausal association}.
+$$
+
+So a central identification problem becomes:
+
+> Can we isolate the causal path $D\rightarrow Y$ from the noncausal paths connecting $D$ and $Y$?
+
+Next week we formalize the answer using conditioning and the backdoor criterion.
+
+---
+
+## Observed confounding
+
+Suppose political engagement itself is not measured, but we observe variables related to the selection process:
+
+```{mermaid}
+flowchart LR
+  X[Observed pre-treatment X] --> D[Phone contact D]
+  X --> Y[Turnout Y]
+  D --> Y
+```
+
+Examples might include:
+
+- previous voting behavior;
+- age;
+- party registration;
+- registration history.
+
+If $X$ captures the relevant common causes of treatment and outcome, comparisons conditional on $X$ may recover the causal effect.
+
+---
+
+## Conditional ignorability
+
+A standard identification assumption is
+
+$$
+(Y(1),Y(0))\perp D\mid X.
+$$
+
+Informally:
+
+> Once we compare units with the same $X$, treatment assignment contains no additional information about their potential outcomes.
+
+For an ATT, the key counterfactual condition can be expressed as
+
+$$
+E[Y(0)\mid D=1,X]
+=
+E[Y(0)\mid D=0,X].
+$$
+
+---
+
+## What does conditioning buy us?
+
+Under the relevant assumptions, untreated units with covariates $X=x$ tell us about the missing untreated potential outcomes of treated units with $X=x$.
+
+For the ATT:
+
+$$
+E[Y(0)\mid D=1,X=x]
+=
+E[Y\mid D=0,X=x].
+$$
+
+That gives us the missing counterfactual comparison.
+
+::: {.callout-important}
+“Control for $X$” is not the substantive justification. The justification is that, conditional on $X$, untreated observations provide valid counterfactual outcomes for treated observations.
+:::
+
+---
+
+## But the assumption is doing the work
+
+Now suppose an unobserved variable remains:
+
+```{mermaid}
+flowchart LR
+  X[Observed X] --> D[Treatment D]
+  X --> Y[Outcome Y]
+  U[Unobserved U] --> D
+  U --> Y
+  D --> Y
+```
+
+Even perfect adjustment for $X$ does not remove
+
+$$
+D\leftarrow U\rightarrow Y.
+$$
+
+This is why observational causal inference depends on substantive assumptions about the data-generating process.
+
+---
+
+## A DAG is an argument
+
+When reading a paper, ask:
+
+1. What causes treatment?
+2. What causes the outcome?
+3. Which causes are shared?
+4. Which variables occur after treatment?
+5. Which variables are observed?
+6. Which important variables might be unobserved?
+
+Then draw the graph implied by the authors' argument.
+
+**Do not begin by drawing the regression specification.** Begin with the causal process.
+
+---
+
+## In-class exercise
+
+A researcher argues that college education increases political participation.
+
+They observe:
+
+- parental socioeconomic status;
+- high-school achievement;
+- college attendance;
+- adult income;
+- political participation.
+
+In small groups:
+
+1. Define a causal estimand and propose a DAG.
+2. Identify possible confounders and a possible mediator.
+3. Identify at least one plausible unobserved common cause.
+4. State what would have to be true for a comparison conditional on pre-treatment covariates be able to identify the effect.
+
+---
+
+## Competing DAGs can imply different analyses
+
+Consider adult income.
+
+**Model A:** income is partly caused by college and subsequently affects participation.
+
+```{mermaid}
+flowchart LR
+  SES --> College
+  SES --> Participation
+  College --> Income
+  Income --> Participation
+  College --> Participation
+```
+
+If so, income is downstream of treatment.
+
+But another substantive theory might locate income differently.
+
+**The correct adjustment set is therefore a causal question before it is a statistical question.**
+
+---
+
+## What you should be able to do after today
+
+Given a published causal claim, you should be able to:
+
+- identify $D$, $Y$, and the target estimand;
+- distinguish the causal estimand from an observed association;
+- decompose an observational comparison into effect + selection bias;
+- translate a simple substantive theory into a DAG;
+- recognize confounders, mediators, and colliders;
+- distinguish causal from simple backdoor paths; and
+- state the conditional ignorability assumption in words and notation.
+
+---
+
+## What comes next
+
+### September 2: Conditioning to identify causal effects
+
+We will add the rules needed to decide **whether conditioning helps or hurts**:
+
+- backdoor criterion;
+- blocking paths;
+- collider bias;
+- post-treatment bias;
+- sample-selection bias;
+- bias amplification;
+- placebo and negative-control logic.
+
+### September 9: Matching, weighting, and overlap
+
+Once an adjustment set is justified, we turn to how to construct the comparison empirically.
+
+---
+
+## Preview: the first replication problem set
+
+The first problem set asks whether observational adjustment can recover the causal effect of receiving a GOTV phone call.
+
+The empirical setting is designed to force a distinction between:
+
+$$
+\text{excellent balance on observed covariates}
+$$
+
+and
+
+$$
+\text{credible identification of a causal effect}.
+$$
+
+The tools introduced today provide the first step: **state precisely what must be true before estimating anything.**
+
+---
+
+## References for today's lecture
+
+- Greenland, S. and J. Pearl. 2014. “Causal Diagrams.” *Wiley StatsRef: Statistics Reference Online*.
+- Morgan, S. L. and C. Winship. 2015. *Counterfactuals and Causal Inference*, 2nd ed., Ch. 4.
+- Pearl, J. 1995. “Causal Diagrams for Empirical Research.” *Biometrika* 82(4): 669–688.
+- Samii, C. 2026. *Introduction to Quantitative Methods II: Causal Inference*, sections on causal identification analysis.
+- Arceneaux, K., A. Gerber, and D. Green. 2010. “A Cautionary Note on the Use of Matching to Estimate Causal Effects.” *Sociological Methods & Research*.

@@ -1,0 +1,281 @@
+---
+title: "Problem Set 1: Conditioning on Observables and Matching"
+author: "Advanced Observational Causal Inference"
+date: ""
+output:
+  html_document:
+    toc: false
+    number_sections: false
+header-includes:
+  - |
+    <style>
+    body { font-family: sans-serif; line-height: 1.5; }
+    h1, h2, h3 { margin-top: 1.4em; }
+    table { width: auto; }
+    </style>
+---
+
+# Problem Set 1: Conditioning on Observables and Matching
+
+## Purpose
+
+This problem set asks you to evaluate whether conditioning on observed covariates can support a causal interpretation in an observational study. You will work with Arceneaux, Gerber, and Green (2010), “A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark.” The paper uses a large-scale voter-mobilization experiment to compare an observational matching estimate with an experimental benchmark.
+
+The central methodological question is:
+
+> **When does conditioning on observed covariates allow us to recover a causal effect, and what can empirical diagnostics tell us when the identifying assumption is fundamentally untestable?**
+
+You should approach the paper first as an observational researcher. In the middle of the assignment, you will then use the randomized component of the study as an experimental benchmark. Do not use that benchmark to justify your earlier answers retrospectively; the point is to assess what could have been learned from the observational analysis alone.
+
+## Data and replication materials
+
+Use the replication materials supplied with the assignment. All empirical work should be conducted in **R** and submitted as a reproducible R Markdown document or equivalent Quarto document.
+
+The paper and replication materials are:
+
+- Arceneaux, Kevin, Alan S. Gerber, and Donald P. Green. 2010. “A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark.” *Sociological Methods & Research*.
+
+You may consult the paper while completing the assignment. You may also consult the course readings on causal identification, DAGs, matching, and weighting.
+
+## General submission requirements
+
+Your submission should contain publication-quality tables and figures. Do not paste raw console output into the assignment. Tables and figures should have informative labels, appropriate numbers of digits, sample sizes where relevant, and captions that explain what is being shown.
+
+For each empirical result, explain what the quantity represents and why the analysis is relevant to the causal question. A correct numerical result without an explanation of its causal interpretation will receive limited credit.
+
+You may use AI tools for coding assistance, debugging, and consultation, but you remain responsible for every line of code, statistical result, and causal claim in your submission. Be prepared to explain your analysis without relying on the AI system that helped produce it.
+
+---
+
+# Part I. Formalize the causal question and identification strategy
+
+### 1. Define the causal estimand. [5 points]
+
+AGG distinguish between treatment assignment, actual receipt of the treatment, and whether a subject is reachable by phone. Using the notation in the paper, define precisely:
+
+- the treatment of substantive interest;
+- the outcome;
+- the target population for the treatment effect; and
+- the causal estimand the authors call the treatment-on-treated effect (ATT).
+
+Explain why, in this design, the ATT can also be interpreted as the average treatment effect among compliers.
+
+### 2. Reconstruct the observational identification argument. [10 points]
+
+Suppose you did **not** know that the data came from a randomized experiment. You simply observed whether a person was contacted by the phone bank, their 2004 turnout, and the pre-treatment covariates used for matching.
+
+Construct a DAG representing the causal argument required for a matching analysis to identify the ATT.
+
+Your DAG should include, at minimum:
+
+- treatment/contact;
+- 2004 turnout;
+- observed pre-treatment covariates used in the matching procedure; and
+- at least one unobserved characteristic that could plausibly affect both treatment receipt and turnout.
+
+Then explain in words what causal pathways the matching strategy is attempting to block.
+
+### 3. State the identifying assumption. [10 points]
+
+Write down a formal version of the conditional ignorability assumption required for the observational comparison to identify the ATT.
+
+Then answer:
+
+1. What does this assumption imply about the untreated potential outcome among people who were reachable versus those who were not?
+2. Why does exact matching on observed covariates not establish that this assumption is true?
+3. Using your DAG from Question 2, explain what happens to identification if an unobserved cause of both reachability and turnout remains.
+
+### 4. Backdoor criterion. [10 points]
+
+Using the DAG from Question 2, assess whether the proposed adjustment set satisfies the backdoor criterion.
+
+Identify which paths are blocked by conditioning on the observed covariates and which paths would remain open if an important confounder were unobserved.
+
+Your answer should distinguish between:
+
+- a problem with the **choice of estimator**; and
+- a problem with the **identification assumption itself**.
+
+---
+
+# Part II. Reproduce the observational analysis
+
+In the following questions, put yourself in the position of a researcher who does not have access to the experimental benchmark.
+
+### 5. Reproduce the matching sample. [8 points]
+
+Using the covariates described in the paper, reconstruct the exact-matching procedure used for the GOTV treatment and the matched control group.
+
+Report:
+
+- the number of treated observations retained;
+- the number of matched controls retained;
+- the number of exact-matching strata; and
+- a balance table comparing the treated and matched control groups.
+
+Your balance table should resemble the presentation in Table 2 of the paper.
+
+Briefly explain what the exact-match design guarantees about the observed covariates.
+
+### 6. Reproduce the observational estimate. [10 points]
+
+Reproduce the observational matching estimate for the effect of the GOTV phone call on 2004 turnout.
+
+Report the point estimate and its standard error, and compare your result to the estimate reported in the paper.
+
+Interpret the coefficient in percentage-point terms.
+
+Then repeat the analysis for the buckle-up placebo treatment.
+
+### 7. What does balance establish? [7 points]
+
+The authors emphasize that their matched treatment and control groups are perfectly balanced on the observed covariates.
+
+Explain precisely what this evidence establishes and what it does **not** establish.
+
+Your answer should address the distinction between:
+
+- balance on observed covariates;
+- conditional ignorability; and
+- causal identification.
+
+---
+
+# Part III. Diagnose the observational design
+
+### 8. Placebo treatment test. [10 points]
+
+The paper includes a second treatment condition: a phone call encouraging people to buckle their seat belts.
+
+Use the replication data to reproduce the authors’ placebo-treatment analysis.
+
+Then explain:
+
+1. Why is the buckle-up message a useful placebo treatment for voter turnout?
+2. What identifying assumption would have to hold for a correctly implemented matching analysis to produce a zero effect here?
+3. What does the large positive matching estimate imply about the credibility of the observational design?
+4. Does a successful placebo test prove conditional ignorability? Explain why or why not.
+
+### 9. Lagged outcome placebo test. [10 points]
+
+Following the paper's diagnostic exercise, use a pre-treatment turnout measure as the outcome. Reconstruct the authors’ matching strategy using the reduced set of matching covariates described in the paper, then estimate the relationship between treatment/contact and the earlier voting outcome.
+
+Report the result for the GOTV treatment and explain why this is a useful diagnostic.
+
+Why can a correlation between treatment receipt and a pre-treatment outcome not be interpreted as a causal effect of the phone call?
+
+What does the result suggest about selection into treatment?
+
+### 10. Effective comparison group. [5 points]
+
+The authors argue that matching can fail even when the observed covariates are very rich because people who are reachable by phone may differ from those who are not in ways that are not measured in the data.
+
+Using the logic of the matching estimator, explain what counterfactual quantity the matched controls are intended to provide for the treated group.
+
+Then explain why differences in latent turnout propensity between reachable and unreachable individuals would bias the matching estimate.
+
+---
+
+# Part IV. Reveal and reproduce the experimental benchmark
+
+You may now use the randomized treatment-assignment variable.
+
+### 11. Experimental benchmark. [10 points]
+
+Estimate the experimental effect of the GOTV intervention using randomized assignment.
+
+Report:
+
+- the intent-to-treat effect (ITT);
+- the first-stage effect of assignment on phone contact; and
+- the treatment-on-treated estimate using assignment as an instrumental variable.
+
+Explain why randomized assignment provides identification of the relevant causal effect despite imperfect compliance with treatment assignment.
+
+Compare the experimental estimate with the observational matching estimate.
+
+### 12. The placebo benchmark. [5 points]
+
+Repeat the experimental analysis for the buckle-up condition.
+
+Explain what the experimental estimate tells us about the plausibility of the matching estimate for the placebo treatment.
+
+---
+
+# Part V. Explain the failure of matching
+
+### 13. Decompose the source of bias. [10 points]
+
+The paper derives an expression showing that matching bias depends on the difference between the untreated turnout rate of reachable people and the untreated turnout rate of people who are not reachable.
+
+Using the notation in the paper, explain the intuition behind this expression without simply restating the algebra.
+
+In particular, explain:
+
+- why reachable untreated individuals provide useful information about the counterfactual turnout of treated individuals;
+- why unreachable untreated individuals can contaminate the comparison; and
+- why the fraction of the control group that is reachable matters for the size of the bias.
+
+### 14. Sensitivity analysis. [10 points]
+
+Reproduce the paper's sensitivity analysis regarding the amount of hidden bias necessary to explain the observed matching estimate.
+
+Present the analysis graphically or in a clearly labeled table.
+
+Then interpret the result in substantive terms. How large would the difference in untreated turnout between reachable and unreachable individuals have to be to account for the observed matching estimate?
+
+Explain how this analysis changes your assessment of the observational evidence.
+
+---
+
+# Part VI. Causal audit
+
+### 15. Referee report. [15 points]
+
+Write a short referee-style assessment of the following claim:
+
+> “Because the treated and comparison groups are exactly balanced on a rich set of pre-treatment covariates, the matching estimate provides a credible estimate of the causal effect of GOTV phone calls on turnout.”
+
+Your assessment should distinguish among:
+
+1. evidence about observed covariate balance;
+2. evidence about overlap and the construction of the comparison group;
+3. placebo and pre-treatment outcome diagnostics;
+4. sensitivity to hidden bias; and
+5. the conditional ignorability assumption itself.
+
+State the strongest causal conclusion you believe could have been defended **without access to the randomized benchmark**.
+
+Then explain how the experimental benchmark changes your assessment.
+
+Do not simply say that “matching is biased.” Your task is to identify the specific identifying assumption that fails and explain how the empirical evidence reveals the failure.
+
+---
+
+# Optional extension: Alternative estimators
+
+This section is optional and will not count toward the core grade.
+
+### A. Regression adjustment
+
+Estimate the GOTV effect using regression adjustment with the same observed covariates used for matching. Compare the regression estimate with the matching estimate.
+
+### B. Weighting
+
+Estimate the effect using a covariate-balancing or overlap-weighting estimator. Examine covariate balance before and after weighting and compare the resulting estimate with the matching and regression estimates.
+
+### C. Estimator agreement versus identification
+
+Suppose that regression, matching, and weighting all produced nearly identical estimates. Would that provide evidence that conditional ignorability is true? Explain why or why not.
+
+This question is intended to reinforce a central principle of the course:
+
+> **Robustness across estimators does not establish robustness of identification assumptions.**
+
+---
+
+# References
+
+Arceneaux, Kevin, Alan S. Gerber, and Donald P. Green. 2010. “A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark.” *Sociological Methods & Research*.
+
+Course readings on causal identification, conditioning, matching, and weighting may be cited where relevant.

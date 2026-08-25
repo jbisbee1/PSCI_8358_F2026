@@ -1,0 +1,151 @@
+---
+title: "Assignment 0: Naming the Estimand"
+author: "Advanced Observational Causal Inference"
+date: ""
+output:
+  html_document:
+    toc: false
+    number_sections: false
+header-includes:
+  - |
+    <style>
+    body { font-family: sans-serif; line-height: 1.5; }
+    h1, h2, h3 { margin-top: 1.4em; }
+    table { width: auto; }
+    </style>
+---
+
+# Assignment 0: Naming the Estimand
+
+**Assigned:** August 26. **Due:** September 2, at the start of class.
+
+## Purpose
+
+This assignment contains no data and no code. You will not estimate anything.
+
+The point is to practice the step that comes before estimation. A statistical procedure acquires a causal interpretation only after we have specified the causal quantity we want to learn and justified an argument that some feature of the observed data recovers it. Most published papers move quickly past that step, and most methodological confusion in applied work can be traced back to it.
+
+You will read one methodological paper that gives you a vocabulary for this step, and one empirical paper that you will replicate in Problem Set 1. Your task is to apply the first to the second.
+
+The central methodological question is:
+
+> **Before any estimator is chosen, what exactly is the quantity this paper is trying to learn, and what would have to be true for the data to reveal it?**
+
+Because you will replicate Arceneaux, Gerber, and Green in Problem Set 1, treat this assignment as the first stage of that replication rather than as a separate exercise.
+
+## Readings
+
+- Lundberg, Ian, Rebecca Johnson, and Brandon M. Stewart. 2021. "What Is Your Estimand? Defining the Target Quantity Connects Statistical Evidence to Theory." *American Sociological Review*.
+- Arceneaux, Kevin, Alan S. Gerber, and Donald P. Green. 2010. "A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark." *Sociological Methods & Research*.
+
+Read Lundberg, Johnson, and Stewart first.
+
+For Arceneaux, Gerber, and Green, read the introduction, the description of the data and design, and the presentation of the matching results. **Do not yet work through their experimental benchmark or their sensitivity analysis.** Those are the subject of Problem Set 1, and this assignment is deliberately restricted to what an observational researcher could have said before seeing the benchmark.
+
+## Submission requirements
+
+Two pages maximum, excluding references. Submit as a PDF.
+
+Formal notation is expected where the question asks for it, but prose explanations should be readable without reference to the notation. You may write potential outcomes and expectations inline rather than in display equations.
+
+Do not submit code, output, tables, or figures. There is nothing to compute.
+
+You may use AI tools for consultation, but you remain responsible for every claim in your submission. Be prepared to defend your answers in class on September 2 without reference to the AI system that helped produce them.
+
+---
+
+# Part I. The framework
+
+These questions are about Lundberg, Johnson, and Stewart only.
+
+### 1. The two components of a theoretical estimand. [5 points]
+
+The authors argue that a theoretical estimand has two components. Name both and define each in one sentence.
+
+Then give an example, from any substantive area you care about, of two research questions that share the first component but differ in the second.
+
+### 2. Theoretical estimand versus empirical estimand. [8 points]
+
+The authors distinguish the theoretical estimand from the empirical estimand.
+
+State precisely what kind of object each one is a function of. Your answer should make clear why one of them can be learned with certainty from an infinitely large sample and the other cannot.
+
+Then state what has to be supplied in order to move from the first to the second, and explain why that move is not a statistical result.
+
+### 3. When the estimator defines the question. [5 points]
+
+The authors argue that empirical papers frequently skip the theoretical estimand and allow the estimator to define the quantity of interest.
+
+Explain in your own words what goes wrong when this happens.
+
+Then give one concrete example of a way a reader could be misled by a paper that reports a well-estimated quantity without ever naming the target quantity. The example may be hypothetical.
+
+---
+
+# Part II. Applying the framework
+
+These questions are about Arceneaux, Gerber, and Green. Use the vocabulary from Part I throughout.
+
+### 4. Unit and target population. [5 points]
+
+What is the unit of analysis?
+
+The paper's design involves people who differ in whether they were assigned to receive a phone call, whether they actually received one, and whether they could be reached by phone at all. Name **two** candidate target populations a reader might plausibly have in mind when reading a claim about "the effect of a GOTV phone call," and explain how they differ.
+
+### 5. The treatment contrast. [6 points]
+
+The paper distinguishes assignment to treatment, receipt of the treatment, and reachability by phone.
+
+Using potential-outcomes notation, write down the unit-specific quantity whose average the paper's **observational** analysis is trying to recover. State explicitly which of the three variables above is playing the role of the treatment.
+
+Then explain why the phrase "the effect of a GOTV phone call" is ambiguous until this choice is made, and why the three choices need not yield the same answer.
+
+### 6. State the theoretical estimand. [6 points]
+
+Combining your answers to Questions 4 and 5, write down the theoretical estimand of the observational analysis formally.
+
+Then classify it. Is it an average treatment effect, an average effect on the treated, or something else? Justify the classification by reference to the population you specified in Question 4.
+
+If you believe the paper leaves this genuinely ambiguous, say so, and state which reading you will adopt for Problem Set 1 and why.
+
+### 7. State the empirical estimand. [6 points]
+
+Write down the function of the observed data distribution that the matching analysis treats as equal to your answer to Question 6.
+
+State the assumption that licenses that equality.
+
+Then explain why collecting more observations on the same population could not establish whether the assumption holds.
+
+### 8. Two analyses, one estimand. [4 points]
+
+The paper also reports an analysis using the randomized component of the study. You are not asked to work through it here.
+
+Answer only this: the comparison the paper draws is informative because both analyses are aimed at the same theoretical estimand while relying on different identifying assumptions.
+
+Explain why that shared target is what gives the comparison its force, and what a reader could conclude instead if the two analyses were aimed at different target populations.
+
+---
+
+# Part III. Judgment
+
+### 9. The sentence a reader must accept. [5 points]
+
+In one paragraph, state the single claim about the world that a reader would have to accept before the paper's matching estimate could be read causally. State it as a claim about people, not as a formula.
+
+Then say whether you currently find it plausible, and name one piece of evidence, of any kind, that would change your assessment.
+
+Do not use the experimental benchmark to answer this question. The exercise is to establish what could have been argued without it. You will revisit this paragraph in Problem Set 1, and you will be asked whether you want to revise it.
+
+---
+
+# How this connects to the rest of the course
+
+Every replication problem set this semester begins with the step you are practicing here, and the final causal audit is this assignment performed at full scale on a paper of your choosing. The vocabulary introduced by Lundberg, Johnson, and Stewart will be used throughout, though other authors on the syllabus use different terms for the same distinctions. Where a reading refers to a functional of the observed-data distribution, or to an identified quantity, it is describing what we are here calling the empirical estimand.
+
+---
+
+# References
+
+Arceneaux, Kevin, Alan S. Gerber, and Donald P. Green. 2010. "A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark." *Sociological Methods & Research*.
+
+Lundberg, Ian, Rebecca Johnson, and Brandon M. Stewart. 2021. "What Is Your Estimand? Defining the Target Quantity Connects Statistical Evidence to Theory." *American Sociological Review*.

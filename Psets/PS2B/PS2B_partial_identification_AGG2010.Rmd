@@ -1,0 +1,261 @@
+---
+title: "Problem Set 2B: Partial Identification"
+author: "Advanced Observational Causal Inference"
+date: ""
+output:
+  html_document:
+    toc: false
+    number_sections: false
+header-includes:
+  - |
+    <style>
+    body { font-family: sans-serif; line-height: 1.5; }
+    h1, h2, h3 { margin-top: 1.4em; }
+    table { width: auto; }
+    </style>
+---
+
+# Problem Set 2B: Partial Identification
+
+**Assigned:** October 7. **Due:** October 21.
+
+## Purpose
+
+Every design we have studied so far delivers a point estimate by assuming enough to make one available. This problem set asks what remains when we decline to assume that much.
+
+You will return to Arceneaux, Gerber, and Green (2010), the paper you replicated in Problem Set 1. You already know how that story ends: the observational matching estimate is badly wrong, and the randomized benchmark reveals it. This assignment asks a different question about the same data.
+
+The randomized experiment does **not** point-identify the average effect of phone contact on turnout. It point-identifies an intent-to-treat effect, and, under an additional behavioral assumption, an effect for compliers. The average effect of contact across everyone in the study remains unidentified even with randomization in hand. Partial identification is the vocabulary for saying what we know about it anyway.
+
+The central methodological question is:
+
+> **When the assumptions required for a point estimate are not credible, what does the data still rule out?**
+
+A secondary theme runs throughout. Each assumption you add narrows the identified set. You will be asked, repeatedly, to say what you have purchased with each assumption and what it cost you in credibility.
+
+## Relationship to Problem Set 1
+
+You will reuse the data and the variables you constructed for Problem Set 1: the randomized assignment indicator, the phone-contact indicator, and the 2004 turnout outcome. No new data preparation should be required. If you did not retain your Problem Set 1 code, rebuild the analysis sample before beginning.
+
+You will also need three numbers from your Problem Set 1 submission: the observational matching estimate, the intent-to-treat estimate, and the instrumental-variables estimate of the effect of contact. Report them again here so that this assignment is self-contained.
+
+Unlike Problem Set 1, you may use the randomized assignment variable from the beginning.
+
+## Data and software
+
+All empirical work should be conducted in **R** and submitted as a reproducible R Markdown or Quarto document.
+
+Every bound in Parts II through IV can be computed directly from sample proportions using the expressions in the assigned readings. You are encouraged to implement them yourself rather than calling a package, because the arithmetic is where the intuition lives. If you wish to cross-check your results against an existing implementation you may, but you must report your own computation as the primary result and state clearly what you used for verification.
+
+## General submission requirements
+
+Your submission should contain publication-quality tables and figures. Do not paste raw console output into the assignment.
+
+Bounds should be presented graphically wherever you are asked to compare more than two of them. A figure showing nested intervals on a common axis, annotated with the assumption that produces each one, will communicate more than a table of endpoints.
+
+For each result, explain what the quantity represents and why it bears on the causal question. A correct numerical result without an explanation of its causal interpretation will receive limited credit.
+
+You may use AI tools for coding assistance, debugging, and consultation, but you remain responsible for every line of code, statistical result, and causal claim in your submission. Be prepared to explain your analysis without relying on the AI system that helped produce it.
+
+---
+
+# Part I. What are we bounding?
+
+### 1. Separate the estimands. [5 points]
+
+Let $Z$ denote randomized assignment to the GOTV call, $D$ denote actual phone contact, and $Y$ denote 2004 turnout. All three are binary.
+
+Write down, in potential-outcomes notation, each of the following:
+
+- the intent-to-treat effect of $Z$ on $Y$;
+- the average treatment effect of $D$ on $Y$ in the full study population;
+- the average effect of $D$ on $Y$ among those actually contacted.
+
+State which of these your Problem Set 1 instrumental-variables estimate was targeting, and under what assumption.
+
+### 2. Why the experiment is not enough. [5 points]
+
+Explain why randomization of $Z$ does not, by itself, point-identify the average treatment effect of $D$ on $Y$.
+
+Your answer should make clear which quantity randomization does deliver without further assumptions, and what additional assumption is required to move from that quantity to an effect of contact.
+
+Then state which target quantity you will bound for the remainder of this assignment, and why it is the interesting one.
+
+---
+
+# Part II. Worst-case bounds
+
+In this part you may use only $D$ and $Y$. Set the instrument aside.
+
+### 3. Derive and compute the no-assumption bounds. [10 points]
+
+Following Manski (1990), derive bounds on $E[Y(1)]$ and $E[Y(0)]$ using only the observed data and the fact that $Y$ is binary.
+
+Show the derivation. The key step is that the observed data are informative about the potential outcome that was realized and completely uninformative about the one that was not, while the logical range of a binary outcome is nonetheless known.
+
+Then compute the implied bounds on the average treatment effect in the AGG data. Report the interval and the sample proportions that produce it.
+
+### 4. Interpret the width. [5 points]
+
+Report the width of the interval you obtained in Question 3.
+
+Prove that this width does not depend on the data. That is, show that for a binary outcome the worst-case bounds on the average treatment effect always have the same width, whatever the observed proportions happen to be.
+
+Then answer: does your interval contain zero? Does it necessarily contain zero, for any dataset with a binary outcome? Explain what this tells you about what "no assumptions" can and cannot deliver.
+
+---
+
+# Part III. Shape restrictions
+
+The intervals in Part II are valid but uninformative. We now add assumptions, one at a time, and observe what each one buys.
+
+### 5. Monotone treatment response. [8 points]
+
+Assume that receiving a GOTV phone call does not reduce any individual's probability of voting.
+
+State this assumption formally in terms of potential outcomes.
+
+Derive the bounds it implies and recompute them in the data. Report the new interval alongside the interval from Question 3.
+
+Then assess the assumption substantively. Is there any plausible mechanism by which a mobilization call could *lower* an individual's turnout? Your answer should engage with the possibility rather than dismissing it, and should distinguish between an assumption that is likely true on average and an assumption that must hold for every unit.
+
+### 6. Monotone treatment selection. [7 points]
+
+Now assume instead that people who were contacted by phone would have turned out at a weakly higher rate than people who were not contacted, had neither group received a call.
+
+State this assumption formally. Note that it is a claim about untreated potential outcomes, not about effects.
+
+Derive the resulting bound and compute it. Explain in one sentence why this assumption implies that the naive observational comparison is an upper bound rather than a lower bound.
+
+Then connect this to Problem Set 1: this assumption encodes the same selection story that made the matching analysis fail. Explain how an assumption that was fatal in Problem Set 1 becomes useful here.
+
+### 7. Combine the restrictions. [5 points]
+
+Impose monotone treatment response and monotone treatment selection together, following Manski and Pepper (2000).
+
+Report the resulting interval and add it to your figure.
+
+State plainly what you have assumed at this point, and whether you would be willing to defend both assumptions to a skeptical reader.
+
+---
+
+# Part IV. Using the instrument
+
+You may now use $Z$.
+
+### 8. Instrument-based intersection bounds. [10 points]
+
+A valid instrument implies that the bounds on $E[Y(1)]$ and $E[Y(0)]$ computed within each value of $Z$ must each contain the truth. The identified set is therefore the intersection across values of $Z$.
+
+State the instrument-validity condition this argument requires. Be explicit about whether it is an independence assumption, an exclusion assumption, or both, and note that it does **not** require monotonicity in the compliance behavior.
+
+Compute the worst-case bounds separately within $Z = 1$ and $Z = 0$, then intersect them. Report the resulting interval.
+
+Explain why intersecting cannot make the interval wider, and what feature of the data determines how much narrower it becomes.
+
+### 9. Sharp bounds with a binary instrument. [8 points]
+
+The intersection bounds in Question 8 are valid but not sharp. Balke and Pearl (1997) derive the sharp bounds on the average treatment effect for the case where instrument, treatment, and outcome are all binary, which is exactly the structure of this study.
+
+Either implement the Balke–Pearl bounds and report the resulting interval, or, if you do not implement them, explain precisely what "sharp" means in this context and why an interval can be valid without being sharp.
+
+If you implement them, compare the width to your answer in Question 8 and explain where the additional tightening comes from.
+
+### 10. Where do the point estimates fall? [7 points]
+
+Assemble a single figure showing every interval you have computed, from the worst-case bounds to the tightest, annotated by the assumption that produces each.
+
+On the same figure, mark the three point estimates from Problem Set 1: the observational matching estimate, the intent-to-treat estimate, and the instrumental-variables estimate.
+
+Then answer:
+
+1. Does the instrumental-variables estimate fall inside every interval you computed? Explain whether it was guaranteed to, and what it would have meant if it had not.
+2. Does the observational matching estimate fall inside every interval? If it falls outside any of them, state exactly what that demonstrates, and note that the demonstration does not require access to the experimental benchmark.
+3. Which of your assumptions, if any, would have been sufficient to reject the matching estimate on its own?
+
+---
+
+# Part V. Inference
+
+### 11. Confidence intervals for a set. [5 points]
+
+Everything computed so far has been an estimate of an identified set from a finite sample, and is therefore subject to sampling uncertainty.
+
+Explain why constructing a confidence interval by taking the lower confidence limit of the estimated lower bound and the upper confidence limit of the estimated upper bound is not the right procedure.
+
+Your answer should distinguish between:
+
+- a confidence interval that covers the entire identified set with the stated probability; and
+- a confidence interval that covers the true parameter with the stated probability.
+
+Explain which of the two is usually the quantity of interest, and why the second is generally narrower than the first.
+
+You are not required to implement a formal procedure. A conceptual answer that engages with the assigned readings is sufficient.
+
+---
+
+# Part VI. Causal audit
+
+### 12. Referee report. [10 points]
+
+Write a short referee-style assessment of the following claim:
+
+> "Because the worst-case bounds on the effect of phone contact contain zero, the data are uninformative about whether GOTV calls mobilize voters."
+
+Your assessment should address:
+
+1. what the worst-case bounds do and do not establish;
+2. which additional assumptions materially narrow the identified set, and at what cost in credibility;
+3. whether any interval you computed excludes zero, and what a reader must accept in order to believe it;
+4. how the partial-identification analysis compares to the experimental benchmark as a basis for a substantive conclusion; and
+5. what you would report to a campaign that asked you whether phone calls work.
+
+State the strongest causal conclusion you believe the bounds support. Then state, separately, the strongest conclusion you believe the experiment supports, and explain why the two differ.
+
+Do not simply conclude that bounds are wide. The task is to identify which specific assumption is doing the work in each interval and to say whether you would defend it.
+
+---
+
+# Optional extension: When bounds are the only option
+
+This section is optional and will not count toward the core grade.
+
+### A. Bounds without an experiment
+
+Suppose the randomized component of this study did not exist and you had only observational data on contact and turnout.
+
+Which of the intervals you computed would still be available? Present the subset of your figure that an observational researcher could have produced, and state the strongest conclusion available from it.
+
+### B. Selection versus contact
+
+Lee (2009) develops bounds for a different problem: outcomes observed only for a subgroup selected in part by treatment.
+
+Explain why Lee bounds are not the appropriate tool for the question in this problem set, and describe a modification to the AGG study design that would make them appropriate.
+
+### C. What would tighten this?
+
+Identify one additional piece of information, not present in these data, that would meaningfully narrow the identified set for the average treatment effect. Explain the mechanism by which it would help.
+
+The point of this section is a principle that recurs throughout the course:
+
+> **Narrower is not the same as more credible. An interval is only as good as the assumption that produced it.**
+
+---
+
+# References
+
+Arceneaux, Kevin, Alan S. Gerber, and Donald P. Green. 2010. "A Cautionary Note on the Use of Matching to Estimate Causal Effects: An Empirical Example Comparing Matching Estimates to an Experimental Benchmark." *Sociological Methods & Research*.
+
+Balke, Alexander, and Judea Pearl. 1997. "Bounds on Treatment Effects from Studies with Imperfect Compliance." *Journal of the American Statistical Association*.
+
+Chernozhukov, Victor, Sokbae Lee, and Adam M. Rosen. 2013. "Intersection Bounds: Estimation and Inference." *Econometrica*.
+
+Lee, David S. 2009. "Training, Wages, and Sample Selection: Estimating Sharp Bounds on Treatment Effects." *Review of Economic Studies*.
+
+Manski, Charles F. 1990. "Nonparametric Bounds on Treatment Effects." *American Economic Review*.
+
+Manski, Charles F., and John V. Pepper. 2000. "Monotone Instrumental Variables: With an Application to the Returns to Schooling." *Econometrica*.
+
+Molinari, Francesca. 2020. "Microeconometrics with Partial Identification." *Handbook of Econometrics*.
+
+Swanson, Sonja A., Miguel A. Hernán, Matthew Miller, James M. Robins, and Thomas S. Richardson. 2018. "Partial Identification of the Average Treatment Effect Using Instrumental Variables." *Journal of the American Statistical Association*.
