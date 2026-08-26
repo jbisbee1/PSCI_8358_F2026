@@ -11,6 +11,7 @@ import json
 import re
 import html
 from pathlib import Path
+from urllib.parse import quote
 
 import markdown as md
 
@@ -53,6 +54,92 @@ MONTHS = ("January|February|March|April|May|June|July|August|September|"
           "October|November|December")
 
 
+
+# Reading links are repo-relative: they resolve to the blob view in the
+# rendered README and to the served PDF on the GitHub Pages site.
+GITHUB_READINGS_URL = "Readings/"
+
+
+def fill_readme_readings(week_readings, titleize_fn):
+    """Rewrite the <!-- READINGS:n --> ... <!-- /READINGS:n --> blocks in
+    README.md with that week's reading list, linked to the GitHub copies.
+    Everything outside the markers is untouched, so the syllabus prose stays
+    hand-editable. Idempotent: re-running replaces the block contents."""
+    path = ROOT / "README.md"
+    text = path.read_text(encoding="utf-8")
+    newline = "\r\n" if "\r\n" in text else "\n"
+    text = text.replace("\r\n", "\n")
+
+    def block_for(n):
+        readings = week_readings.get(n)
+        if not readings:
+            return ""
+        items = "".join(
+            f'<li><a href="{GITHUB_READINGS_URL}{quote(p.name)}">'
+            f'{html.escape(titleize_fn(p.stem))}</a></li>'
+            for p in readings
+        )
+        return f'\n<div class="readings"><strong>Readings:</strong><ul>{items}</ul></div>\n'
+
+    def repl(m):
+        n = int(m.group(1))
+        return f"<!-- READINGS:{n} -->{block_for(n)}<!-- /READINGS:{n} -->"
+
+    text = re.sub(r"<!-- READINGS:(\d+) -->.*?<!-- /READINGS:\1 -->", repl, text, flags=re.S)
+    path.write_text(text.replace("\n", newline) if newline == "\r\n" else text,
+                    encoding="utf-8")
+    return sum(1 for _ in re.finditer(r"<!-- READINGS:\d+ -->", text))
+
+
+
+# ---------------------------------------------------------------------------
+# Per-week course materials (slides, problem sets) linked from README.md and
+# the Pages site. Paths are repo-relative. Add rows as lectures are written.
+# ---------------------------------------------------------------------------
+WEEK_MATERIALS = {
+    1: [("Lecture 1 slides: From Causal Questions to Identification",
+         "Lectures/lecture1/lecture01_identification.html"),
+        ("Assignment 0: Naming the Estimand (due Sep 2)",
+         "Psets/PS0/PS0_naming_the_estimand.html")],
+    2: [("Lecture 2 slides: Conditioning, DAGs, and Good and Bad Controls",
+         "Lectures/lecture2/lecture02_conditioning.html"),
+        ("Problem Set 1: Conditioning and Matching (due Sep 16)",
+         "Psets/PS1/PS1_conditioning_matching_AGG2010.html")],
+    3: [("Lecture 3 slides: Matching, Weighting, and Overlap",
+         "Lectures/lecture3/lecture03_matching_weighting_overlap.html")],
+    7: [("Problem Set 2B: Partial Identification (due Oct 21)",
+         "Psets/PS2B/PS2B_partial_identification_AGG2010.html")],
+}
+
+
+def fill_readme_materials():
+    """Fill the <!-- MATERIALS:n --> blocks in README.md with links to that
+    week's slides and problem sets. Idempotent; content outside the markers
+    is untouched."""
+    path = ROOT / "README.md"
+    text = path.read_text(encoding="utf-8")
+    newline = "\r\n" if "\r\n" in text else "\n"
+    text = text.replace("\r\n", "\n")
+
+    def block_for(n):
+        items = WEEK_MATERIALS.get(n)
+        if not items:
+            return ""
+        lis = "".join(
+            f'<li><a href="{quote(href)}">{html.escape(label)}</a></li>'
+            for label, href in items
+        )
+        return f'\n<div class="readings"><strong>Materials:</strong><ul>{lis}</ul></div>\n'
+
+    def repl(m):
+        n = int(m.group(1))
+        return f"<!-- MATERIALS:{n} -->{block_for(n)}<!-- /MATERIALS:{n} -->"
+
+    text = re.sub(r"<!-- MATERIALS:(\d+) -->.*?<!-- /MATERIALS:\1 -->", repl, text, flags=re.S)
+    path.write_text(text.replace("\n", newline) if newline == "\r\n" else text,
+                    encoding="utf-8")
+
+
 def inject_readings(body_html, week_readings, titleize_fn):
     """Insert a Readings block right after each weekly <h2> heading in the
     syllabus body, matched positionally among *weekly-schedule* headings
@@ -84,8 +171,6 @@ def inject_readings(body_html, week_readings, titleize_fn):
 # Reading lists are injected per week further below, once week_readings is
 # resolved; the file is written there, not here.
 # ---------------------------------------------------------------------------
-readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
-syllabus_html_body = md.markdown(readme_text, extensions=["tables", "fenced_code"])
 
 # ---------------------------------------------------------------------------
 # 2. Weekly schedule (mirrors README.md's "# Semester Schedule")
@@ -413,8 +498,21 @@ for key in SUPPLEMENTARY:
     supp_files.append(p)
     used_files.add(p.name)
 
-# Now that week_readings is resolved, finish and write the syllabus page.
-syllabus_html_body = inject_readings(syllabus_html_body, week_readings, titleize)
+# Now that week_readings is resolved, write the linked reading lists into
+# README.md, then render the syllabus from it. inject_readings() is retired:
+# README now carries the lists, so injecting again would duplicate them.
+_n_blocks = fill_readme_readings(week_readings, titleize)
+fill_readme_materials()
+readme_text = (ROOT / "README.md").read_text(encoding="utf-8")
+syllabus_html_body = md.markdown(readme_text, extensions=["tables", "fenced_code"])
+
+# GitHub Pages landing page, same source as the syllabus page. Served from
+# the repo root alongside .nojekyll, so Readings/, Lectures/ and Psets/ are
+# reachable by the repo-relative links written above.
+(ROOT / "index.html").write_text(
+    wrap("PSCI 8358 \u2014 Advanced Observational Causal Inference", syllabus_html_body),
+    encoding="utf-8",
+)
 (PAGES / "syllabus.html").write_text(
     wrap("PSCI 8358 — Syllabus: Advanced Observational Causal Inference", syllabus_html_body),
     encoding="utf-8",
