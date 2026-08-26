@@ -55,9 +55,15 @@ MONTHS = ("January|February|March|April|May|June|July|August|September|"
 
 
 
-# Reading links are repo-relative: they resolve to the blob view in the
-# rendered README and to the served PDF on the GitHub Pages site.
-GITHUB_READINGS_URL = "Readings/"
+# Everything the syllabus links to is addressed on the GitHub Pages site.
+# Repo-relative hrefs would resolve to /blob/main/... in the rendered README
+# on github.com, which serves raw HTML source for the slide decks and problem
+# sets rather than the rendered pages. Absolute Pages URLs render correctly
+# from both the README and the site itself.
+# Custom domain, not jbisbee1.github.io: the github.io address 302s here and
+# downgrades to http:// on the way. This is the canonical https URL.
+SITE_URL = "https://www.jamesbisbee.com/PSCI_8358_F2026/"
+GITHUB_READINGS_URL = SITE_URL + "Readings/"
 
 
 def fill_readme_readings(week_readings, titleize_fn):
@@ -94,7 +100,8 @@ def fill_readme_readings(week_readings, titleize_fn):
 
 # ---------------------------------------------------------------------------
 # Per-week course materials (slides, problem sets) linked from README.md and
-# the Pages site. Paths are repo-relative. Add rows as lectures are written.
+# the Pages site. Paths are repo-relative and get SITE_URL prepended when
+# written out. Add rows as lectures are written.
 # ---------------------------------------------------------------------------
 WEEK_MATERIALS = {
     1: [("Lecture 1 slides: From Causal Questions to Identification",
@@ -126,7 +133,7 @@ def fill_readme_materials():
         if not items:
             return ""
         lis = "".join(
-            f'<li><a href="{quote(href)}">{html.escape(label)}</a></li>'
+            f'<li><a href="{SITE_URL}{quote(href)}">{html.escape(label)}</a></li>'
             for label, href in items
         )
         return f'\n<div class="readings"><strong>Materials:</strong><ul>{lis}</ul></div>\n'
@@ -508,7 +515,7 @@ syllabus_html_body = md.markdown(readme_text, extensions=["tables", "fenced_code
 
 # GitHub Pages landing page, same source as the syllabus page. Served from
 # the repo root alongside .nojekyll, so Readings/, Lectures/ and Psets/ are
-# reachable by the repo-relative links written above.
+# reachable at the SITE_URL links written above.
 (ROOT / "index.html").write_text(
     wrap("PSCI 8358 \u2014 Advanced Observational Causal Inference", syllabus_html_body),
     encoding="utf-8",
