@@ -1,0 +1,1368 @@
+---
+title: "Matching in Practice: A Worked Example"
+author: "Advanced Observational Causal Inference"
+date: "September 9"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+## The teaching goal
+
+We will use one synthetic dataset to see what matching actually does.
+
+The sequence is:
+
+$$
+\text{naive comparison}
+\rightarrow
+\text{CEM}
+\rightarrow
+\text{nearest-neighbor matching}
+\rightarrow
+\text{weighting}
+\rightarrow
+\text{balance}.
+$$
+
+Because this is simulated data, we also know the true potential outcomes.
+
+---
+
+## Generate the data
+
+```{r}
+#| echo: true
+#| output: false
+
+library(tidyverse)
+library(MatchIt)
+library(cobalt)
+
+set.seed(1234)
+
+N <- 100
+
+dat <- tibble(
+  id = 1:N,
+  age = pmin(pmax(rnorm(N, 40, 10), 20), 65),
+  income = pmax(rnorm(N, 50 + 0.8 * age, 20), 5)
+) |>
+  mutate(
+    college = rbinom(
+      N, 1,
+      plogis(-2 + 0.04 * age)
+    ),
+
+    propensity =
+      plogis(
+        -5.5 +
+        0.055 * age +
+        0.012 * income +
+        0.9 * college
+      ),
+
+    D = rbinom(N, 1, propensity),
+
+    Y0 =
+      20 +
+      0.35 * age +
+      0.08 * income +
+      5 * college +
+      0.002 * income^2 +
+      rnorm(N, 0, 5),
+
+    tau = 8,
+
+    Y1 = Y0 + tau,
+
+    Y = D * Y1 + (1 - D) * Y0
+  )
+```
+
+---
+
+## What is the true ATT?
+
+Because we simulated both potential outcomes, we can calculate the true ATT.
+
+```{r}
+true_ATT <- dat |>
+  filter(D == 1) |>
+  summarise(ATT = mean(Y1 - Y0)) |>
+  pull(ATT)
+
+true_ATT
+```
+
+---
+
+## What does the naive comparison give?
+
+```{r}
+naive_ATT <- dat |>
+  summarise(
+    estimate =
+      mean(Y[D == 1]) -
+      mean(Y[D == 0])
+  ) |>
+  pull(estimate)
+
+naive_ATT
+```
+
+The difference is larger than the true effect because the treated and control groups differ systematically on pre-treatment covariates.
+
+---
+
+## See the confounding
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+ggplot(
+  dat,
+  aes(
+    x = income,
+    y = age,
+    shape = factor(D)
+  )
+) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  labs(
+    x = "Income",
+    y = "Age",
+    shape = "",
+    title = "Before matching"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Why not exact-match?
+
+To exactly match on the original covariates, we would need
+
+$$
+age_i=age_j,\qquad
+income_i=income_j,\qquad
+college_i=college_j.
+$$
+
+With continuous `age` and `income`, this is essentially impossible.
+
+So instead we **coarsen** the continuous variables.
+
+---
+
+## Create CEM strata
+
+```{r}
+dat <- dat |>
+  mutate(
+    age_band = cut(
+      age,
+      breaks = c(19, 29, 39, 49, 59, 69),
+      labels = FALSE
+    ),
+    income_band = cut(
+      income,
+      breaks = c(0, 50, 75, 100, 125, Inf),
+      labels = FALSE
+    )
+  )
+```
+
+A matching stratum is now defined by
+
+$$
+(age\ band,\ income\ band,\ college).
+$$
+
+---
+
+## Visualize the strata
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+ggplot(
+  dat,
+  aes(
+    x = income,
+    y = age,
+    shape = factor(D)
+  )
+) +
+  geom_vline(
+    xintercept = c(50, 75, 100, 125),
+    linetype = "dashed",
+    alpha = 0.5
+  ) +
+  geom_hline(
+    yintercept = c(29, 39, 49, 59),
+    linetype = "dashed",
+    alpha = 0.5
+  ) +
+  geom_point(size = 3, alpha = 0.7) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  facet_wrap(
+    ~ college,
+    labeller = as_labeller(
+      c(`0` = "No college", `1` = "College")
+    )
+  ) +
+  labs(
+    x = "Income",
+    y = "Age",
+    shape = "",
+    title = "Coarsened exact matching",
+    subtitle = "Each rectangle within a panel is a matching stratum"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Which strata survive?
+
+```{r}
+strata_status <- dat |>
+  group_by(age_band, income_band, college) |>
+  summarise(
+    n_treated = sum(D == 1),
+    n_control = sum(D == 0),
+    .groups = "drop"
+  ) |>
+  mutate(
+    retained = n_treated > 0 & n_control > 0
+  )
+
+strata_status |>
+  count(retained)
+```
+
+A stratum survives only if it contains at least one treated and at least one control.
+
+Strata without overlap are dropped.
+
+---
+
+## Show the dropped observations
+
+```{r}
+dat <- dat |>
+  left_join(
+    strata_status,
+    by = c("age_band", "income_band", "college")
+  ) |>
+  mutate(
+    matched = retained
+  )
+```
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+ggplot(
+  dat,
+  aes(
+    x = income,
+    y = age,
+    shape = factor(D)
+  )
+) +
+  geom_point(
+    data = filter(dat, matched),
+    size = 3,
+    alpha = 0.8
+  ) +
+  geom_point(
+    data = filter(dat, !matched),
+    size = 3,
+    alpha = 0.2
+  ) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  labs(
+    x = "Income",
+    y = "Age",
+    shape = "",
+    title = "CEM drops strata without overlap",
+    subtitle = "Faded observations lie in unusable strata"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## The target population changes
+
+Before matching:
+
+$$
+ATT_{full}
+=
+E[Y(1)-Y(0)\mid D=1].
+$$
+
+After dropping treated units with no matched controls:
+
+$$
+ATT_{matched}
+=
+E[Y(1)-Y(0)\mid D=1,\ matched=1].
+$$
+---
+
+## The target population changes 
+
+```{r}
+ATT_full <- dat |>
+  filter(D == 1) |>
+  summarise(ATT = mean(Y1 - Y0)) |>
+  pull(ATT)
+
+ATT_matched <- dat |>
+  filter(D == 1, matched) |>
+  summarise(ATT = mean(Y1 - Y0)) |>
+  pull(ATT)
+
+tibble(
+  quantity = c(
+    "ATT: all treated",
+    "ATT: matched treated"
+  ),
+  estimate = c(
+    ATT_full,
+    ATT_matched
+  )
+)
+```
+
+With a constant treatment effect, these should be nearly identical.
+
+---
+
+## Make treatment effects heterogeneous
+
+Now let treatment effects vary with income:
+
+$$
+\tau_i
+=
+8+0.05(income_i-\bar{income}).
+$$
+
+```{r}
+dat <- dat |>
+  mutate(
+    tau_het = 8 + 0.05 * (income - mean(income)),
+    Y1_het = Y0 + tau_het,
+    Y_het = D * Y1_het + (1 - D) * Y0
+  )
+```
+
+---
+
+## Trimming can now change the ATT
+
+```{r}
+ATT_full_het <- dat |>
+  filter(D == 1) |>
+  summarise(ATT = mean(Y1_het - Y0)) |>
+  pull(ATT)
+
+ATT_matched_het <- dat |>
+  filter(D == 1, matched) |>
+  summarise(ATT = mean(Y1_het - Y0)) |>
+  pull(ATT)
+
+tibble(
+  quantity = c(
+    "True ATT: all treated",
+    "True ATT: matched treated"
+  ),
+  estimate = c(
+    ATT_full_het,
+    ATT_matched_het
+  )
+)
+```
+
+Now a difference can arise even though we know the potential outcomes exactly.
+
+That difference is due to the change in the target population.
+
+---
+
+## Estimate the CEM ATT
+
+```{r}
+cem_ATT <- dat |>
+  filter(matched) |>
+  group_by(age_band, income_band, college) |>
+  summarise(
+    n_treated = sum(D == 1),
+    n_control = sum(D == 0),
+    treated_mean = mean(Y_het[D == 1]),
+    control_mean = mean(Y_het[D == 0]),
+    difference = treated_mean - control_mean,
+    .groups = "drop"
+  ) |>
+  filter(n_treated > 0, n_control > 0) |>
+  mutate(
+    treated_weight = n_treated / sum(n_treated)
+  ) |>
+  summarise(
+    ATT = sum(difference * treated_weight)
+  ) |>
+  pull(ATT)
+
+cem_ATT
+```
+
+---
+
+## Three different quantities
+
+```{r}
+tibble(
+  quantity = c(
+    "True ATT: all treated",
+    "True ATT: matched treated",
+    "Estimated CEM ATT"
+  ),
+  estimate = c(
+    ATT_full_het,
+    ATT_matched_het,
+    cem_ATT
+  )
+)
+```
+
+The key distinction is:
+
+$$
+\widehat{ATT}_{CEM}-ATT_{full}
+=
+\underbrace{
+ATT_{matched}-ATT_{full}
+}_{\text{changed target}}
++
+\underbrace{
+\widehat{ATT}_{CEM}-ATT_{matched}
+}_{\text{estimation error + residual imbalance}}.
+$$
+
+---
+
+## Nearest-neighbor matching
+
+Now avoid bins entirely.
+
+Instead, define similarity continuously using Mahalanobis distance.
+
+```{r}
+m_nn <- matchit(
+  D ~ age + income + college,
+  data = dat,
+  method = "nearest",
+  distance = "mahalanobis",
+  replace = TRUE,
+  ratio = 1,
+  estimand = "ATT"
+)
+
+summary(m_nn)
+```
+
+---
+
+## Visualize nearest-neighbor matches
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+pairs <- tibble(
+  treated_id = as.numeric(rownames(m_nn$match.matrix)),
+  control_id = as.numeric(m_nn$match.matrix[, 1])
+) |>
+  left_join(
+    dat |> select(id, income, age,college),
+    by = c("treated_id" = "id")
+  ) |>
+  rename(
+    treated_income = income,
+    treated_age = age
+  ) |>
+  left_join(
+    dat |> select(id, income, age),
+    by = c("control_id" = "id")
+  ) |>
+  rename(
+    control_income = income,
+    control_age = age
+  )
+
+ggplot(dat, aes(x = income, y = age, shape = factor(D))) +
+  geom_point(size = 2.5, alpha = 0.35) +
+  geom_segment(
+    data = pairs,
+    aes(
+      x = control_income,
+      y = control_age,
+      xend = treated_income,
+      yend = treated_age
+    ),
+    inherit.aes = FALSE,
+    alpha = 0.5
+  ) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  labs(
+    x = "Income",
+    y = "Age",
+    shape = "",
+    title = "Nearest-neighbor matching"
+  ) +
+  theme_minimal(base_size = 14) + 
+  facet_wrap(~college)
+```
+
+---
+
+## Estimate the nearest-neighbor ATT
+
+```{r}
+nn_dat <- match.data(m_nn)
+
+nn_fit <- lm(
+  Y_het ~ D,
+  data = nn_dat,
+  weights = weights
+)
+
+nn_ATT <- coef(nn_fit)[["D"]]
+
+nn_ATT
+```
+
+---
+
+## ATT weighting
+
+For the ATT, inverse-propensity weighting uses
+
+$$
+w_i =
+\begin{cases}
+~~~~~~~~ 1 & D_i=1,\\[4pt]
+\dfrac{e(X_i)}{1-e(X_i)} & D_i=0.
+\end{cases}
+$$
+
+This reweights the controls to resemble the treated population.
+
+## IPW: the basic idea
+
+Inverse probability weighting (IPW) does the same conceptual job as matching:
+
+$$
+\text{construct a comparison population}
+$$
+
+But instead of pairing or dropping observations, IPW changes how much each observation counts.
+
+Let
+
+$$
+e(X_i)=P(D_i=1\mid X_i)
+$$
+
+be the propensity score.
+
+---
+
+## A simple example
+
+Suppose Alice (who was treated) has
+
+$$
+e(X_A)=0.20
+$$
+
+Treatment was unusual for someone like Alice, so her ATE weight is
+
+$$
+w_A=\frac{1}{0.20}=5
+$$
+
+Now suppose Bob (who was also treated) has
+
+$$
+e(X_B)=0.80
+$$
+
+Treatment was expected for someone like Bob, so his ATE weight is
+
+$$
+w_B=\frac{1}{0.80}=1.25
+$$
+
+Alice counts more because her observed treatment state was less likely.
+
+---
+
+## The basic intuition
+
+$$
+\boxed{
+\text{IPW upweights observations observed in an unlikely treatment state.}
+}
+$$
+
+For treated units:
+
+$$
+w_i=\frac{1}{e(X_i)}.
+$$
+
+For untreated units:
+
+$$
+w_i=\frac{1}{1-e(X_i)}.
+$$
+
+The less likely the observed treatment status, the more informative that observation becomes for reconstructing the target population.
+
+---
+
+## Why does this help with confounding?
+
+Suppose income affects treatment:
+
+$$
+income \rightarrow D
+$$
+
+and also affects the outcome:
+
+$$
+income \rightarrow Y.
+$$
+
+High-income people are disproportionately represented among the treated.
+
+The raw data contain too many high-income treated units and too few high-income control units.
+
+IPW changes their relative contributions.
+
+---
+
+## What happens to the treated group?
+
+Suppose
+
+$$
+e(X)=0.9.
+$$
+
+A treated observation gets
+
+$$
+w=\frac{1}{0.9}\approx1.11.
+$$
+
+Now suppose
+
+$$
+e(X)=0.1.
+$$
+
+A treated observation gets
+
+$$
+w=\frac{1}{0.1}=10.
+$$
+
+Treated observations who were unlikely to be treated receive much more weight.
+
+---
+
+## What happens to the control group?
+
+For controls, the relevant probability is
+
+$$
+1-e(X).
+$$
+
+Suppose
+
+$$
+e(X)=0.9
+$$
+
+but the observation is untreated.
+
+Then
+
+$$
+w=\frac{1}{1-0.9}=10.
+$$
+
+This is a particularly informative control: someone who looks highly likely to have been treated, but happened not to be.
+
+---
+
+## IPW and the ATE
+
+For the ATE,
+
+$$
+w_i=
+\begin{cases}
+\dfrac{1}{e(X_i)}, & D_i=1,\\[8pt]
+\dfrac{1}{1-e(X_i)}, & D_i=0.
+\end{cases}
+$$
+
+The resulting weighted groups are intended to resemble the same target population:
+
+$$
+\boxed{
+\text{weighted treated}
+\approx
+\text{weighted controls}
+\approx
+\text{full population}.
+}
+$$
+
+---
+
+## The ATE estimator
+
+A normalized IPW estimator is
+
+$$
+\widehat{ATE}_{IPW}
+=
+\frac{
+\sum_i D_iY_i/e(X_i)
+}{
+\sum_i D_i/e(X_i)
+}
+-
+\frac{
+\sum_i(1-D_i)Y_i/[1-e(X_i)]
+}{
+\sum_i(1-D_i)/[1-e(X_i)]
+}.
+$$
+
+The first term estimates the population mean under treatment.
+
+The second estimates the population mean under control.
+
+---
+
+## IPW versus matching
+
+The connection to matching is easiest to see for the ATT.
+
+Matching gives us
+
+$$
+ATT
+=
+\sum_s
+\Delta(s)P(S=s\mid D=1),
+$$
+
+where
+
+$$
+\Delta(s)
+=
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s].
+$$
+
+We want the control group to have the **treated distribution of covariates**.
+
+IPW accomplishes the same goal continuously, without explicitly constructing strata.
+
+---
+
+## ATT-IPW
+
+For the ATT:
+
+$$
+w_i=
+\begin{cases}
+~~~~~~~~1, & D_i=1,\\[6pt]
+\dfrac{e(X_i)}{1-e(X_i)}, & D_i=0.
+\end{cases}
+$$
+
+The treated population is already our target population, so treated observations keep weight 1.
+
+We only need to reweight the controls.
+
+---
+
+## ATT-IPW intuition
+
+Consider three control observations:
+
+$$
+\begin{array}{c|c}
+e(X) & \text{ATT weight}\\
+\hline
+0.10 & 0.11\\
+0.50 & 1\\
+0.90 & 9
+\end{array}
+$$
+
+A control with $e(X)=0.90$ looks much more like the treated population.
+
+So it gets much more weight when we construct
+
+$$
+E[Y(0)\mid D=1].
+$$
+
+---
+
+## Why does the ATT weight have this form?
+
+The control group has density proportional to
+
+$$
+f(X\mid D=0).
+$$
+
+The treated group has density proportional to
+
+$$
+f(X\mid D=1).
+$$
+
+By Bayes' rule,
+
+$$
+\frac{f(X\mid D=1)}{f(X\mid D=0)}
+=
+\frac{e(X)}{1-e(X)}
+\cdot
+\frac{P(D=0)}{P(D=1)}.
+$$
+
+The constant term does not matter after normalization.
+
+Thus the ATT control weight is
+
+$$
+\boxed{
+\frac{e(X)}{1-e(X)}.
+}
+$$
+
+---
+
+
+---
+
+## What has the weighting accomplished?
+
+Before weighting:
+
+$$
+f(X\mid D=1)
+\neq
+f(X\mid D=0).
+$$
+
+For the ATT, we want:
+
+$$
+f(X\mid D=1)
+\approx
+f_w(X\mid D=0).
+$$
+
+The weighting procedure creates a pseudo-control population that resembles the treated population.
+
+---
+
+## ATE versus ATT weighting
+
+The target population determines the weights.
+
+$$
+\boxed{
+\begin{array}{c|c|c}
+& \text{Treated} & \text{Controls}\\
+\hline
+ATE &
+1/e(X) &
+1/[1-e(X)]\\[4pt]
+ATT &
+1 &
+e(X)/[1-e(X)]
+\end{array}
+}
+$$
+
+ATE:
+
+$$
+\text{both groups} \rightarrow \text{full population}.
+$$
+
+ATT:
+
+$$
+\text{controls} \rightarrow \text{treated population}.
+$$
+
+---
+
+## The overlap problem returns
+
+Suppose
+
+$$
+e(X)=0.01
+$$
+
+Then its ATE weight is
+
+$$
+\frac{1}{0.01}=100.
+$$
+
+Likewise, if a control has
+
+$$
+e(X)=0.99,
+$$
+
+its ATE weight is also
+
+$$
+\frac{1}{1-0.99}=100.
+$$
+
+Lack of overlap appears as enormous weights.
+
+---
+
+## Matching and IPW handle lack of overlap differently
+
+CEM says:
+
+$$
+\boxed{
+\text{No comparable unit? Drop it.}
+}
+$$
+
+Ordinary IPW says:
+
+$$
+\boxed{
+\text{Comparable unit is very rare? Give it a large weight.}
+}
+$$
+
+This is the same overlap problem appearing in two different forms.
+
+---
+
+
+## The problem with extreme weights
+
+Extreme weights can make the estimate:
+
+$$
+\text{high variance}
+$$
+
+and can make the estimate depend heavily on a small number of observations.
+
+This is why propensity-score overlap is not just a diagnostic issue.
+
+It directly affects how informative the data are for the causal comparison.
+
+---
+
+## Overlap weights
+
+A different strategy is to deliberately emphasize observations in regions of common support.
+
+For overlap weights:
+
+$$
+w_i=
+\begin{cases}
+1-e(X_i), & D_i=1,\\[4pt]
+e(X_i), & D_i=0.
+\end{cases}
+$$
+
+Units with propensity scores near 0 or 1 receive little weight.
+
+Units near
+
+$$
+e(X)=0.5
+$$
+
+receive the most weight.
+
+---
+
+## The broader picture
+
+Matching and weighting are two ways of constructing a comparison population.
+
+$$
+\boxed{
+\begin{array}{ccc}
+\text{Matching}
+&\rightarrow&
+\text{construct comparable units}
+\\[6pt]
+\text{IPW}
+&\rightarrow&
+\text{construct comparable populations}
+\\[6pt]
+\text{Overlap weighting}
+&\rightarrow&
+\text{focus on common support}
+\end{array}
+}
+$$
+
+The identification assumption remains the same:
+
+$$
+(Y(1),Y(0))\perp D\mid X.
+$$
+
+The estimator determines how we use the observed data to exploit that assumption.
+
+
+---
+
+## Estimate ATT weights
+
+```{r}
+ps_model <- glm(
+  D ~ age + income + college,
+  data = dat,
+  family = binomial()
+)
+
+dat <- dat |>
+  mutate(
+    ps = predict(ps_model, type = "response"),
+    att_weight = if_else(
+      D == 1,
+      1,
+      ps / (1 - ps)
+    )
+  )
+```
+
+---
+
+## See the ATT weights
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+ggplot(
+  dat,
+  aes(
+    x = ps,
+    y = att_weight,
+    shape = factor(D)
+  )
+) +
+  geom_point(size = 2.5, alpha = 0.7) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  labs(
+    x = "Estimated propensity score",
+    y = "ATT weight",
+    shape = "",
+    title = "ATT inverse-propensity weights"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Estimate the weighted ATT
+
+```{r}
+att_ipw_fit <- lm(
+  Y_het ~ D,
+  data = dat,
+  weights = att_weight
+)
+
+att_ipw <- coef(att_ipw_fit)[["D"]]
+
+att_ipw
+```
+
+The weighted control group is now intended to represent the treated population.
+
+---
+
+## ATE weighting
+
+For the ATE,
+
+$$
+w_i =
+\begin{cases}
+\dfrac{1}{e(X_i)} & D_i=1,\\[6pt]
+\dfrac{1}{1-e(X_i)} & D_i=0.
+\end{cases}
+$$
+
+This attempts to reconstruct the full target population.
+
+---
+
+## ATE weighting
+
+```{r}
+dat <- dat |>
+  mutate(
+    ate_weight = if_else(
+      D == 1,
+      1 / ps,
+      1 / (1 - ps)
+    )
+  )
+
+ate_ipw_fit <- lm(
+  Y_het ~ D,
+  data = dat,
+  weights = ate_weight
+)
+
+ate_ipw <- coef(ate_ipw_fit)[["D"]]
+
+ate_ipw
+```
+
+---
+
+## Overlap weights
+
+Overlap weights instead use
+
+$$
+w_i =
+\begin{cases}
+1-e(X_i) & D_i=1,\\
+e(X_i) & D_i=0.
+\end{cases}
+$$
+
+Units near the middle of the propensity-score distribution receive more weight.
+
+```{r}
+dat <- dat |>
+  mutate(
+    overlap_weight = if_else(
+      D == 1,
+      1 - ps,
+      ps
+    )
+  )
+
+overlap_fit <- lm(
+  Y_het ~ D,
+  data = dat,
+  weights = overlap_weight
+)
+
+overlap_ate <- coef(overlap_fit)[["D"]]
+
+overlap_ate
+```
+
+---
+
+## Compare the weights visually
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+ggplot(
+  dat,
+  aes(x = ps, y = overlap_weight, shape = factor(D))
+) +
+  geom_point(size = 2.5, alpha = 0.7) +
+  scale_shape_manual(
+    values = c(19, 21),
+    labels = c("Control", "Treated")
+  ) +
+  labs(
+    x = "Estimated propensity score",
+    y = "Overlap weight",
+    shape = "",
+    title = "Overlap weights emphasize common support"
+  ) +
+  theme_minimal(base_size = 14)
+```
+
+---
+
+## Balance is the diagnostic
+
+Matching and weighting are procedures for constructing comparison populations.
+
+We should therefore ask:
+
+$$
+\boxed{
+\text{Did the procedure actually improve covariate balance?}
+}
+$$
+
+```{r}
+bal_nn <- bal.tab(
+  m_nn,
+  un = TRUE,
+  m.threshold = 0.1
+)
+
+bal_nn
+```
+
+---
+
+## Visualize balance
+
+```{r}
+#| output-location: slide
+#| fig-width: 10
+#| fig-height: 5.5
+#| out-width: 90%
+
+love.plot(
+  bal_nn,
+  stat = "mean.diffs",
+  abs = TRUE,
+  thresholds = c(m = 0.1),
+  var.order = "unadjusted"
+) +
+  labs(
+    title = "Covariate balance before and after matching"
+  )
+```
+
+---
+
+## The main lesson
+
+Different estimators solve different parts of the problem.
+
+$$
+\begin{array}{c}
+\text{Exact/CEM}
+\rightarrow
+\text{retain comparable strata}
+\\[6pt]
+\text{Nearest neighbor}
+\rightarrow
+\text{find similar units}
+\\[6pt]
+\text{Weighting}
+\rightarrow
+\text{reconstruct a target population}
+\end{array}
+$$
+
+But in every case, we should distinguish:
+
+$$
+\boxed{
+\text{What population is the estimator targeting?}
+}
+$$
+
+from
+
+$$
+\boxed{
+\text{How well did we construct that population?}
+}
+$$
+
+and from
+
+$$
+\boxed{
+\text{How much sampling/finite-sample error remains?}
+}
+$$

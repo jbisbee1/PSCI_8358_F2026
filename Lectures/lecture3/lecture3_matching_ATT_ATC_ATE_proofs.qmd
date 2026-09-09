@@ -1,0 +1,517 @@
+---
+title: "Lecture 3: Matching, Weighting, and Overlap"
+author: "Advanced Observational Causal Inference"
+date: "September 9"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+execute:
+  enabled: false
+---
+
+## Perfect stratification: setup
+
+Suppose we have perfectly stratified on covariates $S$.
+
+Within each stratum, assume:
+
+$$
+E[Y(1)\mid D=1,S]
+=
+E[Y(1)\mid D=0,S]
+\tag{1-S}
+$$
+
+and
+
+$$
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+\tag{2-S}
+$$
+
+We will use these assumptions to identify the **ATT**, **ATC**, and **ATE**.
+
+---
+
+# Part I: The ATT
+
+## Start with the ATT
+
+Define
+
+$$
+ATT = E[Y(1)-Y(0)\mid D=1].
+$$
+
+By linearity,
+
+$$
+ATT
+=
+E[Y(1)\mid D=1]
+-
+E[Y(0)\mid D=1].
+$$
+
+For treated units, consistency gives
+
+$$
+E[Y(1)\mid D=1]=E[Y\mid D=1].
+$$
+
+The missing counterfactual is
+
+$$
+\boxed{E[Y(0)\mid D=1]}.
+$$
+
+---
+
+## Reconstruct the treated units' missing $Y(0)$
+
+Condition on $S$:
+
+$$
+E[Y(0)\mid D=1]
+=
+E\left[
+E[Y(0)\mid D=1,S]
+\mid D=1
+\right].
+$$
+
+By Assumption 2-S,
+
+$$
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+$$
+
+For untreated units, $Y=Y(0)$, so
+
+$$
+E[Y(0)\mid D=0,S]
+=
+E[Y\mid D=0,S].
+$$
+
+Therefore,
+
+$$
+E[Y(0)\mid D=1]
+=
+E\left[
+E[Y\mid D=0,S]
+\mid D=1
+\right].
+$$
+
+---
+
+## Identification of the ATT
+
+Substitute the reconstructed counterfactual:
+
+$$
+\boxed{
+ATT
+=
+E[Y\mid D=1]
+-
+E\left[
+E[Y\mid D=0,S]
+\mid D=1
+\right].
+}
+$$
+
+For discrete strata,
+
+$$
+\boxed{
+ATT
+=
+E[Y\mid D=1]
+-
+\sum_s
+E[Y\mid D=0,S=s]P(S=s\mid D=1).
+}
+$$
+
+We use control outcomes within each stratum, but weight those strata according to the distribution of $S$ among the **treated**.
+
+---
+
+## Which assumption identifies the ATT?
+
+For the ATT, the missing potential outcome is
+
+$$
+Y(0)\quad\text{for units with }D=1.
+$$
+
+Thus we need
+
+$$
+\boxed{
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+}
+$$
+
+That is **Assumption 2-S**.
+
+Assumption 1-S is not required to identify the ATT.
+
+---
+
+# Part II: The ATC
+
+## Start with the ATC
+
+Define
+
+$$
+ATC = E[Y(1)-Y(0)\mid D=0].
+$$
+
+By linearity,
+
+$$
+ATC
+=
+E[Y(1)\mid D=0]
+-
+E[Y(0)\mid D=0].
+$$
+
+For untreated units, consistency gives
+
+$$
+E[Y(0)\mid D=0]=E[Y\mid D=0].
+$$
+
+The missing counterfactual is
+
+$$
+\boxed{E[Y(1)\mid D=0]}.
+$$
+
+---
+
+## Reconstruct the controls' missing $Y(1)$
+
+Condition on $S$:
+
+$$
+E[Y(1)\mid D=0]
+=
+E\left[
+E[Y(1)\mid D=0,S]
+\mid D=0
+\right].
+$$
+
+By Assumption 1-S,
+
+$$
+E[Y(1)\mid D=0,S]
+=
+E[Y(1)\mid D=1,S].
+$$
+
+For treated units, $Y=Y(1)$, so
+
+$$
+E[Y(1)\mid D=1,S]
+=
+E[Y\mid D=1,S].
+$$
+
+Therefore,
+
+$$
+E[Y(1)\mid D=0]
+=
+E\left[
+E[Y\mid D=1,S]
+\mid D=0
+\right].
+$$
+
+---
+
+## Identification of the ATC
+
+Substitute the reconstructed counterfactual:
+
+$$
+\boxed{
+ATC
+=
+E\left[
+E[Y\mid D=1,S]
+\mid D=0
+\right]
+-
+E[Y\mid D=0].
+}
+$$
+
+For discrete strata,
+
+$$
+\boxed{
+ATC
+=
+\sum_s
+E[Y\mid D=1,S=s]P(S=s\mid D=0)
+-
+E[Y\mid D=0].
+}
+$$
+
+We use treated outcomes within each stratum, but weight those strata according to the distribution of $S$ among the **controls**.
+
+---
+
+## Which assumption identifies the ATC?
+
+For the ATC, the missing potential outcome is
+
+$$
+Y(1)\quad\text{for units with }D=0.
+$$
+
+Thus we need
+
+$$
+\boxed{
+E[Y(1)\mid D=1,S]
+=
+E[Y(1)\mid D=0,S].
+}
+$$
+
+That is **Assumption 1-S**.
+
+So:
+
+$$
+\begin{aligned}
+ATT &: \text{requires Assumption 2-S},\\
+ATC &: \text{requires Assumption 1-S}.
+\end{aligned}
+$$
+
+---
+
+# Part III: The ATE
+
+## From ATT and ATC to the ATE
+
+Define
+
+$$
+ATE = E[Y(1)-Y(0)].
+$$
+
+Apply the law of total expectation over treatment status:
+
+$$
+\begin{aligned}
+ATE
+={}&
+P(D=1)E[Y(1)-Y(0)\mid D=1]\\
+&+
+P(D=0)E[Y(1)-Y(0)\mid D=0].
+\end{aligned}
+$$
+
+Therefore,
+
+$$
+\boxed{
+ATE
+=
+P(D=1)ATT
++
+P(D=0)ATC.
+}
+$$
+
+---
+
+## Substitute the ATT and ATC
+
+Recall:
+
+$$
+ATT
+=
+E[Y\mid D=1]
+-
+\sum_s E[Y\mid D=0,S=s]P(S=s\mid D=1),
+$$
+
+and
+
+$$
+ATC
+=
+\sum_s E[Y\mid D=1,S=s]P(S=s\mid D=0)
+-
+E[Y\mid D=0].
+$$
+
+Therefore,
+
+$$
+\boxed{
+\begin{aligned}
+ATE
+={}&
+P(D=1)
+\left[
+E[Y\mid D=1]
+-
+\sum_s E[Y\mid D=0,S=s]P(S=s\mid D=1)
+\right]\\
+&+
+P(D=0)
+\left[
+\sum_s E[Y\mid D=1,S=s]P(S=s\mid D=0)
+-
+E[Y\mid D=0]
+\right].
+\end{aligned}
+}
+$$
+
+Every quantity on the right-hand side is observable.
+
+---
+
+## Why the ATE needs both assumptions
+
+The ATE requires reconstructing both missing counterfactuals.
+
+For treated units:
+
+$$
+\underbrace{E[Y(0)\mid D=1]}_{\text{missing}}
+$$
+
+requires Assumption 2-S:
+
+$$
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+$$
+
+For controls:
+
+$$
+\underbrace{E[Y(1)\mid D=0]}_{\text{missing}}
+$$
+
+requires Assumption 1-S:
+
+$$
+E[Y(1)\mid D=1,S]
+=
+E[Y(1)\mid D=0,S].
+$$
+
+Thus identifying the ATE requires **both** assumptions.
+
+---
+
+## The matching estimator
+
+Let $N_1$ and $N_0$ denote the numbers of treated and control units.
+
+The sample analogue is
+
+$$
+\widehat{ATE}
+=
+\frac{N_1}{N}\widehat{ATT}
++
+\frac{N_0}{N}\widehat{ATC}.
+$$
+
+With discrete strata,
+
+$$
+\boxed{
+\begin{aligned}
+\widehat{ATE}
+={}&
+\frac{N_1}{N}
+\left[
+\bar Y_1
+-
+\sum_s \bar Y_{0s}\frac{N_{1s}}{N_1}
+\right]\\
+&+
+\frac{N_0}{N}
+\left[
+\sum_s \bar Y_{1s}\frac{N_{0s}}{N_0}
+-
+\bar Y_0
+\right].
+\end{aligned}
+}
+$$
+
+Matching reconstructs the two missing counterfactual means; the ATE then combines the group-specific effects according to the prevalence of treated and untreated units.
+
+---
+
+## ATT, ATC, and ATE: the full picture
+
+$$
+\boxed{
+\begin{array}{lll}
+\text{ATT} &
+\text{reconstruct }Y(0)\text{ for treated} &
+\text{Assumption 2-S}
+\\[6pt]
+\text{ATC} &
+\text{reconstruct }Y(1)\text{ for controls} &
+\text{Assumption 1-S}
+\\[6pt]
+\text{ATE} &
+P(D=1)ATT+P(D=0)ATC &
+\text{both assumptions}
+\end{array}
+}
+$$
+
+The central logic is:
+
+$$
+\boxed{
+\text{Stratify}
+\;\longrightarrow\;
+\text{reconstruct missing counterfactuals}
+\;\longrightarrow\;
+\text{average over the target population}.
+}
+$$

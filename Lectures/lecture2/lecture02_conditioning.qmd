@@ -33,12 +33,23 @@ The answer is graphical: choose variables that block noncausal paths while leavi
 
 Suppose we want the effect of $D$ on $Y$.
 
-```{mermaid}
-flowchart LR
-  D[D] --> Y[Y]
-  X[X] --> D
-  X --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  X [label="X", pos="1.6,1.8!", pin=true]
+  D [label="D", pos="0,0.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  X -> D
+  X -> Y
+  D -> Y
+}
 ```
+
+:::
 
 The observed comparison,
 
@@ -53,8 +64,6 @@ A common source of trouble is a backdoor path:
 $$
 D \leftarrow X \rightarrow Y.
 $$
-
-Conditioning on the right $X$ can block this path.
 
 ## Toward conditional identification
 
@@ -123,12 +132,23 @@ The objective is to block the noncausal paths without disturbing the causal path
 
 Suppose:
 
-```{mermaid}
-flowchart LR
-  X[X] --> D[D]
-  X --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  X [label="X", pos="1.6,1.8!", pin=true]
+  D [label="D", pos="0,0.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  X -> D
+  X -> Y
+  D -> Y
+}
 ```
+
+:::
 
 The path
 
@@ -146,13 +166,25 @@ If the graph is correct and the overlap condition holds, adjustment for $X$ iden
 
 Consider:
 
-```{mermaid}
-flowchart LR
-  X[X] --> A[A]
-  A --> D[D]
-  X --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  X [label="X", pos="0,1.8!", pin=true]
+  A [label="A", pos="1.3,0.8!", pin=true]
+  D [label="D", pos="2.6,0.8!", pin=true]
+  Y [label="Y", pos="3.9,0.8!", pin=true]
+  X -> A
+  A -> D
+  X -> Y
+  D -> Y
+}
 ```
+
+:::
 
 There is a backdoor path between $D$ and $Y$:
 
@@ -168,13 +200,44 @@ This is the broader sense of a “good control” emphasized by Cinelli, Forney,
 
 Consider:
 
-```{mermaid}
-flowchart LR
-  D[D] --> Z[Z]
-  U[U] --> Z
-  U --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+
+  graph [
+    layout=neato,
+    overlap=false,
+    splines=true,
+    outputorder=edgesfirst,
+    bgcolor="transparent"
+  ]
+
+  node [
+    shape=circle,
+    width=0.42,
+    height=0.42,
+    fixedsize=true,
+    fontsize=11
+  ]
+
+  edge [
+    arrowsize=0.55
+  ]
+
+  D [label="D", pos="0,1.5!", pin=true]
+  Z [label="Z", pos="1.5,1.5!", pin=true]
+  U [label="U", pos="0,0!", pin=true]
+  Y [label="Y", pos="1.5,0!", pin=true]
+
+  D -> Z
+  U -> Z
+  U -> Y
+  D -> Y
+}
 ```
+
+:::
 
 $Z$ is a collider on
 
@@ -182,26 +245,216 @@ $$
 D \rightarrow Z \leftarrow U \rightarrow Y.
 $$
 
-Without conditioning on $Z$, this path is closed.
+Conditioning on $Z$ induces a noncausal association between $D$ and $U$.
 
-**BUT** conditioning on $Z$ induces a noncausal association between $D$ and $U$.
+## Collider bias intuition
 
-The lesson:
+Suppose admission to a selective college depends on two things: **ability** and **luck**.
 
-> **A pre-treatment variable can be a bad control.**
+::: {.small-dag}
 
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.62, height=0.62, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  A [label="Ability", pos="0,1.0!", pin=true]
+  L [label="Luck", pos="0,0!", pin=true]
+  C [label="Admitted", pos="2.0,0.5!", pin=true]
+  A -> C
+  L -> C
+}
+```
+
+:::
+
+In the population, suppose ability and luck are independent:
+
+$$
+A \perp L.
+$$
+
+
+## Collider bias intuition
+
+High values of one can compensate for low values of the other:
+
+- a student with relatively low ability must have been relatively lucky;
+- a student with relatively little luck must have had relatively high ability.
+
+So:
+
+$$
+A \not\!\perp L \mid C=1.
+$$
+
+## Collider bias intuition
+
+### In the general population
+
+| Luck | Ability: High | Ability: Low |
+|---|---:|---:|
+| **High** | 25% | 25% |
+| **Low** | 25% | 25% |
+
+There is no relationship between luck and ability:
+
+$$
+\operatorname{Corr}(\text{Luck},\text{Ability}) = 0.
+$$
+
+## Collider bias intuition
+
+### Now condition on admission
+
+Suppose admission requires **either high ability or high luck**.
+
+| Luck | Ability: High | Ability: Low |
+|---|---:|---:|
+| **High** | 33.3% | 33.3% |
+| **Low** | 33.3% | 0% |
+
+Among admitted students:
+
+$$
+\operatorname{Corr}(\text{Luck},\text{Ability}\mid\text{Admitted}) < 0.
+$$
+
+## Collider bias intuition
+
+The low-low combination has been removed by conditioning.
+
+So among admitted students, low ability tends to be paired with high luck,
+and low luck tends to be paired with high ability.
+
+$$
+\text{Luck} \rightarrow \text{Admission} \leftarrow \text{Ability}
+$$
+
+**Conditioning on the collider creates the negative association.**
+
+## Pre-treatment controls are not safe
+
+Consider a causal story about how elite schools improve graduate earnings
+
+Suppose enrollment in a college-prep program occurs before college attendance:
+
+::: {.small-dag}
+
+```{dot}
+digraph {
+
+  graph [
+    layout=neato,
+    overlap=false,
+    splines=true,
+    outputorder=edgesfirst,
+    bgcolor="transparent"
+  ]
+
+  node [
+    shape=circle,
+    width=0.95,
+    height=0.95,
+    fixedsize=true,
+    fontsize=15
+  ]
+
+  edge [
+    arrowsize=0.55
+  ]
+
+  A [label="Ability\n(A)",          pos="0,1.5!", pin=true]
+  W [label="Parental\nwealth\n(W)", pos="0,0!",   pin=true]
+  X [label="Prep\nprogram\n(X)",    pos="1.6,1.5!", pin=true]
+  D [label="Elite\ncollege\n(D)",   pos="3.2,1.5!", pin=true]
+  Y [label="Adult\nearnings\n(Y)",  pos="4.8,0!", pin=true]
+
+  A -> X
+  W -> X
+  X -> D
+  D -> Y
+  A -> Y
+  W -> Y
+}
+```
+
+:::
+
+Can you control for $X$?
+
+## Pre-treatment controls are not safe
+
+$X$ is clearly **pre-treatment**, but it is also a collider:
+
+$$
+A \rightarrow X \leftarrow W.
+$$
+
+Conditioning on $X$ induces an association between ability and parental wealth, opening
+
+$$
+D \leftarrow A \rightarrow X \leftarrow W \rightarrow Y.
+$$
+
+::: {.callout-important}
+**Temporal ordering rules out some causal stories. It does not determine the adjustment set.**
+
+Ask what **causes** a variable, not merely whether it occurs before treatment.
+:::
 ## A bad control: M-bias
 
-A particularly important collider structure is:
+<style>
+.small-dag svg {
+  width: 40% !important;
+  height: auto !important;
+}
+.small-dag {
+  text-align: center;
+}
+</style>
 
-```{mermaid}
-flowchart LR
-  U1[U1] --> Z[Z]
-  U2[U2] --> Z
-  U1 --> D[D]
-  U2 --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph M_bias {
+
+  graph [
+    layout=neato,
+    overlap=false,
+    splines=true,
+    outputorder=edgesfirst,
+    bgcolor="transparent",
+    scale=0.6
+  ]
+
+  node [
+    shape=circle,
+    width=0.42,
+    height=0.42,
+    fixedsize=true,
+    fontsize=11
+  ]
+
+  edge [
+    arrowsize=0.55
+  ]
+
+  U1 [label="U1", pos="0,2.2!", pin=true]
+  U2 [label="U2", pos="3.2,2.2!", pin=true]
+  Z  [label="Z",  pos="1.6,1.25!", pin=true]
+  X  [label="X",  pos="0,0!", pin=true]
+  Y  [label="Y",  pos="3.2,0!", pin=true]
+
+  U1 -> X
+  U1 -> Z
+  U2 -> Z
+  U2 -> Y
+  X -> Y
+}
 ```
+
+:::
 
 $Z$ is pre-treatment and related to both treatment and outcome, but conditioning on it can create bias by opening
 
@@ -217,12 +470,23 @@ The practical implication is important: **“controls for predictors of treatmen
 
 Suppose:
 
-```{mermaid}
-flowchart LR
-  D[D] --> M[M]
-  M --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  D [label="D", pos="0,0.8!", pin=true]
+  M [label="M", pos="1.6,1.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  D -> M
+  M -> Y
+  D -> Y
+}
 ```
+
+:::
 
 If we want the **total effect** of $D$ on $Y$, conditioning on the mediator $M$ removes part of the causal pathway we are trying to estimate.
 
@@ -234,13 +498,25 @@ The backdoor criterion therefore excludes descendants of treatment that lie on d
 
 Consider:
 
-```{mermaid}
-flowchart LR
-  U[U] --> Y[Y]
-  U --> M[M]
-  D[D] --> M
-  M --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  U [label="U", pos="0,1.9!", pin=true]
+  D [label="D", pos="0,0!", pin=true]
+  M [label="M", pos="1.1,0.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  U -> Y
+  U -> M
+  D -> M
+  M -> Y
+}
 ```
+
+:::
 
 Conditioning on $M$ can create an association between $D$ and the unobserved $U$.
 
@@ -255,12 +531,22 @@ Which problem occurs depends on the causal structure.
 
 Let $S$ indicate being observed in the analytic sample.
 
-```{mermaid}
-flowchart LR
-  D[D] --> S[Observed]
-  Y[Y] --> S
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  D [label="D", pos="0,0.8!", pin=true]
+  Y [label="Y", pos="0,0!", pin=true]
+  S [label="S", pos="1.8,0.4!", pin=true]
+  D -> S
+  Y -> S
+}
 ```
+
+:::
 
 If we restrict attention to $S=1$, we are conditioning on a collider.
 
@@ -311,14 +597,25 @@ $$
 
 Suppose we already have some residual confounding:
 
-```{mermaid}
-flowchart LR
-  U[U] --> D[D]
-  U --> Y[Y]
-  X[X] --> D
-  X --> Y
-  Z[Z] --> D
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  Z [label="Z", pos="0,0.8!", pin=true]
+  D [label="D", pos="1.6,0.8!", pin=true]
+  U [label="U", pos="1.6,2.0!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  Z -> D
+  U -> D
+  U -> Y
+  D -> Y
+}
 ```
+
+:::
 
 Adding $Z$ can make the remaining bias **larger**, even if $Z$ is not itself a confounder.
 
@@ -361,12 +658,23 @@ Choose the correct control and explain the relevant path
 
 **A**
 
-```{mermaid}
-flowchart LR
-  X[X] --> D[D]
-  X --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  X [label="X", pos="1.6,1.8!", pin=true]
+  D [label="D", pos="0,0.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  X -> D
+  X -> Y
+  D -> Y
+}
 ```
+
+:::
 
 ## Exercise: choose the adjustment set
 
@@ -374,12 +682,24 @@ Choose the correct control and explain the relevant path
 
 **B**
 
-```{mermaid}
-flowchart LR
-  D[D] --> M[M]
-  M --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  D [label="D", pos="0,0.8!", pin=true]
+  M [label="M", pos="1.6,1.8!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  D -> M
+  M -> Y
+  D -> Y
+}
 ```
+
+:::
+
 
 ## Exercise: choose the adjustment set
 
@@ -387,14 +707,27 @@ Choose the correct control and explain the relevant path
 
 **C**
 
-```{mermaid}
-flowchart LR
-  U1[U1] --> Z[Z]
-  U2[U2] --> Z
-  U1 --> D[D]
-  U2 --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  U1 [label="U1", pos="0,1.6!", pin=true]
+  U2 [label="U2", pos="0,0!", pin=true]
+  Z  [label="Z", pos="1.6,0.8!", pin=true]
+  D  [label="D", pos="3.2,1.4!", pin=true]
+  Y  [label="Y", pos="3.2,0.2!", pin=true]
+  U1 -> Z
+  U2 -> Z
+  U1 -> D
+  U2 -> Y
+  D -> Y
+}
 ```
+
+:::
 
 ## Exercise: choose the adjustment set
 
@@ -402,13 +735,25 @@ Choose the correct control and explain the relevant path
 
 **D**
 
-```{mermaid}
-flowchart LR
-  D[D] --> S[S]
-  U[U] --> S
-  U --> Y[Y]
-  D --> Y
+::: {.small-dag}
+
+```{dot}
+digraph {
+  graph [layout=neato, overlap=false, splines=true, outputorder=edgesfirst, bgcolor="transparent"]
+  node [shape=circle, width=0.42, height=0.42, fixedsize=true, fontsize=11]
+  edge [arrowsize=0.55]
+  D [label="D", pos="0,0.8!", pin=true]
+  U [label="U", pos="1.6,2.0!", pin=true]
+  S [label="S", pos="0.0,1.6!", pin=true]
+  Y [label="Y", pos="3.2,0.8!", pin=true]
+  D -> S
+  U -> S
+  U -> Y
+  D -> Y
+}
 ```
+
+:::
 
 
 

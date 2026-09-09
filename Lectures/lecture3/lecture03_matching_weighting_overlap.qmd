@@ -166,6 +166,351 @@ But exact matching becomes difficult as the number of covariates grows or covari
 
 This is one version of the **curse of dimensionality**.
 
+## Perfect stratification: setup
+
+Suppose we have perfectly stratified on covariates $S$.
+
+Within each stratum, assume:
+
+$$
+E[Y(1)\mid D=1,S]
+=
+E[Y(1)\mid D=0,S]
+\tag{1-S}
+$$
+
+and
+
+$$
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+\tag{2-S}
+$$
+
+Let the individual treatment effect be
+
+$$
+\delta = Y(1)-Y(0).
+$$
+
+---
+
+# The ATC
+
+## Identification of the ATC within strata
+
+Under Assumption 1-S,
+
+$$
+\begin{aligned}
+E[\delta\mid D=0,S]
+&=E[Y(1)-Y(0)\mid D=0,S]\\
+&=E[Y(1)\mid D=0,S]-E[Y(0)\mid D=0,S]\\
+&=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=0,S]\\
+&=E[Y\mid D=1,S]-E[Y\mid D=0,S].
+\end{aligned}
+$$
+
+Thus, within each stratum, the observed difference in outcomes identifies the average treatment effect for the controls in that stratum.
+
+---
+
+## From stratum-specific effects to the ATC
+
+The ATC is
+
+$$
+ATC = E[\delta\mid D=0].
+$$
+
+By iterated expectations,
+
+$$
+ATC
+=
+E\left[
+E[\delta\mid D=0,S]
+\mid D=0
+\right].
+$$
+
+Therefore,
+
+$$
+\boxed{
+ATC
+=
+E\left[
+E[Y\mid D=1,S]-E[Y\mid D=0,S]
+\mid D=0
+\right].
+}
+$$
+
+For discrete strata,
+
+$$
+\boxed{
+ATC
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s\mid D=0).
+}
+$$
+
+The stratum-specific differences are weighted by the distribution of $S$ among the **controls**.
+
+---
+
+# The ATT
+
+## Identification of the ATT within strata
+
+Under Assumption 2-S,
+
+$$
+\begin{aligned}
+E[\delta\mid D=1,S]
+&=E[Y(1)-Y(0)\mid D=1,S]\\
+&=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=1,S]\\
+&=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=0,S]\\
+&=E[Y\mid D=1,S]-E[Y\mid D=0,S].
+\end{aligned}
+$$
+
+Thus, within each stratum, the same observed difference in outcomes identifies the average treatment effect for the treated in that stratum.
+
+---
+
+## From stratum-specific effects to the ATT
+
+The ATT is
+
+$$
+ATT = E[\delta\mid D=1].
+$$
+
+By iterated expectations,
+
+$$
+ATT
+=
+E\left[
+E[\delta\mid D=1,S]
+\mid D=1
+\right].
+$$
+
+Therefore,
+
+$$
+\boxed{
+ATT
+=
+E\left[
+E[Y\mid D=1,S]-E[Y\mid D=0,S]
+\mid D=1
+\right].
+}
+$$
+
+For discrete strata,
+
+$$
+\boxed{
+ATT
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s\mid D=1).
+}
+$$
+
+The stratum-specific differences are weighted by the distribution of $S$ among the **treated**.
+
+---
+
+# Putting the two together
+
+## Same comparison, different target populations
+
+Within stratum $S=s$, define the observed treated-control difference:
+
+$$
+\Delta(s)
+=
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s].
+$$
+
+Then:
+
+$$
+\boxed{
+ATC
+=
+\sum_s \Delta(s)P(S=s\mid D=0)
+}
+$$
+
+and
+
+$$
+\boxed{
+ATT
+=
+\sum_s \Delta(s)P(S=s\mid D=1).
+}
+$$
+
+The within-stratum comparison is the same.
+
+What changes is **which population determines the weights**.
+
+---
+
+# The ATE
+
+## From ATT and ATC to the ATE
+
+The ATE is
+
+$$
+ATE = E[\delta].
+$$
+
+Conditioning on treatment status,
+
+$$
+\begin{aligned}
+ATE
+&=
+P(D=1)E[\delta\mid D=1]
++
+P(D=0)E[\delta\mid D=0]\\
+&=
+P(D=1)ATT
++
+P(D=0)ATC.
+\end{aligned}
+$$
+
+Therefore,
+
+$$
+\boxed{
+ATE
+=
+P(D=1)ATT
++
+P(D=0)ATC.
+}
+$$
+
+---
+
+## ATE as a weighted average across strata
+
+Substituting the expressions for ATT and ATC,
+
+$$
+\begin{aligned}
+ATE
+={}&
+P(D=1)
+\sum_s \Delta(s)P(S=s\mid D=1)\\
+&+
+P(D=0)
+\sum_s \Delta(s)P(S=s\mid D=0).
+\end{aligned}
+$$
+
+By the law of total probability,
+
+$$
+P(S=s)
+=
+P(S=s\mid D=1)P(D=1)
++
+P(S=s\mid D=0)P(D=0).
+$$
+
+Hence,
+
+$$
+\boxed{
+ATE
+=
+\sum_s
+\Delta(s)P(S=s).
+}
+$$
+
+or, expanding $\Delta(s)$,
+
+$$
+\boxed{
+ATE
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s).
+}
+$$
+
+So the ATE weights the same within-stratum comparisons by the distribution of $S$ in the **full population**.
+
+---
+
+## ATT, ATC, and ATE
+
+Let
+
+$$
+\Delta(s)
+=
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s].
+$$
+
+Then:
+
+$$
+\boxed{
+\begin{aligned}
+ATC
+&=
+\sum_s \Delta(s)P(S=s\mid D=0),
+\\[6pt]
+ATT
+&=
+\sum_s \Delta(s)P(S=s\mid D=1),
+\\[6pt]
+ATE
+&=
+\sum_s \Delta(s)P(S=s).
+\end{aligned}
+}
+$$
+
+The estimands differ not in the within-stratum comparison, but in the population over which those comparisons are averaged.
+
 ---
 
 ## Coarsening and approximate matching

@@ -124,9 +124,6 @@
       margin-right: 0; 
     }
   </style>
-  <script src="lecture02_conditioning_files/libs/quarto-diagram/mermaid.min.js"></script>
-  <script src="lecture02_conditioning_files/libs/quarto-diagram/mermaid-init.js"></script>
-  <link href="lecture02_conditioning_files/libs/quarto-diagram/mermaid.css" rel="stylesheet">
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -173,18 +170,55 @@ Jim Bisbee
 <section id="the-basic-observational-problem" class="slide level2">
 <h2>The basic observational problem</h2>
 <p>Suppose we want the effect of <span class="math inline">\(D\)</span> on <span class="math inline">\(Y\)</span>.</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; Y[Y]
-  X[X] --&gt; D
-  X --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- X&#45;&gt;D -->
+<g id="edge1" class="edge">
+<title>X-&gt;D</title>
+<path fill="none" stroke="black" d="M117.43,-79.02C96.76,-66.1 55.92,-40.58 32.54,-25.96"></path>
+<polygon fill="black" stroke="black" points="33.51,-24.3 27.83,-23.02 31.47,-27.56 33.51,-24.3"></polygon>
+</g>
+<!-- X&#45;&gt;Y -->
+<g id="edge2" class="edge">
+<title>X-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.97,-79.02C163.64,-66.1 204.48,-40.58 227.86,-25.96"></path>
+<polygon fill="black" stroke="black" points="228.93,-27.56 232.57,-23.02 226.89,-24.3 228.93,-27.56"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- X -->
+<g id="node1" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-83.7" font-family="Times,serif" font-size="11.00">X</text>
+</g>
+<!-- D -->
+<g id="node2" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node3" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -197,7 +231,6 @@ E[Y\mid D=1]-E[Y\mid D=0],
 <p><span class="math display">\[
 D \leftarrow X \rightarrow Y.
 \]</span></p>
-<p>Conditioning on the right <span class="math inline">\(X\)</span> can block this path.</p>
 </section>
 <section id="toward-conditional-identification" class="slide level2">
 <h2>Toward conditional identification</h2>
@@ -264,18 +297,55 @@ E[Y(0)\mid D=1,X] = E[Y\mid D=0,X].
 <section id="a-simple-good-control-case" class="slide level2">
 <h2>A simple good-control case</h2>
 <p>Suppose:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  X[X] --&gt; D[D]
-  X --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- X&#45;&gt;D -->
+<g id="edge1" class="edge">
+<title>X-&gt;D</title>
+<path fill="none" stroke="black" d="M117.43,-79.02C96.76,-66.1 55.92,-40.58 32.54,-25.96"></path>
+<polygon fill="black" stroke="black" points="33.51,-24.3 27.83,-23.02 31.47,-27.56 33.51,-24.3"></polygon>
+</g>
+<!-- X&#45;&gt;Y -->
+<g id="edge2" class="edge">
+<title>X-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.97,-79.02C163.64,-66.1 204.48,-40.58 227.86,-25.96"></path>
+<polygon fill="black" stroke="black" points="228.93,-27.56 232.57,-23.02 226.89,-24.3 228.93,-27.56"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- X -->
+<g id="node1" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-83.7" font-family="Times,serif" font-size="11.00">X</text>
+</g>
+<!-- D -->
+<g id="node2" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node3" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -290,19 +360,67 @@ D \leftarrow X \rightarrow Y
 <section id="a-complicated-good-control" class="slide level2">
 <h2>A complicated good-control</h2>
 <p>Consider:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  X[X] --&gt; A[A]
-  A --&gt; D[D]
-  X --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 318.80 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- X&#45;&gt;A -->
+<g id="edge1" class="edge">
+<title>X-&gt;A</title>
+<path fill="none" stroke="black" d="M27.24,-77.59C43.86,-64.8 73.65,-41.89 92.2,-27.62"></path>
+<polygon fill="black" stroke="black" points="93.47,-29.07 96.66,-24.19 91.12,-26.02 93.47,-29.07"></polygon>
+</g>
+<!-- X&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>X-&gt;Y</title>
+<path fill="none" stroke="black" d="M29.7,-83.23C76.52,-71.23 222.19,-33.88 275.76,-20.14"></path>
+<polygon fill="black" stroke="black" points="276.39,-21.96 281.24,-18.73 275.44,-18.23 276.39,-21.96"></polygon>
+</g>
+<!-- A&#45;&gt;D -->
+<g id="edge2" class="edge">
+<title>A-&gt;D</title>
+<path fill="none" stroke="black" d="M123.64,-15C139.33,-15 164.05,-15 181.56,-15"></path>
+<polygon fill="black" stroke="black" points="181.7,-16.93 187.2,-15 181.7,-13.08 181.7,-16.93"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M217.24,-15C232.93,-15 257.65,-15 275.16,-15"></path>
+<polygon fill="black" stroke="black" points="275.3,-16.93 280.8,-15 275.3,-13.08 275.3,-16.93"></polygon>
+</g>
+<!-- X -->
+<g id="node1" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-83.7" font-family="Times,serif" font-size="11.00">X</text>
+</g>
+<!-- A -->
+<g id="node2" class="node">
+<title>A</title>
+<ellipse fill="none" stroke="black" cx="108.6" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="108.6" y="-11.7" font-family="Times,serif" font-size="11.00">A</text>
+</g>
+<!-- D -->
+<g id="node3" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="202.2" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="202.2" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node4" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="295.8" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="295.8" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -316,19 +434,67 @@ D \leftarrow A \leftarrow X \rightarrow Y
 <section id="a-bad-control-collider-bias" class="slide level2">
 <h2>A bad control: collider bias</h2>
 <p>Consider:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; Z[Z]
-  U[U] --&gt; Z
-  U --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 146.00 146.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 142)">
+<!-- D&#45;&gt;Z -->
+<g id="edge1" class="edge">
+<title>D-&gt;Z</title>
+<path fill="none" stroke="black" d="M30.02,-123C48.77,-123 80.96,-123 102.11,-123"></path>
+<polygon fill="black" stroke="black" points="102.26,-124.93 107.76,-123 102.26,-121.08 102.26,-124.93"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M25.75,-112.25C45.16,-92.84 86.07,-51.93 108.14,-29.86"></path>
+<polygon fill="black" stroke="black" points="109.77,-30.96 112.29,-25.71 107.04,-28.23 109.77,-30.96"></polygon>
+</g>
+<!-- U&#45;&gt;Z -->
+<g id="edge2" class="edge">
+<title>U-&gt;Z</title>
+<path fill="none" stroke="black" d="M25.75,-25.75C45.16,-45.16 86.07,-86.07 108.14,-108.14"></path>
+<polygon fill="black" stroke="black" points="107.04,-109.77 112.29,-112.29 109.77,-107.04 107.04,-109.77"></polygon>
+</g>
+<!-- U&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>U-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.02,-15C48.77,-15 80.96,-15 102.11,-15"></path>
+<polygon fill="black" stroke="black" points="102.26,-16.93 107.76,-15 102.26,-13.08 102.26,-16.93"></polygon>
+</g>
+<!-- D -->
+<g id="node1" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-123" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-119.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Z -->
+<g id="node2" class="node">
+<title>Z</title>
+<ellipse fill="none" stroke="black" cx="123" cy="-123" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="123" y="-119.7" font-family="Times,serif" font-size="11.00">Z</text>
+</g>
+<!-- U -->
+<g id="node3" class="node">
+<title>U</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">U</text>
+</g>
+<!-- Y -->
+<g id="node4" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="123" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="123" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -336,30 +502,349 @@ D \leftarrow A \leftarrow X \rightarrow Y
 <p><span class="math display">\[
 D \rightarrow Z \leftarrow U \rightarrow Y.
 \]</span></p>
-<p>Without conditioning on <span class="math inline">\(Z\)</span>, this path is closed.</p>
-<p><strong>BUT</strong> conditioning on <span class="math inline">\(Z\)</span> induces a noncausal association between <span class="math inline">\(D\)</span> and <span class="math inline">\(U\)</span>.</p>
-<p>The lesson:</p>
-<blockquote>
-<p><strong>A pre-treatment variable can be a bad control.</strong></p>
-</blockquote>
+<p>Conditioning on <span class="math inline">\(Z\)</span> induces a noncausal association between <span class="math inline">\(D\)</span> and <span class="math inline">\(U\)</span>.</p>
 </section>
-<section id="a-bad-control-m-bias" class="slide level2">
-<h2>A bad control: M-bias</h2>
-<p>A particularly important collider structure is:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<section id="collider-bias-intuition" class="slide level2">
+<h2>Collider bias intuition</h2>
+<p>Suppose admission to a selective college depends on two things: <strong>ability</strong> and <strong>luck</strong>.</p>
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  U1[U1] --&gt; Z[Z]
-  U2[U2] --&gt; Z
-  U1 --&gt; D[D]
-  U2 --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 197.00 125.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 121)">
+<!-- A&#45;&gt;C -->
+<g id="edge1" class="edge">
+<title>A-&gt;C</title>
+<path fill="none" stroke="black" d="M44.37,-89.03C69.64,-82.72 111.26,-72.31 138.78,-65.43"></path>
+<polygon fill="black" stroke="black" points="139.55,-67.22 144.42,-64.02 138.62,-63.49 139.55,-67.22"></polygon>
+</g>
+<!-- L&#45;&gt;C -->
+<g id="edge2" class="edge">
+<title>L-&gt;C</title>
+<path fill="none" stroke="black" d="M44.37,-27.97C69.64,-34.28 111.26,-44.69 138.78,-51.57"></path>
+<polygon fill="black" stroke="black" points="138.62,-53.51 144.42,-52.98 139.55,-49.78 138.62,-53.51"></polygon>
+</g>
+<!-- A -->
+<g id="node1" class="node">
+<title>A</title>
+<ellipse fill="none" stroke="black" cx="22.5" cy="-94.5" rx="22.5" ry="22.5"></ellipse>
+<text text-anchor="middle" x="22.5" y="-91.2" font-family="Times,serif" font-size="11.00">Ability</text>
+</g>
+<!-- L -->
+<g id="node2" class="node">
+<title>L</title>
+<ellipse fill="none" stroke="black" cx="22.5" cy="-22.5" rx="22.5" ry="22.5"></ellipse>
+<text text-anchor="middle" x="22.5" y="-19.2" font-family="Times,serif" font-size="11.00">Luck</text>
+</g>
+<!-- C -->
+<g id="node3" class="node">
+<title>C</title>
+<ellipse fill="none" stroke="black" cx="166.5" cy="-58.5" rx="22.5" ry="22.5"></ellipse>
+<text text-anchor="middle" x="166.5" y="-55.2" font-family="Times,serif" font-size="11.00">Admitted</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+<p>In the population, suppose ability and luck are independent:</p>
+<p><span class="math display">\[
+A \perp L.
+\]</span></p>
+</section>
+<section id="collider-bias-intuition-1" class="slide level2">
+<h2>Collider bias intuition</h2>
+<p>High values of one can compensate for low values of the other:</p>
+<ul>
+<li>a student with relatively low ability must have been relatively lucky;</li>
+<li>a student with relatively little luck must have had relatively high ability.</li>
+</ul>
+<p>So:</p>
+<p><span class="math display">\[
+A \not\!\perp L \mid C=1.
+\]</span></p>
+</section>
+<section id="collider-bias-intuition-2" class="slide level2">
+<h2>Collider bias intuition</h2>
+<h3 id="in-the-general-population">In the general population</h3>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Luck</th>
+<th style="text-align: right;">Ability: High</th>
+<th style="text-align: right;">Ability: Low</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>High</strong></td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: right;">25%</td>
+</tr>
+<tr class="even">
+<td><strong>Low</strong></td>
+<td style="text-align: right;">25%</td>
+<td style="text-align: right;">25%</td>
+</tr>
+</tbody>
+</table>
+<p>There is no relationship between luck and ability:</p>
+<p><span class="math display">\[
+\operatorname{Corr}(\text{Luck},\text{Ability}) = 0.
+\]</span></p>
+</section>
+<section id="collider-bias-intuition-3" class="slide level2">
+<h2>Collider bias intuition</h2>
+<h3 id="now-condition-on-admission">Now condition on admission</h3>
+<p>Suppose admission requires <strong>either high ability or high luck</strong>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Luck</th>
+<th style="text-align: right;">Ability: High</th>
+<th style="text-align: right;">Ability: Low</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>High</strong></td>
+<td style="text-align: right;">33.3%</td>
+<td style="text-align: right;">33.3%</td>
+</tr>
+<tr class="even">
+<td><strong>Low</strong></td>
+<td style="text-align: right;">33.3%</td>
+<td style="text-align: right;">0%</td>
+</tr>
+</tbody>
+</table>
+<p>Among admitted students:</p>
+<p><span class="math display">\[
+\operatorname{Corr}(\text{Luck},\text{Ability}\mid\text{Admitted}) &lt; 0.
+\]</span></p>
+</section>
+<section id="collider-bias-intuition-4" class="slide level2">
+<h2>Collider bias intuition</h2>
+<p>The low-low combination has been removed by conditioning.</p>
+<p>So among admitted students, low ability tends to be paired with high luck, and low luck tends to be paired with high ability.</p>
+<p><span class="math display">\[
+\text{Luck} \rightarrow \text{Admission} \leftarrow \text{Ability}
+\]</span></p>
+<p><strong>Conditioning on the collider creates the negative association.</strong></p>
+</section>
+<section id="pre-treatment-controls-are-not-safe" class="slide level2">
+<h2>Pre-treatment controls are not safe</h2>
+<p>Consider a causal story about how elite schools improve graduate earnings</p>
+<p>Suppose enrollment in a college-prep program occurs before college attendance:</p>
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class=""><p></p>
+<div>
+<svg width="960" height="480" viewbox="0.00 0.00 421.60 184.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 180)">
+<!-- A&#45;&gt;X -->
+<g id="edge1" class="edge">
+<title>A-&gt;X</title>
+<path fill="none" stroke="black" d="M68.25,-142C81.14,-142 95.89,-142 109.25,-142"></path>
+<polygon fill="black" stroke="black" points="109.38,-143.93 114.88,-142 109.38,-140.08 109.38,-143.93"></polygon>
+</g>
+<!-- A&#45;&gt;Y -->
+<g id="edge5" class="edge">
+<title>A-&gt;Y</title>
+<path fill="none" stroke="black" d="M66.51,-131.84C130.58,-111.82 272.85,-67.36 341.33,-45.96"></path>
+<polygon fill="black" stroke="black" points="342.25,-47.69 346.92,-44.21 341.1,-44.02 342.25,-47.69"></polygon>
+</g>
+<!-- W&#45;&gt;X -->
+<g id="edge2" class="edge">
+<title>W-&gt;X</title>
+<path fill="none" stroke="black" d="M59,-57.43C76.96,-74.28 101.23,-97.03 120.08,-114.7"></path>
+<polygon fill="black" stroke="black" points="118.92,-116.25 124.25,-118.61 121.56,-113.45 118.92,-116.25"></polygon>
+</g>
+<!-- W&#45;&gt;Y -->
+<g id="edge6" class="edge">
+<title>W-&gt;Y</title>
+<path fill="none" stroke="black" d="M68.08,-34C132.43,-34 271.48,-34 339.92,-34"></path>
+<polygon fill="black" stroke="black" points="340.02,-35.93 345.52,-34 340.02,-32.08 340.02,-35.93"></polygon>
+</g>
+<!-- X&#45;&gt;D -->
+<g id="edge3" class="edge">
+<title>X-&gt;D</title>
+<path fill="none" stroke="black" d="M183.45,-142C196.34,-142 211.09,-142 224.45,-142"></path>
+<polygon fill="black" stroke="black" points="224.58,-143.93 230.08,-142 224.58,-140.08 224.58,-143.93"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M289.4,-118.57C307.36,-101.72 331.63,-78.97 350.48,-61.3"></path>
+<polygon fill="black" stroke="black" points="351.96,-62.55 354.65,-57.39 349.32,-59.75 351.96,-62.55"></polygon>
+</g>
+<!-- A -->
+<g id="node1" class="node">
+<title>A</title>
+<ellipse fill="none" stroke="black" cx="34" cy="-142" rx="34" ry="34"></ellipse>
+<text text-anchor="middle" x="34" y="-146.5" font-family="Times,serif" font-size="15.00">Ability</text>
+<text text-anchor="middle" x="34" y="-128.5" font-family="Times,serif" font-size="15.00">(A)</text>
+</g>
+<!-- W -->
+<g id="node2" class="node">
+<title>W</title>
+<ellipse fill="none" stroke="black" cx="34" cy="-34" rx="34" ry="34"></ellipse>
+<text text-anchor="middle" x="34" y="-47.5" font-family="Times,serif" font-size="15.00">Parental</text>
+<text text-anchor="middle" x="34" y="-29.5" font-family="Times,serif" font-size="15.00">wealth</text>
+<text text-anchor="middle" x="34" y="-11.5" font-family="Times,serif" font-size="15.00">(W)</text>
+</g>
+<!-- X -->
+<g id="node3" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="149.2" cy="-142" rx="34" ry="34"></ellipse>
+<text text-anchor="middle" x="149.2" y="-155.5" font-family="Times,serif" font-size="15.00">Prep</text>
+<text text-anchor="middle" x="149.2" y="-137.5" font-family="Times,serif" font-size="15.00">program</text>
+<text text-anchor="middle" x="149.2" y="-119.5" font-family="Times,serif" font-size="15.00">(X)</text>
+</g>
+<!-- D -->
+<g id="node4" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="264.4" cy="-142" rx="34" ry="34"></ellipse>
+<text text-anchor="middle" x="264.4" y="-155.5" font-family="Times,serif" font-size="15.00">Elite</text>
+<text text-anchor="middle" x="264.4" y="-137.5" font-family="Times,serif" font-size="15.00">college</text>
+<text text-anchor="middle" x="264.4" y="-119.5" font-family="Times,serif" font-size="15.00">(D)</text>
+</g>
+<!-- Y -->
+<g id="node5" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="379.6" cy="-34" rx="34" ry="34"></ellipse>
+<text text-anchor="middle" x="379.6" y="-47.5" font-family="Times,serif" font-size="15.00">Adult</text>
+<text text-anchor="middle" x="379.6" y="-29.5" font-family="Times,serif" font-size="15.00">earnings</text>
+<text text-anchor="middle" x="379.6" y="-11.5" font-family="Times,serif" font-size="15.00">(Y)</text>
+</g>
+</g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
+</div>
+</div>
+</div>
+<p>Can you control for <span class="math inline">\(X\)</span>?</p>
+</section>
+<section id="pre-treatment-controls-are-not-safe-1" class="slide level2">
+<h2>Pre-treatment controls are not safe</h2>
+<p><span class="math inline">\(X\)</span> is clearly <strong>pre-treatment</strong>, but it is also a collider:</p>
+<p><span class="math display">\[
+A \rightarrow X \leftarrow W.
+\]</span></p>
+<p>Conditioning on <span class="math inline">\(X\)</span> induces an association between ability and parental wealth, opening</p>
+<p><span class="math display">\[
+D \leftarrow A \rightarrow X \leftarrow W \rightarrow Y.
+\]</span></p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Important</strong></p>
+</div>
+<div class="callout-content">
+<p><strong>Temporal ordering rules out some causal stories. It does not determine the adjustment set.</strong></p>
+<p>Ask what <strong>causes</strong> a variable, not merely whether it occurs before treatment.</p>
+</div>
+</div>
+</div>
+</section>
+<section id="a-bad-control-m-bias" class="slide level2">
+<h2>A bad control: M-bias</h2>
+<style>
+.small-dag svg {
+  width: 40% !important;
+  height: auto !important;
+}
+.small-dag {
+  text-align: center;
+}
+</style>
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
+<div class="cell-output-display">
+<div>
+<p></p><figure class=""><p></p>
+<div>
+<svg width="960" height="480" viewbox="0.00 0.00 176.24 133.04" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 129.04)">
+<title>M_bias</title>
+<!-- U1&#45;&gt;Z -->
+<g id="edge2" class="edge">
+<title>U1-&gt;Z</title>
+<path fill="none" stroke="black" d="M28,-102.32C38.81,-95.9 54.31,-86.7 66.29,-79.59"></path>
+<polygon fill="black" stroke="black" points="67.43,-81.15 71.18,-76.68 65.47,-77.84 67.43,-81.15"></polygon>
+</g>
+<!-- U1&#45;&gt;X -->
+<g id="edge1" class="edge">
+<title>U1-&gt;X</title>
+<path fill="none" stroke="black" d="M15,-94.77C15,-78.84 15,-53.74 15,-35.96"></path>
+<polygon fill="black" stroke="black" points="16.93,-35.73 15,-30.23 13.08,-35.73 16.93,-35.73"></polygon>
+</g>
+<!-- U2&#45;&gt;Z -->
+<g id="edge3" class="edge">
+<title>U2-&gt;Z</title>
+<path fill="none" stroke="black" d="M140.24,-102.32C129.43,-95.9 113.93,-86.7 101.95,-79.59"></path>
+<polygon fill="black" stroke="black" points="102.77,-77.84 97.06,-76.68 100.81,-81.15 102.77,-77.84"></polygon>
+</g>
+<!-- U2&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>U2-&gt;Y</title>
+<path fill="none" stroke="black" d="M153.24,-94.77C153.24,-78.84 153.24,-53.74 153.24,-35.96"></path>
+<polygon fill="black" stroke="black" points="155.17,-35.73 153.24,-30.23 151.32,-35.73 155.17,-35.73"></polygon>
+</g>
+<!-- X&#45;&gt;Y -->
+<g id="edge5" class="edge">
+<title>X-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.06,-15C54.88,-15 104.45,-15 132.55,-15"></path>
+<polygon fill="black" stroke="black" points="132.7,-16.93 138.2,-15 132.7,-13.08 132.7,-16.93"></polygon>
+</g>
+<!-- U1 -->
+<g id="node1" class="node">
+<title>U1</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-110.04" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-106.74" font-family="Times,serif" font-size="11.00">U1</text>
+</g>
+<!-- U2 -->
+<g id="node2" class="node">
+<title>U2</title>
+<ellipse fill="none" stroke="black" cx="153.24" cy="-110.04" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="153.24" y="-106.74" font-family="Times,serif" font-size="11.00">U2</text>
+</g>
+<!-- Z -->
+<g id="node3" class="node">
+<title>Z</title>
+<ellipse fill="none" stroke="black" cx="84.12" cy="-69" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="84.12" y="-65.7" font-family="Times,serif" font-size="11.00">Z</text>
+</g>
+<!-- X -->
+<g id="node4" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">X</text>
+</g>
+<!-- Y -->
+<g id="node5" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="153.24" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="153.24" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
+</div>
+<p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -373,18 +858,55 @@ D \leftarrow U_1 \rightarrow Z \leftarrow U_2 \rightarrow Y.
 <section id="a-bad-control-post-treatment" class="slide level2">
 <h2>A bad control: post-treatment</h2>
 <p>Suppose:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; M[M]
-  M --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- D&#45;&gt;M -->
+<g id="edge1" class="edge">
+<title>D-&gt;M</title>
+<path fill="none" stroke="black" d="M27.77,-22.98C48.44,-35.9 89.28,-61.42 112.66,-76.04"></path>
+<polygon fill="black" stroke="black" points="111.69,-77.7 117.37,-78.98 113.73,-74.44 111.69,-77.7"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- M&#45;&gt;Y -->
+<g id="edge2" class="edge">
+<title>M-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.97,-79.02C163.64,-66.1 204.48,-40.58 227.86,-25.96"></path>
+<polygon fill="black" stroke="black" points="228.93,-27.56 232.57,-23.02 226.89,-24.3 228.93,-27.56"></polygon>
+</g>
+<!-- D -->
+<g id="node1" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- M -->
+<g id="node2" class="node">
+<title>M</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-83.7" font-family="Times,serif" font-size="11.00">M</text>
+</g>
+<!-- Y -->
+<g id="node3" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -395,19 +917,67 @@ D \leftarrow U_1 \rightarrow Z \leftarrow U_2 \rightarrow Y.
 <section id="post-treatment-can-create-colliders" class="slide level2">
 <h2>Post-treatment can create colliders</h2>
 <p>Consider:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  U[U] --&gt; Y[Y]
-  U --&gt; M[M]
-  D[D] --&gt; M
-  M --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 174.80" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 170.8)">
+<!-- U&#45;&gt;M -->
+<g id="edge2" class="edge">
+<title>U-&gt;M</title>
+<path fill="none" stroke="black" d="M25.68,-141.12C39.5,-127.3 63.64,-103.16 79.27,-87.53"></path>
+<polygon fill="black" stroke="black" points="80.91,-88.62 83.44,-83.36 78.18,-85.89 80.91,-88.62"></polygon>
+</g>
+<!-- U&#45;&gt;Y -->
+<g id="edge1" class="edge">
+<title>U-&gt;Y</title>
+<path fill="none" stroke="black" d="M29.41,-146.85C69.09,-133.21 180.01,-95.08 225.52,-79.43"></path>
+<polygon fill="black" stroke="black" points="226.42,-81.16 230.99,-77.55 225.17,-77.52 226.42,-81.16"></polygon>
+</g>
+<!-- D&#45;&gt;M -->
+<g id="edge3" class="edge">
+<title>D-&gt;M</title>
+<path fill="none" stroke="black" d="M27.38,-24C40.74,-33.72 62.13,-49.28 77.1,-60.17"></path>
+<polygon fill="black" stroke="black" points="76.33,-61.99 81.91,-63.66 78.6,-58.87 76.33,-61.99"></polygon>
+</g>
+<!-- M&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>M-&gt;Y</title>
+<path fill="none" stroke="black" d="M109.25,-72.6C136.28,-72.6 193.12,-72.6 224.12,-72.6"></path>
+<polygon fill="black" stroke="black" points="224.46,-74.53 229.96,-72.6 224.46,-70.68 224.46,-74.53"></polygon>
+</g>
+<!-- U -->
+<g id="node1" class="node">
+<title>U</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-151.8" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-148.5" font-family="Times,serif" font-size="11.00">U</text>
+</g>
+<!-- D -->
+<g id="node2" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- M -->
+<g id="node3" class="node">
+<title>M</title>
+<ellipse fill="none" stroke="black" cx="94.2" cy="-72.6" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="94.2" y="-69.3" font-family="Times,serif" font-size="11.00">M</text>
+</g>
+<!-- Y -->
+<g id="node4" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-72.6" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-69.3" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -422,18 +992,49 @@ D \leftarrow U_1 \rightarrow Z \leftarrow U_2 \rightarrow Y.
 <section id="sample-selection-is-a-collider-problem" class="slide level2">
 <h2>Sample selection is a collider problem</h2>
 <p>Let <span class="math inline">\(S\)</span> indicate being observed in the analytic sample.</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; S[Observed]
-  Y[Y] --&gt; S
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 167.60 95.60" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 91.6)">
+<!-- D&#45;&gt;S -->
+<g id="edge1" class="edge">
+<title>D-&gt;S</title>
+<path fill="none" stroke="black" d="M29.87,-69.3C53.11,-64.13 98.1,-54.13 124.3,-48.31"></path>
+<polygon fill="black" stroke="black" points="124.96,-50.14 129.91,-47.07 124.12,-46.38 124.96,-50.14"></polygon>
+</g>
+<!-- Y&#45;&gt;S -->
+<g id="edge2" class="edge">
+<title>Y-&gt;S</title>
+<path fill="none" stroke="black" d="M29.87,-18.3C53.11,-23.47 98.1,-33.47 124.3,-39.29"></path>
+<polygon fill="black" stroke="black" points="124.12,-41.22 129.91,-40.53 124.96,-37.46 124.12,-41.22"></polygon>
+</g>
+<!-- D -->
+<g id="node1" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-72.6" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-69.3" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node2" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+<!-- S -->
+<g id="node3" class="node">
+<title>S</title>
+<ellipse fill="none" stroke="black" cx="144.6" cy="-43.8" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="144.6" y="-40.5" font-family="Times,serif" font-size="11.00">S</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -475,20 +1076,67 @@ D \rightarrow M \rightarrow Y
 <section id="bias-amplification" class="slide level2">
 <h2>Bias amplification</h2>
 <p>Suppose we already have some residual confounding:</p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  U[U] --&gt; D[D]
-  U --&gt; Y[Y]
-  X[X] --&gt; D
-  X --&gt; Y
-  Z[Z] --&gt; D
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 124.40" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 120.4)">
+<!-- Z&#45;&gt;D -->
+<g id="edge1" class="edge">
+<title>Z-&gt;D</title>
+<path fill="none" stroke="black" d="M30.06,-15C50.41,-15 86.78,-15 109.63,-15"></path>
+<polygon fill="black" stroke="black" points="109.64,-16.93 115.14,-15 109.64,-13.08 109.64,-16.93"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M145.26,-15C165.61,-15 201.98,-15 224.83,-15"></path>
+<polygon fill="black" stroke="black" points="224.84,-16.93 230.34,-15 224.84,-13.08 224.84,-16.93"></polygon>
+</g>
+<!-- U&#45;&gt;D -->
+<g id="edge2" class="edge">
+<title>U-&gt;D</title>
+<path fill="none" stroke="black" d="M130.2,-86.35C130.2,-72.44 130.2,-51.62 130.2,-36.06"></path>
+<polygon fill="black" stroke="black" points="132.13,-35.67 130.2,-30.17 128.28,-35.67 132.13,-35.67"></polygon>
+</g>
+<!-- U&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>U-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.53,-92.15C163.32,-76.56 205.35,-45.04 228.74,-27.49"></path>
+<polygon fill="black" stroke="black" points="229.92,-29.02 233.16,-24.18 227.61,-25.94 229.92,-29.02"></polygon>
+</g>
+<!-- Z -->
+<g id="node1" class="node">
+<title>Z</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">Z</text>
+</g>
+<!-- D -->
+<g id="node2" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- U -->
+<g id="node3" class="node">
+<title>U</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-101.4" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-98.1" font-family="Times,serif" font-size="11.00">U</text>
+</g>
+<!-- Y -->
+<g id="node4" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -550,18 +1198,55 @@ D \rightarrow M \rightarrow Y
 <h2>Exercise: choose the adjustment set</h2>
 <p>Choose the correct control and explain the relevant path</p>
 <p><strong>A</strong></p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  X[X] --&gt; D[D]
-  X --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- X&#45;&gt;D -->
+<g id="edge1" class="edge">
+<title>X-&gt;D</title>
+<path fill="none" stroke="black" d="M117.43,-79.02C96.76,-66.1 55.92,-40.58 32.54,-25.96"></path>
+<polygon fill="black" stroke="black" points="33.51,-24.3 27.83,-23.02 31.47,-27.56 33.51,-24.3"></polygon>
+</g>
+<!-- X&#45;&gt;Y -->
+<g id="edge2" class="edge">
+<title>X-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.97,-79.02C163.64,-66.1 204.48,-40.58 227.86,-25.96"></path>
+<polygon fill="black" stroke="black" points="228.93,-27.56 232.57,-23.02 226.89,-24.3 228.93,-27.56"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- X -->
+<g id="node1" class="node">
+<title>X</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-83.7" font-family="Times,serif" font-size="11.00">X</text>
+</g>
+<!-- D -->
+<g id="node2" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node3" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -570,18 +1255,55 @@ D \rightarrow M \rightarrow Y
 <h2>Exercise: choose the adjustment set</h2>
 <p>Choose the correct control and explain the relevant path</p>
 <p><strong>B</strong></p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; M[M]
-  M --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 110.00" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 106)">
+<!-- D&#45;&gt;M -->
+<g id="edge1" class="edge">
+<title>D-&gt;M</title>
+<path fill="none" stroke="black" d="M27.77,-22.98C48.44,-35.9 89.28,-61.42 112.66,-76.04"></path>
+<polygon fill="black" stroke="black" points="111.69,-77.7 117.37,-78.98 113.73,-74.44 111.69,-77.7"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- M&#45;&gt;Y -->
+<g id="edge2" class="edge">
+<title>M-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.97,-79.02C163.64,-66.1 204.48,-40.58 227.86,-25.96"></path>
+<polygon fill="black" stroke="black" points="228.93,-27.56 232.57,-23.02 226.89,-24.3 228.93,-27.56"></polygon>
+</g>
+<!-- D -->
+<g id="node1" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- M -->
+<g id="node2" class="node">
+<title>M</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-87" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-83.7" font-family="Times,serif" font-size="11.00">M</text>
+</g>
+<!-- Y -->
+<g id="node3" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -590,20 +1312,79 @@ D \rightarrow M \rightarrow Y
 <h2>Exercise: choose the adjustment set</h2>
 <p>Choose the correct control and explain the relevant path</p>
 <p><strong>C</strong></p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  U1[U1] --&gt; Z[Z]
-  U2[U2] --&gt; Z
-  U1 --&gt; D[D]
-  U2 --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 153.20" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 149.2)">
+<!-- U1&#45;&gt;Z -->
+<g id="edge1" class="edge">
+<title>U1-&gt;Z</title>
+<path fill="none" stroke="black" d="M28.67,-123.37C49.28,-113.06 88.37,-93.51 111.57,-81.91"></path>
+<polygon fill="black" stroke="black" points="112.49,-83.61 116.55,-79.42 110.77,-80.16 112.49,-83.61"></polygon>
+</g>
+<!-- U1&#45;&gt;D -->
+<g id="edge3" class="edge">
+<title>U1-&gt;D</title>
+<path fill="none" stroke="black" d="M30.12,-129.26C70.15,-126.75 178.98,-119.95 224.72,-117.09"></path>
+<polygon fill="black" stroke="black" points="224.86,-119.01 230.23,-116.75 224.62,-115.17 224.86,-119.01"></polygon>
+</g>
+<!-- U2&#45;&gt;Z -->
+<g id="edge2" class="edge">
+<title>U2-&gt;Z</title>
+<path fill="none" stroke="black" d="M28.67,-21.83C49.28,-32.14 88.37,-51.69 111.57,-63.29"></path>
+<polygon fill="black" stroke="black" points="110.77,-65.04 116.55,-65.78 112.49,-61.59 110.77,-65.04"></polygon>
+</g>
+<!-- U2&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>U2-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15.94C70.15,-18.45 178.98,-25.25 224.72,-28.11"></path>
+<polygon fill="black" stroke="black" points="224.62,-30.03 230.23,-28.45 224.86,-26.19 224.62,-30.03"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge5" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M245.4,-100.75C245.4,-86.84 245.4,-66.02 245.4,-50.46"></path>
+<polygon fill="black" stroke="black" points="247.33,-50.07 245.4,-44.57 243.48,-50.07 247.33,-50.07"></polygon>
+</g>
+<!-- U1 -->
+<g id="node1" class="node">
+<title>U1</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-130.2" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-126.9" font-family="Times,serif" font-size="11.00">U1</text>
+</g>
+<!-- U2 -->
+<g id="node2" class="node">
+<title>U2</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">U2</text>
+</g>
+<!-- Z -->
+<g id="node3" class="node">
+<title>Z</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-72.6" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-69.3" font-family="Times,serif" font-size="11.00">Z</text>
+</g>
+<!-- D -->
+<g id="node4" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-115.8" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-112.5" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- Y -->
+<g id="node5" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-29.4" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-26.1" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>
@@ -612,19 +1393,67 @@ D \rightarrow M \rightarrow Y
 <h2>Exercise: choose the adjustment set</h2>
 <p>Choose the correct control and explain the relevant path</p>
 <p><strong>D</strong></p>
-<div class="cell" data-reveal="true" data-layout-align="default">
+<div class="small-dag">
+<div class="cell" data-layout-align="default">
 <div class="cell-output-display">
 <div>
 <p></p><figure class=""><p></p>
 <div>
-<pre class="mermaid mermaid-js">flowchart LR
-  D[D] --&gt; S[S]
-  U[U] --&gt; S
-  U --&gt; Y[Y]
-  D --&gt; Y
-</pre>
+<svg width="960" height="480" viewbox="0.00 0.00 268.40 124.40" xmlns="http://www.w3.org/2000/svg" xlink="http://www.w3.org/1999/xlink" style="; max-width: none; max-height: none; display: block; margin: auto auto auto auto">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 120.4)">
+<!-- D&#45;&gt;S -->
+<g id="edge1" class="edge">
+<title>D-&gt;S</title>
+<path fill="none" stroke="black" d="M15,-30.13C15,-36.7 15,-44.49 15,-51.6"></path>
+<polygon fill="black" stroke="black" points="13.08,-51.87 15,-57.37 16.93,-51.87 13.08,-51.87"></polygon>
+</g>
+<!-- D&#45;&gt;Y -->
+<g id="edge4" class="edge">
+<title>D-&gt;Y</title>
+<path fill="none" stroke="black" d="M30.12,-15C70.15,-15 178.98,-15 224.72,-15"></path>
+<polygon fill="black" stroke="black" points="224.73,-16.93 230.23,-15 224.73,-13.08 224.73,-16.93"></polygon>
+</g>
+<!-- U&#45;&gt;S -->
+<g id="edge2" class="edge">
+<title>U-&gt;S</title>
+<path fill="none" stroke="black" d="M115.61,-97.75C95.29,-92.67 58.39,-83.45 35.37,-77.69"></path>
+<polygon fill="black" stroke="black" points="35.64,-75.78 29.84,-76.31 34.7,-79.51 35.64,-75.78"></polygon>
+</g>
+<!-- U&#45;&gt;Y -->
+<g id="edge3" class="edge">
+<title>U-&gt;Y</title>
+<path fill="none" stroke="black" d="M142.53,-92.15C163.32,-76.56 205.35,-45.04 228.74,-27.49"></path>
+<polygon fill="black" stroke="black" points="229.92,-29.02 233.16,-24.18 227.61,-25.94 229.92,-29.02"></polygon>
+</g>
+<!-- D -->
+<g id="node1" class="node">
+<title>D</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-11.7" font-family="Times,serif" font-size="11.00">D</text>
+</g>
+<!-- U -->
+<g id="node2" class="node">
+<title>U</title>
+<ellipse fill="none" stroke="black" cx="130.2" cy="-101.4" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="130.2" y="-98.1" font-family="Times,serif" font-size="11.00">U</text>
+</g>
+<!-- S -->
+<g id="node3" class="node">
+<title>S</title>
+<ellipse fill="none" stroke="black" cx="15" cy="-72.6" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="15" y="-69.3" font-family="Times,serif" font-size="11.00">S</text>
+</g>
+<!-- Y -->
+<g id="node4" class="node">
+<title>Y</title>
+<ellipse fill="none" stroke="black" cx="245.4" cy="-15" rx="15" ry="15"></ellipse>
+<text text-anchor="middle" x="245.4" y="-11.7" font-family="Times,serif" font-size="11.00">Y</text>
+</g>
+</g>
+</svg>
 </div>
 <p></p></figure><p></p>
+</div>
 </div>
 </div>
 </div>

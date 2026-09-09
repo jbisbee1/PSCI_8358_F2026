@@ -340,6 +340,309 @@ X_j=X_i.
 <p>But exact matching becomes difficult as the number of covariates grows or covariates become continuous.</p>
 <p>This is one version of the <strong>curse of dimensionality</strong>.</p>
 </section>
+<section id="perfect-stratification-setup" class="slide level2">
+<h2>Perfect stratification: setup</h2>
+<p>Suppose we have perfectly stratified on covariates <span class="math inline">\(S\)</span>.</p>
+<p>Within each stratum, assume:</p>
+<p><span class="math display">\[
+E[Y(1)\mid D=1,S]
+=
+E[Y(1)\mid D=0,S]
+\tag{1-S}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+E[Y(0)\mid D=1,S]
+=
+E[Y(0)\mid D=0,S].
+\tag{2-S}
+\]</span></p>
+<p>Let the individual treatment effect be</p>
+<p><span class="math display">\[
+\delta = Y(1)-Y(0).
+\]</span></p>
+</section>
+<section class="slide level2">
+
+</section>
+<section>
+<section id="the-atc" class="title-slide slide level1 center">
+<h1>The ATC</h1>
+
+</section>
+<section id="identification-of-the-atc-within-strata" class="slide level2">
+<h2>Identification of the ATC within strata</h2>
+<p>Under Assumption 1-S,</p>
+<p><span class="math display">\[
+\begin{aligned}
+E[\delta\mid D=0,S]
+&amp;=E[Y(1)-Y(0)\mid D=0,S]\\
+&amp;=E[Y(1)\mid D=0,S]-E[Y(0)\mid D=0,S]\\
+&amp;=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=0,S]\\
+&amp;=E[Y\mid D=1,S]-E[Y\mid D=0,S].
+\end{aligned}
+\]</span></p>
+<p>Thus, within each stratum, the observed difference in outcomes identifies the average treatment effect for the controls in that stratum.</p>
+</section>
+<section id="from-stratum-specific-effects-to-the-atc" class="slide level2">
+<h2>From stratum-specific effects to the ATC</h2>
+<p>The ATC is</p>
+<p><span class="math display">\[
+ATC = E[\delta\mid D=0].
+\]</span></p>
+<p>By iterated expectations,</p>
+<p><span class="math display">\[
+ATC
+=
+E\left[
+E[\delta\mid D=0,S]
+\mid D=0
+\right].
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{
+ATC
+=
+E\left[
+E[Y\mid D=1,S]-E[Y\mid D=0,S]
+\mid D=0
+\right].
+}
+\]</span></p>
+<p>For discrete strata,</p>
+<p><span class="math display">\[
+\boxed{
+ATC
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s\mid D=0).
+}
+\]</span></p>
+<p>The stratum-specific differences are weighted by the distribution of <span class="math inline">\(S\)</span> among the <strong>controls</strong>.</p>
+</section>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="the-att" class="title-slide slide level1 center">
+<h1>The ATT</h1>
+
+</section>
+<section id="identification-of-the-att-within-strata" class="slide level2">
+<h2>Identification of the ATT within strata</h2>
+<p>Under Assumption 2-S,</p>
+<p><span class="math display">\[
+\begin{aligned}
+E[\delta\mid D=1,S]
+&amp;=E[Y(1)-Y(0)\mid D=1,S]\\
+&amp;=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=1,S]\\
+&amp;=E[Y(1)\mid D=1,S]-E[Y(0)\mid D=0,S]\\
+&amp;=E[Y\mid D=1,S]-E[Y\mid D=0,S].
+\end{aligned}
+\]</span></p>
+<p>Thus, within each stratum, the same observed difference in outcomes identifies the average treatment effect for the treated in that stratum.</p>
+</section>
+<section id="from-stratum-specific-effects-to-the-att" class="slide level2">
+<h2>From stratum-specific effects to the ATT</h2>
+<p>The ATT is</p>
+<p><span class="math display">\[
+ATT = E[\delta\mid D=1].
+\]</span></p>
+<p>By iterated expectations,</p>
+<p><span class="math display">\[
+ATT
+=
+E\left[
+E[\delta\mid D=1,S]
+\mid D=1
+\right].
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{
+ATT
+=
+E\left[
+E[Y\mid D=1,S]-E[Y\mid D=0,S]
+\mid D=1
+\right].
+}
+\]</span></p>
+<p>For discrete strata,</p>
+<p><span class="math display">\[
+\boxed{
+ATT
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s\mid D=1).
+}
+\]</span></p>
+<p>The stratum-specific differences are weighted by the distribution of <span class="math inline">\(S\)</span> among the <strong>treated</strong>.</p>
+</section>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="putting-the-two-together" class="title-slide slide level1 center">
+<h1>Putting the two together</h1>
+
+</section>
+<section id="same-comparison-different-target-populations" class="slide level2">
+<h2>Same comparison, different target populations</h2>
+<p>Within stratum <span class="math inline">\(S=s\)</span>, define the observed treated-control difference:</p>
+<p><span class="math display">\[
+\Delta(s)
+=
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s].
+\]</span></p>
+<p>Then:</p>
+<p><span class="math display">\[
+\boxed{
+ATC
+=
+\sum_s \Delta(s)P(S=s\mid D=0)
+}
+\]</span></p>
+<p>and</p>
+<p><span class="math display">\[
+\boxed{
+ATT
+=
+\sum_s \Delta(s)P(S=s\mid D=1).
+}
+\]</span></p>
+<p>The within-stratum comparison is the same.</p>
+<p>What changes is <strong>which population determines the weights</strong>.</p>
+</section>
+<section class="slide level2">
+
+</section></section>
+<section>
+<section id="the-ate" class="title-slide slide level1 center">
+<h1>The ATE</h1>
+
+</section>
+<section id="from-att-and-atc-to-the-ate" class="slide level2">
+<h2>From ATT and ATC to the ATE</h2>
+<p>The ATE is</p>
+<p><span class="math display">\[
+ATE = E[\delta].
+\]</span></p>
+<p>Conditioning on treatment status,</p>
+<p><span class="math display">\[
+\begin{aligned}
+ATE
+&amp;=
+P(D=1)E[\delta\mid D=1]
++
+P(D=0)E[\delta\mid D=0]\\
+&amp;=
+P(D=1)ATT
++
+P(D=0)ATC.
+\end{aligned}
+\]</span></p>
+<p>Therefore,</p>
+<p><span class="math display">\[
+\boxed{
+ATE
+=
+P(D=1)ATT
++
+P(D=0)ATC.
+}
+\]</span></p>
+</section>
+<section id="ate-as-a-weighted-average-across-strata" class="slide level2">
+<h2>ATE as a weighted average across strata</h2>
+<p>Substituting the expressions for ATT and ATC,</p>
+<p><span class="math display">\[
+\begin{aligned}
+ATE
+={}&amp;
+P(D=1)
+\sum_s \Delta(s)P(S=s\mid D=1)\\
+&amp;+
+P(D=0)
+\sum_s \Delta(s)P(S=s\mid D=0).
+\end{aligned}
+\]</span></p>
+<p>By the law of total probability,</p>
+<p><span class="math display">\[
+P(S=s)
+=
+P(S=s\mid D=1)P(D=1)
++
+P(S=s\mid D=0)P(D=0).
+\]</span></p>
+<p>Hence,</p>
+<p><span class="math display">\[
+\boxed{
+ATE
+=
+\sum_s
+\Delta(s)P(S=s).
+}
+\]</span></p>
+<p>or, expanding <span class="math inline">\(\Delta(s)\)</span>,</p>
+<p><span class="math display">\[
+\boxed{
+ATE
+=
+\sum_s
+\left[
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s]
+\right]
+P(S=s).
+}
+\]</span></p>
+<p>So the ATE weights the same within-stratum comparisons by the distribution of <span class="math inline">\(S\)</span> in the <strong>full population</strong>.</p>
+</section>
+<section id="att-atc-and-ate" class="slide level2">
+<h2>ATT, ATC, and ATE</h2>
+<p>Let</p>
+<p><span class="math display">\[
+\Delta(s)
+=
+E[Y\mid D=1,S=s]
+-
+E[Y\mid D=0,S=s].
+\]</span></p>
+<p>Then:</p>
+<p><span class="math display">\[
+\boxed{
+\begin{aligned}
+ATC
+&amp;=
+\sum_s \Delta(s)P(S=s\mid D=0),
+\\[6pt]
+ATT
+&amp;=
+\sum_s \Delta(s)P(S=s\mid D=1),
+\\[6pt]
+ATE
+&amp;=
+\sum_s \Delta(s)P(S=s).
+\end{aligned}
+}
+\]</span></p>
+<p>The estimands differ not in the within-stratum comparison, but in the population over which those comparisons are averaged.</p>
+</section>
 <section id="coarsening-and-approximate-matching" class="slide level2">
 <h2>Coarsening and approximate matching</h2>
 <p>When exact matching is impossible, we can relax what counts as similar.</p>
@@ -852,7 +1155,7 @@ ESS
 }
 \]</span></p>
 
-</section>
+</section></section>
     </div>
   <div class="quarto-auto-generated-content" style="display: none;">
 <div class="footer footer-default">
