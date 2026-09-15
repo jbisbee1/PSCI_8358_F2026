@@ -565,6 +565,38 @@ The AIPW score is exactly this kind of object: it was already built to be doubly
 
 ---
 
+## Why the naive score fails: a concrete calculation
+
+Take the **plain outcome-regression score**, $\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$. A first-order (Taylor) expansion of $\hat\theta$ around the truth $\mu_0(X)$ gives:
+
+$$
+\hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
+\;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+$$
+
+**This derivative is not zero — it's the identity.** Whatever bias sits in $\hat\mu_1,\hat\mu_0$ (e.g., lasso shrinkage, or any regularization bias) passes straight through into $\hat\theta$, **undiminished**. This is regularization bias made concrete, not just asserted: the naive score has no protection built in.
+
+---
+
+## Checking the AIPW score directly
+
+Does perturbing $\mu_1$ move the AIPW score's expectation? Let $\tilde\mu_1$ be any perturbation direction. Using $\psi = \mu_1(X)-\mu_0(X) + \dfrac{D(Y-\mu_1(X))}{\pi(X)} - \cdots - \theta$:
+
+$$
+\partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
+= E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
+$$
+
+**If $\pi(X)$ is correctly specified**, $E[D\mid X]=\pi(X)$, so the bracketed term is exactly $1-1=0$ — for *every* perturbation direction $\tilde\mu_1$, regardless of how $\hat\mu_1$ is estimated.
+
+::: {.callout-important}
+### This is Neyman orthogonality, verified rather than asserted: wiggling $\hat\mu_1$ does not move $E[\psi]$ at all, to first order — provided $\pi(X)$ is right.
+:::
+
+The symmetric calculation for perturbing $\pi$ (holding $\mu_1,\mu_0$ correct) gives the same zero — **this symmetric pair of zero-derivative results is exactly double robustness**, derived rather than pattern-matched.
+
+---
+
 ## Orthogonality does the heavy lifting
 
 With an orthogonal score, the estimation error in $\hat\tau$ from nuisance mis-estimation is bounded by a **product** of the outcome-model error and the propensity-model error:

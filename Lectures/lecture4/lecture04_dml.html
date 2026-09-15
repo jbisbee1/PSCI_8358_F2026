@@ -807,6 +807,38 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 <p>Small errors in <span class="math inline">\(\hat\eta\)</span> move <span class="math inline">\(E[\psi]\)</span> only at <strong>second order</strong> — errors multiplied by errors, not errors alone.</p>
 <p>The AIPW score is exactly this kind of object: it was already built to be doubly robust, which is the finite-sample cousin of orthogonality.</p>
 </section>
+<section id="why-the-naive-score-fails-a-concrete-calculation" class="slide level2">
+<h2>Why the naive score fails: a concrete calculation</h2>
+<p>Take the <strong>plain outcome-regression score</strong>, <span class="math inline">\(\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta\)</span>. A first-order (Taylor) expansion of <span class="math inline">\(\hat\theta\)</span> around the truth <span class="math inline">\(\mu_0(X)\)</span> gives:</p>
+<p><span class="math display">\[
+\hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
+\;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+\]</span></p>
+<p><strong>This derivative is not zero — it’s the identity.</strong> Whatever bias sits in <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> (e.g., lasso shrinkage, or any regularization bias) passes straight through into <span class="math inline">\(\hat\theta\)</span>, <strong>undiminished</strong>. This is regularization bias made concrete, not just asserted: the naive score has no protection built in.</p>
+</section>
+<section id="checking-the-aipw-score-directly" class="slide level2">
+<h2>Checking the AIPW score directly</h2>
+<p>Does perturbing <span class="math inline">\(\mu_1\)</span> move the AIPW score’s expectation? Let <span class="math inline">\(\tilde\mu_1\)</span> be any perturbation direction. Using <span class="math inline">\(\psi = \mu_1(X)-\mu_0(X) + \dfrac{D(Y-\mu_1(X))}{\pi(X)} - \cdots - \theta\)</span>:</p>
+<p><span class="math display">\[
+\partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
+= E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
+\]</span></p>
+<p><strong>If <span class="math inline">\(\pi(X)\)</span> is correctly specified</strong>, <span class="math inline">\(E[D\mid X]=\pi(X)\)</span>, so the bracketed term is exactly <span class="math inline">\(1-1=0\)</span> — for <em>every</em> perturbation direction <span class="math inline">\(\tilde\mu_1\)</span>, regardless of how <span class="math inline">\(\hat\mu_1\)</span> is estimated.</p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>This is Neyman orthogonality, verified rather than asserted: wiggling <span class="math inline">\(\hat\mu_1\)</span> does not move <span class="math inline">\(E[\psi]\)</span> at all, to first order — provided <span class="math inline">\(\pi(X)\)</span> is right.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+<p>The symmetric calculation for perturbing <span class="math inline">\(\pi\)</span> (holding <span class="math inline">\(\mu_1,\mu_0\)</span> correct) gives the same zero — <strong>this symmetric pair of zero-derivative results is exactly double robustness</strong>, derived rather than pattern-matched.</p>
+</section>
 <section id="orthogonality-does-the-heavy-lifting" class="slide level2">
 <h2>Orthogonality does the heavy lifting</h2>
 <p>With an orthogonal score, the estimation error in <span class="math inline">\(\hat\tau\)</span> from nuisance mis-estimation is bounded by a <strong>product</strong> of the outcome-model error and the propensity-model error:</p>
