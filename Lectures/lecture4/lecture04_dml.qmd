@@ -75,6 +75,61 @@ No estimator, however flexible, creates identification that was not there.
 
 ---
 
+## Why isn't more matching the answer?
+
+Lecture 3 built the treated-vs-control comparison by matching or weighting on $X$. A natural instinct: if ignorability requires a rich $X$, just match on more covariates.
+
+**Many covariates make matching unreliable** (Samii et al. 2016). Simulation evidence: as the number of covariates grows — even *irrelevant, noise* covariates — matching-based estimators' bias, standard error, and RMSE all worsen. The curse of dimensionality bites long before you have "enough" covariates for high-dimensional ignorability.
+
+Adding covariates to satisfy ignorability and adding covariates to a matching estimator are **not the same operation**, and the second one degrades exactly as the first one demands more of it.
+
+---
+
+## Regression has a subtler problem: the wrong estimand
+
+Suppose you instead regress $Y$ on $D$ and $X$ additively:
+
+$$
+Y = \alpha + \theta_R D + X'\beta + \varepsilon
+$$
+
+Even if $X$ is **sufficient for ignorability** — the confounding problem is solved — Aronow and Samii (2016) show $\hat\theta_R$ does **not** consistently estimate the ATE. Instead:
+
+$$
+\hat\theta_R \xrightarrow{p} \frac{E[w_i\theta_i]}{E[w_i]}, \qquad w_i = \big(D_i - E[D_i\mid X_i]\big)^2
+$$
+
+where $\theta_i = Y_i(1)-Y_i(0)$ is the unit-level effect, and $E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]$.
+
+**In words:** OLS implicitly weights each unit's treatment effect by how much that unit's treatment status *varies* conditional on $X$ — units near the "margin" of treatment assignment dominate the estimate, regardless of how representative they are of the population you actually want to describe.
+
+---
+
+## The Jensen (2003) example
+
+Jensen (2003) estimates the effect of regime type on FDI using a cross-national panel.
+
+Aronow and Samii (2016) compute the **effective sample** implied by that regression — each country weighted by $\text{Var}[D_i\mid X_i]$ — and compare it to the **nominal sample** (every country/year actually in the data):
+
+- Countries near the democracy/autocracy "margin," where regime type is least predictable from covariates, dominate the effective sample.
+- Countries whose regime type is well-predicted by their covariates — nominally in the sample, included in every summary statistic — contribute **almost nothing** to the actual estimate.
+
+::: {.callout-important}
+### The researcher never chose this weighting. It is an invisible artifact of running regression with covariates, and it silently redefines the population the estimate describes.
+:::
+
+---
+
+## Why this matters for today
+
+This is a **third** failure mode, distinct from misspecification and slow convergence: even a *correctly specified*, *correctly identified* regression can target a quantity nobody asked for.
+
+This is also the sharpened, formal version of a point from earlier: an additive regression of $Y$ on $D$ and $X$ imposes a constant treatment effect *implicitly*; Aronow and Samii show what you get instead when effects are heterogeneous — not "the ATE, roughly," but a specific, derivable, variance-weighted average.
+
+**Look back at today's "Proof" slides:** $\hat\tau_{AIPW}$ was built by explicitly averaging $\hat\mu_1(X)-\hat\mu_0(X)$ over the empirical distribution of $X$ — $E_X[\mu_1(X)] = E[Y(1)]$, with no implicit reweighting term anywhere. That structural difference from OLS-with-controls is a second reason (beyond double robustness) that AIPW-type estimators are worth the extra machinery.
+
+---
+
 ## Two ways to use the same identification result
 
 Ignorability implies
