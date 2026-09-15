@@ -152,35 +152,201 @@ $$
 
 ---
 
-## Proof: why the reweighting recovers exactly the missing piece
+## Proof
 
-Condition on $X$. Since $E[Y\mid X,D=1]=\mu_1(X)$ — the **true** conditional mean, not $\hat\mu_1$:
+Condition on $X$ and define $E[D|X] = P(D=1|X) = \pi(X)$ and $E[Y|D=1,X] = \mu_1(X)$
 
-$$
-E\big[D(Y-\hat\mu_1(X)) \mid X\big] = \pi(X)\big(\mu_1(X)-\hat\mu_1(X)\big)
-$$
-
-. . .
-
-Divide by $\pi(X)$ — exactly what the correction term does:
+Start with:
 
 $$
-E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)} \,\middle|\, X\right] = \mu_1(X) - \hat\mu_1(X)
+E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right].
 $$
 
-. . .
+#### Step 1: Evaluate the conditional expectation
 
-Average over $X$, then add back $E[\hat\mu_1(X)]$:
+We can write:
 
 $$
-E[\hat\mu_1(X)] + E_X\big[\mu_1(X)-\hat\mu_1(X)\big] = E_X[\mu_1(X)] = E[Y(1)]
+\begin{aligned}
+E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right]
+&= E[DY\mid X]
+   - E[D\hat\mu_1(X)\mid X] \\
+&= \pi(X)\mu_1(X)
+   - \pi(X)\hat\mu_1(X) \\
+&= \pi(X)\left(\mu_1(X)-\hat\mu_1(X)\right).
+\end{aligned}
+$$
+So the expected treated-unit residual is the error in our outcome
+model, $\mu_1(X)-\hat\mu_1(X)$, multiplied by the probability of being
+treated, $\pi(X)$.
+
+---
+
+## Step 2: Divide by the propensity score
+
+Now consider the inverse-propensity-weighted residual:
+
+$$
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\mid X
+\right].
 $$
 
-::: {.callout-important}
-### The $1/\pi(X)$ weighting is what makes this exact: it scales up each treated unit's residual by how rare treatment was at that unit's $X$, reconstructing the population-wide gap — not just the average gap within the treated subsample.
-:::
+Since $\pi(X)$ is a function of $X$, it is fixed once we condition on
+$X$. Therefore,
 
-**This is why $\hat\pi(X)$ needs to be correct here:** get it wrong, and the reweighting misrepresents which treated units should stand in for more of the population, and the cancellation above fails.
+$$
+\begin{aligned}
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\mid X
+\right]
+&=
+\frac{1}{\pi(X)}
+E[D(Y-\hat\mu_1(X))\mid X] \\
+&=
+\frac{1}{\pi(X)}
+\pi(X)(\mu_1(X)-\hat\mu_1(X)) \\
+&=
+\mu_1(X)-\hat\mu_1(X).
+\end{aligned}
+$$
+
+Thus, dividing by $\pi(X)$ removes the scaling induced by the fact
+that only a $\pi(X)$ fraction of units with covariates $X$ are treated.
+
+---
+
+## Step 3: Average over the distribution of $X$
+
+Using the law of iterated expectations,
+
+$$
+\begin{aligned}
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\right]
+&=
+E_X\left[
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\mid X
+\right]
+\right] \\
+&=
+E_X[\mu_1(X)-\hat\mu_1(X)].
+\end{aligned}
+$$
+
+Equivalently,
+
+$$
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\right]
+=
+E_X[\mu_1(X)]-E_X[\hat\mu_1(X)].
+$$
+
+---
+
+## Step 4: Add the outcome-model prediction
+
+Now add $E_X[\hat\mu_1(X)]$:
+
+$$
+\begin{aligned}
+E_X[\hat\mu_1(X)]
+&+
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\right] \\
+&=
+E_X[\hat\mu_1(X)]
++
+E_X[\mu_1(X)-\hat\mu_1(X)] \\
+&=
+E_X[\mu_1(X)].
+\end{aligned}
+$$
+
+The $\hat\mu_1(X)$ terms cancel. Thus, the inverse-propensity-weighted
+residual acts as a correction for the error in $\hat\mu_1(X)$.
+
+---
+
+## Step 5: Connect $\mu_1(X)$ to POs
+
+By definition,
+
+$$
+\mu_1(X)=E[Y\mid D=1,X].
+$$
+
+Under consistency,
+
+$$
+Y=Y(1) \qquad \text{when } D=1, ~~\text{so}~~~\mu_1(X)
+=
+E[Y(1)\mid D=1,X].
+$$
+
+Under conditional ignorability,
+
+$$
+Y(1)\perp D\mid X,
+$$
+
+which implies
+
+$$
+E[Y(1)\mid D=1,X]
+=
+E[Y(1)\mid X].
+$$
+
+Therefore,
+
+$$
+\mu_1(X)=E[Y(1)\mid X].
+$$
+
+---
+
+## Step 6: Average over $X$
+
+Finally, apply the law of iterated expectations:
+
+$$
+\begin{aligned}
+E_X[\mu_1(X)]
+&=
+E_X\left[E[Y(1)\mid X]\right] \\
+&=
+E[Y(1)].
+\end{aligned}
+$$
+
+Putting everything together,
+
+$$
+\boxed{
+\begin{aligned}
+E_X[\hat\mu_1(X)]
+&+
+E\left[
+\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
+\right] \\
+&=
+E_X[\mu_1(X)] \\
+&=
+E_X\left[E[Y(1)\mid X]\right] \\
+&=
+E[Y(1)].
+\end{aligned}
+}
+$$
 
 ---
 
