@@ -502,6 +502,22 @@ E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 \]</span></p>
 <p>This is the outcome-regression estimate <strong>plus a bias-correction term</strong> built from the propensity model.</p>
 </section>
+<section id="unpacking-the-bias-correction-term" class="slide level2">
+<h2>Unpacking the bias-correction term</h2>
+<p><span class="math display">\[
+\underbrace{\hat\mu_1(X_i) - \hat\mu_0(X_i)}_{\text{outcome regression}} \;+\; \underbrace{\frac{D_i(Y_i - \hat\mu_1(X_i))}{\hat\pi(X_i)} - \frac{(1-D_i)(Y_i - \hat\mu_0(X_i))}{1-\hat\pi(X_i)}}_{\text{bias correction}}
+\]</span></p>
+<ul>
+<li><span class="math inline">\(D_i(Y_i - \hat\mu_1(X_i))\)</span> is the treated unit’s <strong>residual</strong> — actual <span class="math inline">\(Y_i\)</span> minus what the outcome model predicted — switched off for controls by <span class="math inline">\(D_i\)</span>.</li>
+<li>Dividing by <span class="math inline">\(\hat\pi(X_i)\)</span> <strong>grosses that residual up</strong>: if only 20% of units at this <span class="math inline">\(X\)</span> were treated, each treated residual is scaled up 5× before averaging, so the average over the <em>whole sample</em> still represents the full population — the same IPW-reweighting logic as before, now applied to residuals rather than raw outcomes.</li>
+<li>The mirror-image term does the same for controls.</li>
+</ul>
+<p><strong>Why this is a genuine correction, not decoration:</strong></p>
+<ul>
+<li>If <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> are <strong>correct</strong>, the residuals are pure noise — the correction term has expectation zero and contributes nothing beyond variance.</li>
+<li>If <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> are <strong>wrong but <span class="math inline">\(\hat\pi\)</span> is right</strong>, the residuals systematically encode whatever the outcome model missed. The reweighted average of those residuals estimates exactly that missing piece and adds it back in.</li>
+</ul>
+</section>
 <section id="double-robustness" class="slide level2">
 <h2>Double robustness</h2>
 <div class="callout callout-important callout-titled callout-style-default">
