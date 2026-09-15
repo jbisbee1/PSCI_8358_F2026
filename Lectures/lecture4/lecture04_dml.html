@@ -406,8 +406,81 @@ E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 <p><span class="math display">\[
 \hat\tau_{OR} = \frac{1}{n}\sum_{i=1}^n \big(\hat\mu_1(X_i) - \hat\mu_0(X_i)\big)
 \]</span></p>
-<p><strong>What has to go right:</strong> <span class="math inline">\(\hat\mu_1, \hat\mu_0\)</span> must be correctly specified (or converge fast enough).</p>
+<p><strong>What has to go right:</strong> <span class="math inline">\(\hat\mu_1, \hat\mu_0\)</span> must be correctly specified (or converge fast enough — more on exactly what that means next).</p>
 <p><strong>Failure mode:</strong> misspecify the outcome model in regions with few treated (or few control) units, and the extrapolation is invisible in the fit statistics.</p>
+</section>
+<section id="what-does-it-mean-for-a-function-to-converge" class="slide level2">
+<h2>What does it mean for a <em>function</em> to converge?</h2>
+<p><span class="math inline">\(\mu(X)\)</span> is a function, not a single number — so “how close is <span class="math inline">\(\hat\mu\)</span> to <span class="math inline">\(\mu\)</span>?” is not as simple as comparing two numbers.</p>
+<p>It is tempting to answer this by looking at residuals, <span class="math inline">\(Y_i - \hat\mu(X_i)\)</span>. <strong>This is the wrong quantity.</strong> The residual mixes two very different things:</p>
+<p><span class="math display">\[
+\underbrace{Y - \hat\mu(X)}_{\text{residual}} = \underbrace{Y - \mu(X)}_{\text{irreducible noise } \varepsilon} + \underbrace{\mu(X) - \hat\mu(X)}_{\text{estimation error}}
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\varepsilon\)</span> is genuine unpredictable variation in <span class="math inline">\(Y\)</span> given <span class="math inline">\(X\)</span>. <strong>It never shrinks</strong>, no matter how good your estimator is or how much data you collect.</li>
+<li><span class="math inline">\(\mu(X) - \hat\mu(X)\)</span> is the gap between your fitted function and the truth. <strong>This is the only piece that shrinks with more data</strong> — and it is the only piece “convergence” refers to.</li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Small residuals do not mean <span class="math inline">\(\hat\mu\)</span> is close to <span class="math inline">\(\mu\)</span>. A model can have tiny residuals by memorizing noise, not by learning the truth.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+</section>
+<section id="turning-a-function-to-function-gap-into-one-number" class="slide level2">
+<h2>Turning a function-to-function gap into one number</h2>
+<p>We can’t observe <span class="math inline">\(\mu(X) - \hat\mu(X)\)</span> directly (<span class="math inline">\(\mu\)</span> is unknown), but we can define what we <em>mean</em> by “close”:</p>
+<p><span class="math display">\[
+\|\hat\mu - \mu\|^2 = E_X\big[(\hat\mu(X) - \mu(X))^2\big]
+\]</span></p>
+<p>In words: average, over the population distribution of <span class="math inline">\(X\)</span>, the squared gap between the fitted function and the true function at each <span class="math inline">\(X\)</span>.</p>
+<p>This is a single number that summarizes how good <span class="math inline">\(\hat\mu\)</span> is <strong>as an approximation to the whole function</strong> <span class="math inline">\(\mu\)</span> — not how well it fits any particular sample.</p>
+<p>“Converges fast enough” means: as <span class="math inline">\(n\)</span> grows, does <span class="math inline">\(\|\hat\mu - \mu\|^2\)</span> shrink, and how quickly?</p>
+</section>
+<section id="why-flexible-estimators-converge-more-slowly" class="slide level2">
+<h2>Why flexible estimators converge more slowly</h2>
+<p>Think about what more data buys you, in each case.</p>
+<p><strong>A correctly-specified low-dimensional model</strong> (e.g., linear regression with the right functional form) has only a handful of unknowns — a few coefficients. Every additional observation sharpens all of them simultaneously. Estimation error shrinks proportional to <span class="math inline">\(1/\sqrt{n}\)</span>: quadruple your sample, and error roughly halves.</p>
+<p><strong>A flexible ML estimator</strong> (random forest, boosting) is approximating an unknown, possibly complicated function while <em>also</em> guarding against overfitting to noise. Part of every new observation goes toward controlling model complexity rather than purely sharpening the fit. Error shrinks much more slowly — often close to <span class="math inline">\(1/n^{1/4}\)</span>.</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Sample size</th>
+<th>Error, parametric (<span class="math inline">\(\propto n^{-1/2}\)</span>)</th>
+<th>Error, ML (<span class="math inline">\(\propto n^{-1/4}\)</span>)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>100</td>
+<td>0.10</td>
+<td>0.32</td>
+</tr>
+<tr class="even">
+<td>1,600 (16×)</td>
+<td>0.025</td>
+<td>0.16</td>
+</tr>
+<tr class="odd">
+<td>25,600 (256×)</td>
+<td>0.006</td>
+<td>0.08</td>
+</tr>
+</tbody>
+</table>
+<p>Same growth in <span class="math inline">\(n\)</span>; wildly different shrinkage in error. <strong>This is the trade-off “converge fast enough” is asking about.</strong></p>
 </section>
 <section id="inverse-probability-weighting" class="slide level2">
 <h2>Inverse-probability weighting</h2>
@@ -479,6 +552,7 @@ E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 </section>
 <section id="slow-convergence-concretely" class="slide level2">
 <h2>Slow convergence, concretely</h2>
+<p>Formally, the parametric-vs-ML gap from a few slides ago is written:</p>
 <p>Parametric estimators: <span class="math inline">\(\hat\mu(X) - \mu(X) = O_p(n^{-1/2})\)</span>.</p>
 <p>Flexible ML estimators: <span class="math inline">\(\hat\mu(X) - \mu(X) = O_p(n^{-1/4})\)</span> (or slower), because they are trading bias for variance across a large function space.</p>
 <p>A causal estimator built by plugging in <span class="math inline">\(\hat\mu, \hat\pi\)</span> naively inherits an error of order</p>
