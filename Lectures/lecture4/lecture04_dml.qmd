@@ -188,6 +188,23 @@ This is the outcome-regression estimate **plus a bias-correction term** built fr
 
 ---
 
+## Unpacking the bias-correction term
+
+$$
+\underbrace{\hat\mu_1(X_i) - \hat\mu_0(X_i)}_{\text{outcome regression}} \;+\; \underbrace{\frac{D_i(Y_i - \hat\mu_1(X_i))}{\hat\pi(X_i)} - \frac{(1-D_i)(Y_i - \hat\mu_0(X_i))}{1-\hat\pi(X_i)}}_{\text{bias correction}}
+$$
+
+- $D_i(Y_i - \hat\mu_1(X_i))$ is the treated unit's **residual** — actual $Y_i$ minus what the outcome model predicted — switched off for controls by $D_i$.
+- Dividing by $\hat\pi(X_i)$ **grosses that residual up**: if only 20% of units at this $X$ were treated, each treated residual is scaled up 5× before averaging, so the average over the *whole sample* still represents the full population — the same IPW-reweighting logic as before, now applied to residuals rather than raw outcomes.
+- The mirror-image term does the same for controls.
+
+**Why this is a genuine correction, not decoration:**
+
+- If $\hat\mu_1,\hat\mu_0$ are **correct**, the residuals are pure noise — the correction term has expectation zero and contributes nothing beyond variance.
+- If $\hat\mu_1,\hat\mu_0$ are **wrong but $\hat\pi$ is right**, the residuals systematically encode whatever the outcome model missed. The reweighted average of those residuals estimates exactly that missing piece and adds it back in.
+
+---
+
 ## Double robustness
 
 ::: {.callout-important}
