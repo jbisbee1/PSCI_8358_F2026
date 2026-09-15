@@ -384,27 +384,27 @@ results_dml %>%
 # automates it. This section is optional and requires
 # install.packages(c("DoubleML", "mlr3", "mlr3learners")).
 
-# library(DoubleML)
-# library(mlr3)
-# library(mlr3learners)
-#
-# dml_data <- DoubleMLData$new(
-#   as.data.frame(dat),
-#   y_col = "Y",
-#   d_cols = "D",
-#   x_cols = c("age", "income", "college", "noise1", "noise2", "noise3")
-# )
-#
-# ml_g <- lrn("regr.ranger", num.trees = 500)
-# ml_m <- lrn("classif.ranger", num.trees = 500, predict_type = "prob")
-#
-# dml_irm <- DoubleMLIRM$new(
-#   dml_data,
-#   ml_g = ml_g,
-#   ml_m = ml_m,
-#   n_folds = 5,
-#   score = "ATE"
-# )
-#
-# dml_irm$fit()
-# dml_irm$summary()
+library(DoubleML)
+library(mlr3)
+library(mlr3learners)
+
+dml_data <- DoubleMLData$new(
+  as.data.frame(dat),
+  y_col = "Y",
+  d_cols = "D",
+  x_cols = c("age", "income", "college", "noise1", "noise2", "noise3")
+)
+
+ml_g <- lrn("regr.ranger", num.trees = 500)
+ml_m <- lrn("classif.ranger", num.trees = 500, predict_type = "prob")
+
+dml_irm <- DoubleMLIRM$new(
+  dml_data,
+  ml_g = ml_g,
+  ml_m = ml_m,
+  n_folds = 5,
+  score = "ATE"
+)
+
+dml_irm$fit()
+dml_irm$summary()
