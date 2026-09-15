@@ -101,9 +101,62 @@ $$
 \hat\tau_{OR} = \frac{1}{n}\sum_{i=1}^n \big(\hat\mu_1(X_i) - \hat\mu_0(X_i)\big)
 $$
 
-**What has to go right:** $\hat\mu_1, \hat\mu_0$ must be correctly specified (or converge fast enough).
+**What has to go right:** $\hat\mu_1, \hat\mu_0$ must be correctly specified (or converge fast enough — more on exactly what that means next).
 
 **Failure mode:** misspecify the outcome model in regions with few treated (or few control) units, and the extrapolation is invisible in the fit statistics.
+
+---
+
+## What does it mean for a *function* to converge?
+
+$\mu(X)$ is a function, not a single number — so "how close is $\hat\mu$ to $\mu$?" is not as simple as comparing two numbers.
+
+It is tempting to answer this by looking at residuals, $Y_i - \hat\mu(X_i)$. **This is the wrong quantity.** The residual mixes two very different things:
+
+$$
+\underbrace{Y - \hat\mu(X)}_{\text{residual}} = \underbrace{Y - \mu(X)}_{\text{irreducible noise } \varepsilon} + \underbrace{\mu(X) - \hat\mu(X)}_{\text{estimation error}}
+$$
+
+- $\varepsilon$ is genuine unpredictable variation in $Y$ given $X$. **It never shrinks**, no matter how good your estimator is or how much data you collect.
+- $\mu(X) - \hat\mu(X)$ is the gap between your fitted function and the truth. **This is the only piece that shrinks with more data** — and it is the only piece "convergence" refers to.
+
+::: {.callout-important}
+### Small residuals do not mean $\hat\mu$ is close to $\mu$. A model can have tiny residuals by memorizing noise, not by learning the truth.
+:::
+
+---
+
+## Turning a function-to-function gap into one number
+
+We can't observe $\mu(X) - \hat\mu(X)$ directly ($\mu$ is unknown), but we can define what we *mean* by "close":
+
+$$
+\|\hat\mu - \mu\|^2 = E_X\big[(\hat\mu(X) - \mu(X))^2\big]
+$$
+
+In words: average, over the population distribution of $X$, the squared gap between the fitted function and the true function at each $X$.
+
+This is a single number that summarizes how good $\hat\mu$ is **as an approximation to the whole function** $\mu$ — not how well it fits any particular sample.
+
+"Converges fast enough" means: as $n$ grows, does $\|\hat\mu - \mu\|^2$ shrink, and how quickly?
+
+---
+
+## Why flexible estimators converge more slowly
+
+Think about what more data buys you, in each case.
+
+**A correctly-specified low-dimensional model** (e.g., linear regression with the right functional form) has only a handful of unknowns — a few coefficients. Every additional observation sharpens all of them simultaneously. Estimation error shrinks proportional to $1/\sqrt{n}$: quadruple your sample, and error roughly halves.
+
+**A flexible ML estimator** (random forest, boosting) is approximating an unknown, possibly complicated function while *also* guarding against overfitting to noise. Part of every new observation goes toward controlling model complexity rather than purely sharpening the fit. Error shrinks much more slowly — often close to $1/n^{1/4}$.
+
+| Sample size | Error, parametric ($\propto n^{-1/2}$) | Error, ML ($\propto n^{-1/4}$) |
+|---|---|---|
+| 100 | 0.10 | 0.32 |
+| 1,600 (16×) | 0.025 | 0.16 |
+| 25,600 (256×) | 0.006 | 0.08 |
+
+Same growth in $n$; wildly different shrinkage in error. **This is the trade-off "converge fast enough" is asking about.**
 
 ---
 
@@ -191,6 +244,8 @@ Any causal contrast built from these residuals (e.g., the AIPW correction term) 
 ---
 
 ## Slow convergence, concretely
+
+Formally, the parametric-vs-ML gap from a few slides ago is written:
 
 Parametric estimators: $\hat\mu(X) - \mu(X) = O_p(n^{-1/2})$.
 
