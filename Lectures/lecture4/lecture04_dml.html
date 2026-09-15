@@ -883,6 +883,36 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p>Without it: overfit residuals <span class="math inline">\(\Rightarrow\)</span> biased score <span class="math inline">\(\Rightarrow\)</span> invalid standard errors, even asymptotically.</p>
 <p>With it: the orthogonality bound applies, <span class="math inline">\(\hat\tau\)</span> is <span class="math inline">\(\sqrt{n}\)</span>-consistent and asymptotically normal, and standard confidence intervals are valid.</p>
 </section>
+<section id="cross-fitted-aipw-formalized" class="slide level2">
+<h2>Cross-fitted AIPW, formalized</h2>
+<p>Let <span class="math inline">\(\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}\)</span> denote nuisance fits trained on every fold <strong>except</strong> <span class="math inline">\(k\)</span>. For each <span class="math inline">\(i \in I_k\)</span>, define the cross-fitted pseudo-outcome:</p>
+<p><span class="math display">\[
+\hat\psi_i = \hat\mu_{1,-k}(X_i)-\hat\mu_{0,-k}(X_i) + \frac{D_i\big(Y_i-\hat\mu_{1,-k}(X_i)\big)}{\hat\pi_{-k}(X_i)} - \frac{(1-D_i)\big(Y_i-\hat\mu_{0,-k}(X_i)\big)}{1-\hat\pi_{-k}(X_i)}
+\]</span></p>
+<p>Then</p>
+<p><span class="math display">\[
+\hat\theta_{DML} = \frac{1}{N}\sum_{i=1}^N \hat\psi_i.
+\]</span></p>
+<p>This is exactly the cross-fitting algorithm from the previous slide, written as one formula. Standard errors come directly from the empirical variance of the <span class="math inline">\(\hat\psi_i\)</span>:</p>
+<p><span class="math display">\[
+\widehat{\mathrm{Var}}(\hat\theta_{DML}) = \frac{1}{N^2}\sum_{i=1}^N \big(\hat\psi_i - \hat\theta_{DML}\big)^2
+\]</span></p>
+<p>No separate asymptotic derivation needed — the <span class="math inline">\(\hat\psi_i\)</span> already carry everything a standard error requires.</p>
+</section>
+<section id="when-does-dml-work-the-formal-statement" class="slide level2">
+<h2>When does DML work? The formal statement</h2>
+<p>Orthogonality plus cross-fitting together deliver an <strong>asymptotically linear</strong> representation:</p>
+<p><span class="math display">\[
+\hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
+\]</span></p>
+<p>where <span class="math inline">\(\|\cdot\|_2\)</span> is exactly the out-of-sample <span class="math inline">\(L^2(P)\)</span> prediction error from the “converging function” slides earlier.</p>
+<p><strong>Sufficient rate condition for valid <span class="math inline">\(\sqrt N\)</span> inference:</strong></p>
+<p><span class="math display">\[
+\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2 = o_p(N^{-1/2})
+\]</span></p>
+<p><strong>Rule of thumb:</strong> if both nuisances converge at the flexible-ML rate <span class="math inline">\(o_p(N^{-1/4})\)</span>, their product is <span class="math inline">\(o_p(N^{-1/2})\)</span>, and <span class="math inline">\(\sqrt N(\hat\theta_{DML}-\theta_0)\)</span> is asymptotically normal.</p>
+<p><strong>Caution:</strong> if overlap is weak (propensities near 0/1) or nuisance fits are poor, <span class="math inline">\(R_N\)</span> need not be small even with cross-fitting — inference can still be unstable. Same overlap warning as Lecture 3, now showing up as a rate condition instead of a diagnostic plot.</p>
+</section>
 <section id="doubledebiased-machine-learning-dml" class="slide level2">
 <h2>Double/debiased machine learning (DML)</h2>
 <p>Putting the pieces together:</p>
@@ -893,6 +923,25 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 \]</span></p>
 <p>DML is the recipe that lets you use random forests, lasso, boosting, or neural nets for <span class="math inline">\(\hat\mu(X)\)</span> and <span class="math inline">\(\hat\pi(X)\)</span> <strong>without</strong> sacrificing <span class="math inline">\(\sqrt{n}\)</span>-consistency or valid standard errors.</p>
 <p>It is an <strong>estimation</strong> technology. It answers “how do I flexibly model a high-dimensional <span class="math inline">\(X\)</span>?” — not “is <span class="math inline">\(X\)</span> the right adjustment set?”</p>
+</section>
+<section id="aipw-is-efficient-not-just-consistent" class="slide level2">
+<h2>AIPW is efficient, not just consistent</h2>
+<p>Among all regular, asymptotically linear estimators of the ATE under unconfoundedness, there is a <strong>smallest achievable asymptotic variance</strong> — the semiparametric efficiency bound. The estimator that attains it has, as its influence function, the <strong>efficient influence function (EIF)</strong>.</p>
+<p><strong>Key fact:</strong> under standard regularity conditions, the AIPW score <em>is</em> the EIF for the ATE under unconfoundedness. So <span class="math inline">\(\hat\theta_{DML}\)</span> doesn’t just get you a valid <span class="math inline">\(\sqrt N\)</span>-consistent estimate — it gets you the <strong>most precise</strong> valid estimate any regular estimator could achieve, given only conditional ignorability and overlap.</p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>You cannot asymptotically beat AIPW/DML’s variance without strengthening the assumptions.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+<p>This is the formal version of the Kennedy (2024) reading — see the paper-specific slides later today.</p>
 </section>
 <section id="what-dml-repairs" class="slide level2">
 <h2>What DML repairs</h2>
@@ -928,6 +977,43 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 \text{Flexible nuisance estimation} \not\Rightarrow \text{Conditional ignorability}
 }
 \]</span></p>
+</section>
+<section id="a-special-case-partially-linear-regression-via-fwl" class="slide level2">
+<h2>A special case: partially linear regression via FWL</h2>
+<p>Suppose you’re willing to assume a <strong>constant treatment effect</strong>:</p>
+<p><span class="math display">\[
+Y = \theta_0 D + g_0(X) + \varepsilon
+\]</span></p>
+<p>By Frisch–Waugh–Lovell, <span class="math inline">\(\theta_0\)</span> can be estimated by “partialling out” <span class="math inline">\(X\)</span>:</p>
+<ol type="1">
+<li>Use ML to estimate <span class="math inline">\(\ell_0(X)=E[Y\mid X]\)</span> and <span class="math inline">\(r_0(X)=E[D\mid X]\)</span>.</li>
+<li>Form residuals <span class="math inline">\(\tilde Y = Y-\hat\ell(X)\)</span> and <span class="math inline">\(\tilde D = D-\hat r(X)\)</span>.</li>
+<li>Regress <span class="math inline">\(\tilde Y\)</span> on <span class="math inline">\(\tilde D\)</span>.</li>
+</ol>
+<p>The underlying score, <span class="math inline">\(\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(X))\big](D-\eta_D(X))\)</span>, is Neyman orthogonal (Ahrens et al.&nbsp;2026) — the same recipe, applied to a <strong>linear-in-<span class="math inline">\(D\)</span></strong> model instead of the fully nonparametric <span class="math inline">\(\mu_1,\mu_0\)</span>.</p>
+<p><strong>This is exactly the residualize-both-and-regress structure discussed earlier this session</strong> — now you can see precisely which assumption makes it valid.</p>
+</section>
+<section id="is-plr-dml-better-than-aipw-dml" class="slide level2">
+<h2>Is PLR-DML “better” than AIPW-DML?</h2>
+<p>Only under an assumption you have to be willing to defend.</p>
+<ul>
+<li><strong>If treatment effects truly are constant</strong>, PLR-DML and AIPW-DML both consistently estimate the same <span class="math inline">\(\theta_0\)</span>, and PLR-DML is typically <strong>more efficient</strong> — a correctly-imposed constraint is free precision.</li>
+<li><strong>If effects are heterogeneous</strong>, PLR-DML is <strong>not consistent for the ATE</strong>. It converges to the same variance-weighted average of unit effects as the Aronow and Samii result from earlier in this lecture — now computed with ML nuisances and cross-fitting instead of linear controls.</li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Orthogonality and cross-fitting fix the estimation problem (regularization bias, overfitting). They do not fix the estimand problem created by a constant-effect specification.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+<p><strong>Practical implication:</strong> don’t reach for PLR because it is easier to describe. Reach for it only if you are prepared to defend homogeneous effects — otherwise, AIPW’s interactive regression model is the safer default.</p>
 </section>
 <section id="diagnosing-a-dml-analysis-questions-to-ask" class="slide level2">
 <h2>Diagnosing a DML analysis: questions to ask</h2>
