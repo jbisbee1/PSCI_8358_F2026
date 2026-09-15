@@ -660,6 +660,134 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p><strong>What identifying variation can we exploit when conditional ignorability is not credible?</strong></p>
 </blockquote>
 </section>
+<section id="this-weeks-readings-in-brief" class="slide level2">
+<h2>This week’s readings, in brief</h2>
+<p>Four papers, four roles:</p>
+<ul>
+<li><strong>Chernozhukov et al.&nbsp;(2018)</strong> — the paper that named DML: the general recipe and its canonical applications.</li>
+<li><strong>Athey, Imbens, and Wager (2018)</strong> — a contrasting debiasing strategy for a narrower (sparse linear) setting.</li>
+<li><strong>Kennedy (2024)</strong> — the semiparametric efficiency theory underneath AIPW and DML.</li>
+<li><strong>Ahrens et al.&nbsp;(2026)</strong> — a practitioner’s field guide to actually running DML.</li>
+</ul>
+</section>
+<section id="chernozhukov-et-al.-2018-the-origin-of-the-recipe" class="slide level2">
+<h2>Chernozhukov et al.&nbsp;(2018): the origin of the recipe</h2>
+<p>This is the paper that coined “double/debiased machine learning” and gave it its two-ingredient recipe — Neyman orthogonal scores plus cross-fitting — which is exactly what we built up today.</p>
+<p>It formalizes the two failure modes of naive plug-in estimation:</p>
+<ul>
+<li><strong>regularization bias</strong> — first-order sensitivity of the score to nuisance error;</li>
+<li><strong>overfitting bias</strong> — dependence between <span class="math inline">\(\hat\eta\)</span> and the very data used to evaluate the score.</li>
+</ul>
+<p>It also distinguishes two cross-fitting estimators: <strong>DML1</strong> solves the moment condition separately in each fold and averages the resulting <span class="math inline">\(\hat\theta_k\)</span>; <strong>DML2</strong> pools the orthogonal score across all folds and solves once. DML2 is generally the more stable choice in practice.</p>
+</section>
+<section id="chernozhukov-et-al.-a-menu-of-canonical-applications" class="slide level2">
+<h2>Chernozhukov et al.: a menu of canonical applications</h2>
+<p>The paper works out Neyman orthogonal scores for four widely used estimands:</p>
+<ul>
+<li>the coefficient in a <strong>partially linear regression</strong> (<span class="math inline">\(Y = \theta_0 D + g_0(X) + \varepsilon\)</span>);</li>
+<li>the coefficient in a <strong>partially linear IV model</strong>;</li>
+<li>the <strong>ATE/ATT under unconfoundedness</strong> (the interactive regression model — this is our AIPW setting); and</li>
+<li>the <strong>LATE</strong> in an instrumental-variables design.</li>
+</ul>
+<p><strong>Takeaway:</strong> the same orthogonalize-and-cross-fit logic applies far beyond selection-on-observables — it is a general tool for any low-dimensional parameter defined alongside a high-dimensional nuisance function.</p>
+</section>
+<section id="chernozhukov-et-al.-the-401k-example" class="slide level2">
+<h2>Chernozhukov et al.: the 401(k) example</h2>
+<p>Using SIPP data (Chernozhukov and Hansen 2004), they estimate the effect of 401(k) <em>eligibility</em> on net financial assets, controlling for age, income, family size, education, and other job-related covariates:</p>
+<ul>
+<li><strong>No controls:</strong> ATE <span class="math inline">\(\approx \$19{,}559\)</span> (SE <span class="math inline">\(1{,}413\)</span>) — not credible, given the confounding concern.</li>
+<li><strong>DML-controlled (partially linear model):</strong> ATE <span class="math inline">\(\approx \$8{,}200\)</span>–<span class="math inline">\(9{,}200\)</span>, essentially <strong>the same across six different ML learners</strong> (lasso, regression tree, random forest, boosting, neural net, ensemble).</li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Agreement across very different learners is itself a diagnostic. Large disagreement across learners is a warning sign, not a modeling detail to average away.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+</section>
+<section id="athey-imbens-and-wager-2018-a-different-bet" class="slide level2">
+<h2>Athey, Imbens, and Wager (2018): a different bet</h2>
+<p>Same motivating problem as today — unconfoundedness is more plausible with many covariates, but many covariates break standard estimation. Their example: does controlling only for age and sex vs.&nbsp;detailed medical histories change how credible unconfoundedness is for a flu-vaccine effect?</p>
+<p>Their question: in a <strong>high-dimensional linear</strong> outcome model, do we need to estimate the propensity score at all?</p>
+<p><strong>Their answer: no.</strong> If <span class="math inline">\(\mu_d(X)\)</span> is well approximated by a sparse linear model, <span class="math inline">\(\sqrt{n}\)</span>-consistent inference is possible using only <strong>overlap</strong> — not a consistent <span class="math inline">\(\hat\pi(X)\)</span>, and not sparsity of the treatment effect itself.</p>
+</section>
+<section id="athey-imbens-and-wager-approximate-residual-balancing" class="slide level2">
+<h2>Athey, Imbens, and Wager: approximate residual balancing</h2>
+<p>A two-stage procedure:</p>
+<ol type="1">
+<li>Fit a <strong>regularized (lasso/elastic net) linear outcome model</strong> for <span class="math inline">\(Y\)</span> on <span class="math inline">\(X\)</span>, separately in each treatment arm.</li>
+<li>Reweight the <strong>residuals</strong> using weights chosen not to fit a propensity model, but to <strong>approximately balance</strong> the covariate means between treated and control (following Zubizarreta 2015) — trading exact balance for controlled variance.</li>
+</ol>
+<p>This directly corrects the shrinkage bias that regularized regression introduces, <strong>without ever estimating <span class="math inline">\(\pi(X)\)</span>.</strong></p>
+<p><strong>Cost of the shortcut:</strong> it buys you out of the propensity model, but only by committing to linearity/sparsity in <span class="math inline">\(\mu(X)\)</span> — a functional-form assumption DML’s AIPW-based approach does not require.</p>
+</section>
+<section id="kennedy-2024-the-theory-underneath-aipw" class="slide level2">
+<h2>Kennedy (2024): the theory underneath AIPW</h2>
+<p>Read this one if you want to see the AIPW formula <strong>derived</strong>, not just asserted.</p>
+<p>Kennedy frames estimation as targeting a functional <span class="math inline">\(\psi(P)\)</span> and uses the <strong>von Mises (distributional Taylor) expansion</strong>:</p>
+<p><span class="math display">\[
+\psi(\hat P) - \psi(P) = -\underbrace{\int \phi(z;\hat P)\,dP(z)}_{\text{first-order bias}} + R_2(\hat P, P).
+\]</span></p>
+<p>A naive plug-in estimator <span class="math inline">\(\hat\psi_{pi} = \psi(\hat P)\)</span> inherits that first-order bias directly.</p>
+<p>The fix — subtract an estimate of that bias term — gives the <strong>one-step estimator</strong>:</p>
+<p><span class="math display">\[
+\hat\psi = \psi(\hat P) + P_n\{\phi(Z;\hat P)\}.
+\]</span></p>
+<p>For the ATE, this is exactly <span class="math inline">\(\hat\mu(X) + \dfrac{D(Y-\hat\mu(X))}{\hat\pi(X)} - \cdots\)</span> — our AIPW score, now derived from the efficient influence function rather than pattern-matched from double robustness.</p>
+</section>
+<section id="kennedy-naming-the-two-failure-modes-precisely" class="slide level2">
+<h2>Kennedy: naming the two failure modes precisely</h2>
+<p>Kennedy decomposes the one-step estimator’s error into two terms:</p>
+<p><span class="math display">\[
+\hat\psi - \psi = \underbrace{(P_n - P)\{\hat\phi - \phi\}}_{T_1 \text{: empirical process term}} + \underbrace{R_2(\hat P, P)}_{T_2 \text{: remainder/regularization-bias term}}.
+\]</span></p>
+<ul>
+<li><span class="math inline">\(T_1 \to 0\)</span> requires either low estimator complexity or <strong>sample splitting</strong> — this is cross-fitting’s job.</li>
+<li><span class="math inline">\(T_2 \to 0\)</span> at rate <span class="math inline">\(o_P(n^{-1/2})\)</span> requires an <strong>orthogonal</strong> influence function plus adequate nuisance convergence rates — this is Neyman orthogonality’s job.</li>
+</ul>
+<p><strong>This is the same regularization/overfitting distinction from Chernozhukov et al., now derived from first principles rather than asserted.</strong> The framework generalizes well beyond ATEs — to LATEs, stochastic interventions, and missing-data problems, using the same machinery.</p>
+</section>
+<section id="ahrens-et-al.-2026-the-practitioners-field-guide" class="slide level2">
+<h2>Ahrens et al.&nbsp;(2026): the practitioner’s field guide</h2>
+<p>The newest and most applied of the four readings — written explicitly to help researchers <em>use</em> DML correctly.</p>
+<p>Their running example, Dube et al.&nbsp;(2020) on monopsony power on MTurk, uses a partially linear regression with <strong>text-based task features</strong> as high-dimensional <span class="math inline">\(X\)</span> — a case where no parametric functional form is defensible.</p>
+<p>They contrast a naive score with the orthogonal (partialling-out) score:</p>
+<p><span class="math display">\[
+m_{naive}(W;\theta,\eta) = (Y - g(X) - \theta D)D, \qquad
+m_{PLM}(W;\theta,\eta) = \big[(Y-\ell(X)) - \theta(D-r(X))\big](D - r(X)).
+\]</span></p>
+<p>Both <strong>identify</strong> <span class="math inline">\(\theta_0\)</span>. Only <span class="math inline">\(m_{PLM}\)</span> is Neyman orthogonal — the same lesson as today’s naive-plug-in slides, now in a different application.</p>
+</section>
+<section id="ahrens-et-al.-practical-recommendations-for-ps1" class="slide level2">
+<h2>Ahrens et al.: practical recommendations for PS1</h2>
+<p>Their concrete guidance, directly relevant to your replication:</p>
+<ul>
+<li><strong>Folds:</strong> <span class="math inline">\(K=5\)</span> or <span class="math inline">\(10\)</span> is a reasonable default; more folds help but with diminishing returns.</li>
+<li><strong>Repeat cross-fitting</strong> across several random splits and report the spread — large variation across splits is itself a diagnostic, not just noise to average away.</li>
+<li><strong>Try multiple learners</strong> (parametric benchmark, lasso, trees, neural net); substantial disagreement across learners is a warning sign, not a detail to average over.</li>
+</ul>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>A caution that matters for your problem set: common ML defaults do not automatically satisfy DML’s convergence-rate requirements.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
+<p>They cite evidence that random forests under standard tuning, and deep regression trees, can fail to converge fast enough for DML’s guarantees to hold. “We used a random forest” is not, by itself, a valid DML analysis.</p>
+</section>
 <section id="core-readings" class="slide level2">
 <h2>Core readings</h2>
 <ul>

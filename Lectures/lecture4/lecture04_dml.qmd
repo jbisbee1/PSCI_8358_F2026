@@ -401,6 +401,149 @@ The central question shifts:
 
 ---
 
+## This week's readings, in brief
+
+Four papers, four roles:
+
+- **Chernozhukov et al. (2018)** — the paper that named DML: the general recipe and its canonical applications.
+- **Athey, Imbens, and Wager (2018)** — a contrasting debiasing strategy for a narrower (sparse linear) setting.
+- **Kennedy (2024)** — the semiparametric efficiency theory underneath AIPW and DML.
+- **Ahrens et al. (2026)** — a practitioner's field guide to actually running DML.
+
+---
+
+## Chernozhukov et al. (2018): the origin of the recipe
+
+This is the paper that coined "double/debiased machine learning" and gave it its two-ingredient recipe — Neyman orthogonal scores plus cross-fitting — which is exactly what we built up today.
+
+It formalizes the two failure modes of naive plug-in estimation:
+
+- **regularization bias** — first-order sensitivity of the score to nuisance error;
+- **overfitting bias** — dependence between $\hat\eta$ and the very data used to evaluate the score.
+
+It also distinguishes two cross-fitting estimators: **DML1** solves the moment condition separately in each fold and averages the resulting $\hat\theta_k$; **DML2** pools the orthogonal score across all folds and solves once. DML2 is generally the more stable choice in practice.
+
+---
+
+## Chernozhukov et al.: a menu of canonical applications
+
+The paper works out Neyman orthogonal scores for four widely used estimands:
+
+- the coefficient in a **partially linear regression** ($Y = \theta_0 D + g_0(X) + \varepsilon$);
+- the coefficient in a **partially linear IV model**;
+- the **ATE/ATT under unconfoundedness** (the interactive regression model — this is our AIPW setting); and
+- the **LATE** in an instrumental-variables design.
+
+**Takeaway:** the same orthogonalize-and-cross-fit logic applies far beyond selection-on-observables — it is a general tool for any low-dimensional parameter defined alongside a high-dimensional nuisance function.
+
+---
+
+## Chernozhukov et al.: the 401(k) example
+
+Using SIPP data (Chernozhukov and Hansen 2004), they estimate the effect of 401(k) *eligibility* on net financial assets, controlling for age, income, family size, education, and other job-related covariates:
+
+- **No controls:** ATE $\approx \$19{,}559$ (SE $1{,}413$) — not credible, given the confounding concern.
+- **DML-controlled (partially linear model):** ATE $\approx \$8{,}200$–$9{,}200$, essentially **the same across six different ML learners** (lasso, regression tree, random forest, boosting, neural net, ensemble).
+
+::: {.callout-important}
+### Agreement across very different learners is itself a diagnostic. Large disagreement across learners is a warning sign, not a modeling detail to average away.
+:::
+
+---
+
+## Athey, Imbens, and Wager (2018): a different bet
+
+Same motivating problem as today — unconfoundedness is more plausible with many covariates, but many covariates break standard estimation. Their example: does controlling only for age and sex vs. detailed medical histories change how credible unconfoundedness is for a flu-vaccine effect?
+
+Their question: in a **high-dimensional linear** outcome model, do we need to estimate the propensity score at all?
+
+**Their answer: no.** If $\mu_d(X)$ is well approximated by a sparse linear model, $\sqrt{n}$-consistent inference is possible using only **overlap** — not a consistent $\hat\pi(X)$, and not sparsity of the treatment effect itself.
+
+---
+
+## Athey, Imbens, and Wager: approximate residual balancing
+
+A two-stage procedure:
+
+1. Fit a **regularized (lasso/elastic net) linear outcome model** for $Y$ on $X$, separately in each treatment arm.
+2. Reweight the **residuals** using weights chosen not to fit a propensity model, but to **approximately balance** the covariate means between treated and control (following Zubizarreta 2015) — trading exact balance for controlled variance.
+
+This directly corrects the shrinkage bias that regularized regression introduces, **without ever estimating $\pi(X)$.**
+
+**Cost of the shortcut:** it buys you out of the propensity model, but only by committing to linearity/sparsity in $\mu(X)$ — a functional-form assumption DML's AIPW-based approach does not require.
+
+---
+
+## Kennedy (2024): the theory underneath AIPW
+
+Read this one if you want to see the AIPW formula **derived**, not just asserted.
+
+Kennedy frames estimation as targeting a functional $\psi(P)$ and uses the **von Mises (distributional Taylor) expansion**:
+
+$$
+\psi(\hat P) - \psi(P) = -\underbrace{\int \phi(z;\hat P)\,dP(z)}_{\text{first-order bias}} + R_2(\hat P, P).
+$$
+
+A naive plug-in estimator $\hat\psi_{pi} = \psi(\hat P)$ inherits that first-order bias directly.
+
+The fix — subtract an estimate of that bias term — gives the **one-step estimator**:
+
+$$
+\hat\psi = \psi(\hat P) + P_n\{\phi(Z;\hat P)\}.
+$$
+
+For the ATE, this is exactly $\hat\mu(X) + \dfrac{D(Y-\hat\mu(X))}{\hat\pi(X)} - \cdots$ — our AIPW score, now derived from the efficient influence function rather than pattern-matched from double robustness.
+
+---
+
+## Kennedy: naming the two failure modes precisely
+
+Kennedy decomposes the one-step estimator's error into two terms:
+
+$$
+\hat\psi - \psi = \underbrace{(P_n - P)\{\hat\phi - \phi\}}_{T_1 \text{: empirical process term}} + \underbrace{R_2(\hat P, P)}_{T_2 \text{: remainder/regularization-bias term}}.
+$$
+
+- $T_1 \to 0$ requires either low estimator complexity or **sample splitting** — this is cross-fitting's job.
+- $T_2 \to 0$ at rate $o_P(n^{-1/2})$ requires an **orthogonal** influence function plus adequate nuisance convergence rates — this is Neyman orthogonality's job.
+
+**This is the same regularization/overfitting distinction from Chernozhukov et al., now derived from first principles rather than asserted.** The framework generalizes well beyond ATEs — to LATEs, stochastic interventions, and missing-data problems, using the same machinery.
+
+---
+
+## Ahrens et al. (2026): the practitioner's field guide
+
+The newest and most applied of the four readings — written explicitly to help researchers *use* DML correctly.
+
+Their running example, Dube et al. (2020) on monopsony power on MTurk, uses a partially linear regression with **text-based task features** as high-dimensional $X$ — a case where no parametric functional form is defensible.
+
+They contrast a naive score with the orthogonal (partialling-out) score:
+
+$$
+m_{naive}(W;\theta,\eta) = (Y - g(X) - \theta D)D, \qquad
+m_{PLM}(W;\theta,\eta) = \big[(Y-\ell(X)) - \theta(D-r(X))\big](D - r(X)).
+$$
+
+Both **identify** $\theta_0$. Only $m_{PLM}$ is Neyman orthogonal — the same lesson as today's naive-plug-in slides, now in a different application.
+
+---
+
+## Ahrens et al.: practical recommendations for PS1
+
+Their concrete guidance, directly relevant to your replication:
+
+- **Folds:** $K=5$ or $10$ is a reasonable default; more folds help but with diminishing returns.
+- **Repeat cross-fitting** across several random splits and report the spread — large variation across splits is itself a diagnostic, not just noise to average away.
+- **Try multiple learners** (parametric benchmark, lasso, trees, neural net); substantial disagreement across learners is a warning sign, not a detail to average over.
+
+::: {.callout-important}
+### A caution that matters for your problem set: common ML defaults do not automatically satisfy DML's convergence-rate requirements.
+:::
+
+They cite evidence that random forests under standard tuning, and deep regression trees, can fail to converge fast enough for DML's guarantees to hold. "We used a random forest" is not, by itself, a valid DML analysis.
+
+---
+
 ## Core readings
 
 - Chernozhukov, V., D. Chetverikov, M. Demirer, E. Duflo, C. Hansen, W. Newey, and J. Robins. 2018. "Double/Debiased Machine Learning for Treatment and Structural Parameters." *The Econometrics Journal* 21(1): C1–C68.
