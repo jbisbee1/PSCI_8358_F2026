@@ -152,6 +152,38 @@ $$
 
 ---
 
+## Proof: why the reweighting recovers exactly the missing piece
+
+Condition on $X$. Since $E[Y\mid X,D=1]=\mu_1(X)$ — the **true** conditional mean, not $\hat\mu_1$:
+
+$$
+E\big[D(Y-\hat\mu_1(X)) \mid X\big] = \pi(X)\big(\mu_1(X)-\hat\mu_1(X)\big)
+$$
+
+. . .
+
+Divide by $\pi(X)$ — exactly what the correction term does:
+
+$$
+E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)} \,\middle|\, X\right] = \mu_1(X) - \hat\mu_1(X)
+$$
+
+. . .
+
+Average over $X$, then add back $E[\hat\mu_1(X)]$:
+
+$$
+E[\hat\mu_1(X)] + E_X\big[\mu_1(X)-\hat\mu_1(X)\big] = E_X[\mu_1(X)] = E[Y(1)]
+$$
+
+::: {.callout-important}
+### The $1/\pi(X)$ weighting is what makes this exact: it scales up each treated unit's residual by how rare treatment was at that unit's $X$, reconstructing the population-wide gap — not just the average gap within the treated subsample.
+:::
+
+**This is why $\hat\pi(X)$ needs to be correct here:** get it wrong, and the reweighting misrepresents which treated units should stand in for more of the population, and the cancellation above fails.
+
+---
+
 ## Double robustness
 
 ::: {.callout-important}
