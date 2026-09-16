@@ -792,16 +792,26 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 </section>
 <section id="neyman-orthogonality-the-idea" class="slide level2">
 <h2>Neyman orthogonality: the idea</h2>
-<p><span class="math inline">\(\psi(W; \tau, \eta)\)</span> (here <span class="math inline">\(\eta = (\mu_1,\mu_0,\pi)\)</span>) is <strong>Neyman orthogonal</strong> if</p>
+<p>Bundle the nuisance functions into one object: <span class="math inline">\(\eta = (\mu_1,\mu_0,\pi)\)</span>.</p>
+<p><span class="math inline">\(\psi(W; \theta, \eta)\)</span> is <strong>Neyman orthogonal</strong> if perturbing <span class="math inline">\(\eta\)</span> slightly away from the truth <span class="math inline">\(\eta_0\)</span> doesn’t move <span class="math inline">\(E[\psi]\)</span> — to first order:</p>
 <p><span class="math display">\[
-\left.\frac{\partial}{\partial \eta}\, E\big[\psi(W;\tau,\eta)\big]\right|_{\eta=\eta_0} = 0.
+\left.\frac{\partial}{\partial \eta}\, E\big[\psi(W;\theta,\eta)\big]\right|_{\eta=\eta_0} = 0.
 \]</span></p>
-<p>Small <span class="math inline">\(\hat\eta\)</span> errors move <span class="math inline">\(E[\psi]\)</span> only at <strong>second order</strong>.</p>
-<p>AIPW: built doubly robust — orthogonality’s finite-sample cousin.</p>
+<p>(<span class="math inline">\(\eta\)</span> is function-valued, so this “derivative” means: pick a direction to nudge <span class="math inline">\(\mu_1,\mu_0,\pi\)</span>, and check how much <span class="math inline">\(E[\psi]\)</span> responds.)</p>
+<p>AIPW was already built doubly robust — this is the <em>local</em> (derivative) version of that same protection.</p>
+</section>
+<section id="why-orthogonality-controls-the-error" class="slide level2">
+<h2>Why orthogonality controls the error</h2>
+<p>Taylor-expand <span class="math inline">\(E[\psi(W;\theta,\hat\eta)]\)</span> around the truth <span class="math inline">\(\eta_0\)</span>:</p>
+<p><span class="math display">\[
+E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\,0 \text{ at the truth}} \;+\; \underbrace{\partial_\eta E[\psi]\big|_{\eta_0}}_{=\,0 \text{ by orthogonality}}(\hat\eta-\eta_0) \;+\; \text{2nd-order terms}
+\]</span></p>
+<p><strong>The first-order term vanishes.</strong> What survives is quadratic in <span class="math inline">\((\hat\eta-\eta_0)\)</span> — a <em>product</em> of nuisance errors with themselves, not the error alone.</p>
+<p>This is exactly where <span class="math inline">\(O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})\)</span> comes from, two slides ahead.</p>
 </section>
 <section id="why-the-naive-score-fails-a-concrete-calculation" class="slide level2">
 <h2>Why the naive score fails: a concrete calculation</h2>
-<p><span class="math inline">\(\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta\)</span>.</p>
+<p>Same question, for a score that is <strong>not</strong> orthogonal: <span class="math inline">\(\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta\)</span>.</p>
 <p><span class="math display">\[
 \hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
 \;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
@@ -810,6 +820,7 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 </section>
 <section id="checking-the-aipw-score-directly" class="slide level2">
 <h2>Checking the AIPW score directly</h2>
+<p>The naive score failed this test. Does AIPW pass it? Perturb <span class="math inline">\(\mu_1\)</span> in direction <span class="math inline">\(\tilde\mu_1\)</span> and compute the same derivative:</p>
 <p><span class="math display">\[
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
 = E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
