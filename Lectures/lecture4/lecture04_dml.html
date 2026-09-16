@@ -383,14 +383,14 @@ Advanced Observational Causal Inference
 <p><strong>This assumption does all the causal work.</strong></p>
 <p>Today is about <strong>estimating</strong> a quantity that is already identified. No estimator creates identification that wasn’t there.</p>
 </section>
-<section id="why-isnt-more-matching-the-answer" class="slide level2">
-<h2>Why isn’t more matching the answer?</h2>
+<section id="why-not-more-matching" class="slide level2">
+<h2>Why not more matching?</h2>
 <p>Natural instinct: match on more covariates.</p>
 <p><strong>Matching degrades with more covariates</strong> (Samii et al.&nbsp;2016) — bias, SE, and RMSE all worsen, even from irrelevant noise covariates.</p>
 <p>Satisfying ignorability and satisfying a matching estimator are <strong>not the same operation</strong>.</p>
 </section>
-<section id="regression-has-a-subtler-problem-the-wrong-estimand" class="slide level2">
-<h2>Regression has a subtler problem: the wrong estimand</h2>
+<section id="a-subtler-regression-problem" class="slide level2">
+<h2>A subtler regression problem</h2>
 <p><span class="math display">\[
 Y = \alpha + \theta_R D + X'\beta + \varepsilon
 \]</span></p>
@@ -398,6 +398,7 @@ Y = \alpha + \theta_R D + X'\beta + \varepsilon
 <p><span class="math display">\[
 \hat\theta_R \xrightarrow{p} \frac{E[w_i\theta_i]}{E[w_i]}, \qquad w_i = \big(D_i - E[D_i\mid X_i]\big)^2
 \]</span></p>
+<p>(<span class="math inline">\(\xrightarrow{p}\)</span>: “converges to, as the sample grows” — formally, convergence in probability. You’ll see this arrow throughout today.)</p>
 <p>where <span class="math inline">\(\theta_i = Y_i(1)-Y_i(0)\)</span> and <span class="math inline">\(E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]\)</span>.</p>
 <p><strong>OLS weights by how much <span class="math inline">\(D\)</span> varies given <span class="math inline">\(X\)</span></strong> — units near the assignment margin dominate.</p>
 </section>
@@ -426,12 +427,13 @@ Y = \alpha + \theta_R D + X'\beta + \varepsilon
 <p><strong>A failure of the estimator, not of identification.</strong></p>
 <p>Today: what makes an estimator target <span class="math inline">\(E[Y(1)]-E[Y(0)]\)</span> directly?</p>
 </section>
-<section id="two-ways-to-use-the-same-identification-result" class="slide level2">
-<h2>Two ways to use the same identification result</h2>
+<section id="two-estimation-strategies" class="slide level2">
+<h2>Two estimation strategies</h2>
 <p><span class="math display">\[
 E[Y(1)] = E_X\big[E[Y \mid D=1, X]\big], \qquad
 E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 \]</span></p>
+<p>(Law of iterated expectations: average the within-<span class="math inline">\(X\)</span> mean over the distribution of <span class="math inline">\(X\)</span>. This is the step that turns “regress within each <span class="math inline">\(X\)</span>” into a population-wide number.)</p>
 <ol type="1">
 <li><strong>Outcome regression (OR):</strong> model <span class="math inline">\(E[Y \mid D, X]\)</span>, average over <span class="math inline">\(X\)</span>.</li>
 <li><strong>Inverse-probability weighting (IPW):</strong> model <span class="math inline">\(P(D=1\mid X)\)</span>, reweight.</li>
@@ -447,8 +449,8 @@ E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 <p><strong>Needs:</strong> <span class="math inline">\(\hat\mu_1, \hat\mu_0\)</span> correct, or converging fast enough (next).</p>
 <p><strong>Fails:</strong> misspecification where treated or control units are sparse.</p>
 </section>
-<section id="inverse-probability-weighting" class="slide level2">
-<h2>Inverse-probability weighting</h2>
+<section id="ipw-weighting" class="slide level2">
+<h2>IPW weighting</h2>
 <p>Let <span class="math inline">\(\pi(X) = P(D=1 \mid X)\)</span>.</p>
 <p><span class="math display">\[
 \hat\tau_{IPW} = \frac{1}{n}\sum_{i=1}^n \left(\frac{D_i Y_i}{\hat\pi(X_i)} - \frac{(1-D_i) Y_i}{1-\hat\pi(X_i)}\right)
@@ -503,8 +505,8 @@ E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right]
 \]</span></p>
 <p>Expected treated residual = model error × probability of treatment.</p>
 </section>
-<section id="step-2-divide-by-the-propensity-score" class="slide level2">
-<h2>Step 2: Divide by the propensity score</h2>
+<section id="step-2-divide-by-pix" class="slide level2">
+<h2>Step 2: Divide by <span class="math inline">\(\pi(X)\)</span></h2>
 <p><span class="math display">\[
 E\left[
 \frac{D(Y-\hat\mu_1(X))}{\pi(X)}
@@ -529,8 +531,8 @@ E[D(Y-\hat\mu_1(X))\mid X] \\
 \]</span></p>
 <p>Removes the <span class="math inline">\(\pi(X)\)</span> scaling.</p>
 </section>
-<section id="step-3-average-over-the-distribution-of-x" class="slide level2">
-<h2>Step 3: Average over the distribution of <span class="math inline">\(X\)</span></h2>
+<section id="step-3-average-over-x" class="slide level2">
+<h2>Step 3: Average over <span class="math inline">\(X\)</span></h2>
 <p><span class="math display">\[
 \begin{aligned}
 E\left[
@@ -556,8 +558,8 @@ E\left[
 E_X[\mu_1(X)]-E_X[\hat\mu_1(X)].
 \]</span></p>
 </section>
-<section id="step-4-add-the-outcome-model-prediction" class="slide level2">
-<h2>Step 4: Add the outcome-model prediction</h2>
+<section id="step-4-add-the-prediction" class="slide level2">
+<h2>Step 4: Add the prediction</h2>
 <p><span class="math display">\[
 \begin{aligned}
 E_X[\hat\mu_1(X)]
@@ -575,8 +577,8 @@ E_X[\mu_1(X)].
 \]</span></p>
 <p><span class="math inline">\(\hat\mu_1(X)\)</span> cancels.</p>
 </section>
-<section id="step-5-connect-mu_1x-to-pos" class="slide level2">
-<h2>Step 5: Connect <span class="math inline">\(\mu_1(X)\)</span> to POs</h2>
+<section id="step-5-connect-to-pos" class="slide level2">
+<h2>Step 5: Connect to POs</h2>
 <p><span class="math display">\[
 \mu_1(X)=E[Y\mid D=1,X].
 \]</span></p>
@@ -655,8 +657,8 @@ E[Y(1)].
 <p>Two independent chances to get it right.</p>
 <p><strong>Estimation statement, conditional on ignorability — not a second identification strategy.</strong></p>
 </section>
-<section id="back-to-the-motivating-question" class="slide level2">
-<h2>Back to the motivating question</h2>
+<section id="back-to-the-motivation" class="slide level2">
+<h2>Back to the motivation</h2>
 <p>Recall: <span class="math inline">\(\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]\)</span>, <span class="math inline">\(w_i=\text{Var}[D_i\mid X_i]\)</span>.</p>
 <p><strong><span class="math inline">\(\hat\tau_{AIPW}\)</span> avoids this</strong> — averages <span class="math inline">\(\hat\mu_1(X)-\hat\mu_0(X)\)</span> over <span class="math inline">\(X\)</span> directly: <span class="math inline">\(E_X[\mu_1(X)] = E[Y(1)]\)</span>, no implicit reweighting.</p>
 <div class="callout callout-important callout-titled callout-style-default">
@@ -673,15 +675,15 @@ E[Y(1)].
 </div>
 </div>
 </section>
-<section id="where-high-dimensional-x-enters" class="slide level2">
-<h2>Where high-dimensional <span class="math inline">\(X\)</span> enters</h2>
+<section id="high-dimensional-x-enters" class="slide level2">
+<h2>High-dimensional X enters</h2>
 <p>Lecture 2: adjustment sets are often large.</p>
 <p>Parametric <span class="math inline">\(\hat\mu(X)\)</span>, <span class="math inline">\(\hat\pi(X)\)</span> misspecified exactly where ignorability is most defensible.</p>
 <p>Natural fix: flexible ML.</p>
 <p><strong>New problem — statistical, not causal.</strong></p>
 </section>
-<section id="why-naive-ml-plug-in-fails-overview" class="slide level2">
-<h2>Why naive ML plug-in fails: overview</h2>
+<section id="why-naive-ml-plug-in-fails" class="slide level2">
+<h2>Why naive ML plug-in fails</h2>
 <p>Plug ML <span class="math inline">\(\hat\mu(X)\)</span>, <span class="math inline">\(\hat\pi(X)\)</span> into <span class="math inline">\(\hat\tau_{OR}\)</span>, <span class="math inline">\(\hat\tau_{IPW}\)</span>, or AIPW; fit and evaluate on the <strong>same data</strong>.</p>
 <ol type="1">
 <li><strong>Regularization/overfitting bias.</strong></li>
@@ -693,9 +695,10 @@ E[Y(1)].
 <p>Fit <span class="math inline">\(\hat\mu(X)\)</span> on the full sample; evaluate <span class="math inline">\(Y_i - \hat\mu(X_i)\)</span> on the <strong>same units</strong>.</p>
 <p>Residuals shrink toward zero — the model memorized <span class="math inline">\(Y_i\)</span>.</p>
 <p><strong>Bias that does not vanish as <span class="math inline">\(n \to \infty\)</span>.</strong></p>
+<p><em>Regularization bias — the other failure mode from the previous slide — gets its own worked concrete treatment later (“Why the naive score fails” and after), once Neyman orthogonality gives us the tools to see exactly where it comes from.</em></p>
 </section>
-<section id="a-quick-notation-check-what-does-ocdot-mean" class="slide level2">
-<h2>A quick notation check: what does <span class="math inline">\(O(\cdot)\)</span> mean?</h2>
+<section id="what-does-ocdot-mean" class="slide level2">
+<h2>What does <span class="math inline">\(O(\cdot)\)</span> mean?</h2>
 <p><span class="math inline">\(O(\text{something})\)</span> = “doesn’t grow bigger than a constant times that something.”</p>
 <p>You already know one example: the standard error of a sample mean is <span class="math inline">\(O(1/\sqrt{n})\)</span> — it shrinks proportional to <span class="math inline">\(1/\sqrt{n}\)</span>. Quadruple your sample, and your SE roughly halves.</p>
 <p><span class="math inline">\(O_p(\cdot)\)</span>: same idea, but for a <em>random</em> quantity that depends on your particular sample (like <span class="math inline">\(\hat\mu(X)-\mu(X)\)</span>) — “doesn’t grow bigger than a constant times that something, <strong>with high probability</strong>” across repeated samples.</p>
@@ -709,8 +712,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 \]</span></p>
 <p><strong>only if the score is orthogonal.</strong></p>
 </section>
-<section id="what-does-it-mean-for-a-function-to-converge" class="slide level2">
-<h2>What does it mean for a <em>function</em> to converge?</h2>
+<section id="what-convergence-means-here" class="slide level2">
+<h2>What convergence means here</h2>
 <p><span class="math inline">\(\mu(X)\)</span> is a function — “close” isn’t one number.</p>
 <p><span class="math display">\[
 \underbrace{Y - \hat\mu(X)}_{\text{residual}} = \underbrace{Y - \mu(X)}_{\text{irreducible noise } \varepsilon} + \underbrace{\mu(X) - \hat\mu(X)}_{\text{estimation error}}
@@ -733,16 +736,16 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 </div>
 </div>
 </section>
-<section id="turning-a-function-to-function-gap-into-one-number" class="slide level2">
-<h2>Turning a function-to-function gap into one number</h2>
+<section id="measuring-the-function-gap" class="slide level2">
+<h2>Measuring the function gap</h2>
 <p><span class="math display">\[
 \|\hat\mu - \mu\|^2 = E_X\big[(\hat\mu(X) - \mu(X))^2\big]
 \]</span></p>
 <p>Average squared gap, over the distribution of <span class="math inline">\(X\)</span>.</p>
 <p>“Converges fast enough” = does <span class="math inline">\(\|\hat\mu - \mu\|^2\)</span> shrink, and how fast?</p>
 </section>
-<section id="why-flexible-estimators-converge-more-slowly" class="slide level2">
-<h2>Why flexible estimators converge more slowly</h2>
+<section id="ml-converges-more-slowly" class="slide level2">
+<h2>ML converges more slowly</h2>
 <div class="fragment">
 <p><strong>Parametric:</strong> few coefficients — every observation sharpens all of them. Error shrinks proportional to <span class="math inline">\(1/\sqrt{n}\)</span>.</p>
 </div>
@@ -796,8 +799,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 <li><strong>Cross-fitting</strong></li>
 </ul>
 </section>
-<section id="neyman-orthogonality-the-idea" class="slide level2">
-<h2>Neyman orthogonality: the idea</h2>
+<section id="neyman-orthogonality" class="slide level2">
+<h2>Neyman orthogonality</h2>
 <p>Bundle the nuisance functions into one object: <span class="math inline">\(\eta = (\mu_1,\mu_0,\pi)\)</span>.</p>
 <p><span class="math inline">\(\psi(W; \theta, \eta)\)</span> is <strong>Neyman orthogonal</strong> if perturbing <span class="math inline">\(\eta\)</span> slightly away from the truth <span class="math inline">\(\eta_0\)</span> doesn’t move <span class="math inline">\(E[\psi]\)</span> — to first order:</p>
 <p><span class="math display">\[
@@ -806,8 +809,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 <p>(<span class="math inline">\(\eta\)</span> is function-valued, so this “derivative” means: pick a direction to nudge <span class="math inline">\(\mu_1,\mu_0,\pi\)</span>, and check how much <span class="math inline">\(E[\psi]\)</span> responds.)</p>
 <p>AIPW was already built doubly robust — this is the <em>local</em> (derivative) version of that same protection.</p>
 </section>
-<section id="why-orthogonality-controls-the-error" class="slide level2">
-<h2>Why orthogonality controls the error</h2>
+<section id="how-orthogonality-helps" class="slide level2">
+<h2>How orthogonality helps</h2>
 <p>Define <span class="math inline">\(M(\eta) \equiv E[\psi(W;\theta_0,\eta)]\)</span> — the score, averaged, holding <span class="math inline">\(\theta\)</span> at its <strong>true</strong> value. Then <span class="math inline">\(M(\eta_0)=0\)</span>: the moment condition holds at the truth.</p>
 <p>Taylor’s theorem, exactly:</p>
 <p><span class="math display">\[
@@ -818,8 +821,8 @@ M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}
 \]</span></p>
 <p><strong>Quadratic in the mistake, not linear.</strong> This is where <span class="math inline">\(O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})\)</span> comes from, a few slides ahead.</p>
 </section>
-<section id="making-the-derivative-precise-when-eta-is-a-function" class="slide level2">
-<h2>Making the derivative precise, when <span class="math inline">\(\eta\)</span> is a function</h2>
+<section id="making-derivatives-precise" class="slide level2">
+<h2>Making derivatives precise</h2>
 <p><span class="math inline">\(\eta\)</span> is function-valued, so “<span class="math inline">\(\partial_\eta M(\eta_0)\)</span>” isn’t ordinary calculus. Reduce it to one dimension: for <span class="math inline">\(r\in[0,1]\)</span>,</p>
 <p><span class="math display">\[
 \eta_r = \eta_0 + r(\hat\eta-\eta_0), \qquad f(r) \equiv M(\eta_r)
@@ -839,8 +842,8 @@ M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}
 </div>
 </div>
 </section>
-<section id="why-the-naive-score-fails-a-concrete-calculation" class="slide level2">
-<h2>Why the naive score fails: a concrete calculation</h2>
+<section id="why-the-naive-score-fails" class="slide level2">
+<h2>Why the naive score fails</h2>
 <p>Same question, for a score that is <strong>not</strong> orthogonal — the plain outcome-regression score, using the <strong>same <span class="math inline">\(\mu_1,\mu_0\)</span></strong> from “Outcome regression” several slides back. (Note: <span class="math inline">\(\pi(X)\)</span> never enters this score at all.)</p>
 <p><span class="math display">\[
 \psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta
@@ -855,8 +858,8 @@ M(\hat\mu) = \underbrace{M(\mu_0)}_{=0} + \partial_\mu M(\mu_0)[\hat\mu-\mu_0] =
 \]</span></p>
 <p><strong>No approximation here, and no protection either.</strong> Bias in <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> passes straight through, undiminished.</p>
 </section>
-<section id="checking-the-aipw-score-directly" class="slide level2">
-<h2>Checking the AIPW score directly</h2>
+<section id="checking-the-aipw-score" class="slide level2">
+<h2>Checking the AIPW score</h2>
 <p>The naive score failed this test. Does AIPW pass it? Only two pieces of <span class="math inline">\(\psi\)</span> involve <span class="math inline">\(\mu_1\)</span> — the <span class="math inline">\(\mu_1(X)\)</span> term and the <span class="math inline">\(-\mu_1(X)\)</span> inside the correction term. Perturb <span class="math inline">\(\mu_1\)</span> by <span class="math inline">\(\tilde\mu_1\)</span> and add up their responses:</p>
 <p><span class="math display">\[
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
@@ -880,8 +883,8 @@ M(\hat\mu) = \underbrace{M(\mu_0)}_{=0} + \partial_\mu M(\mu_0)[\hat\mu-\mu_0] =
 </div>
 </div>
 </section>
-<section id="the-symmetric-case-perturbing-pi" class="slide level2">
-<h2>The symmetric case: perturbing <span class="math inline">\(\pi\)</span></h2>
+<section id="the-pi-perturbation-case" class="slide level2">
+<h2>The <span class="math inline">\(\pi\)</span>-perturbation case</h2>
 <p>A genuinely different computation — <span class="math inline">\(\pi\)</span> sits in two denominators, so this needs the quotient rule, not simple substitution:</p>
 <p><span class="math display">\[
 \partial_{\pi} E[\psi]\,[\tilde\pi] = -E\left[\tilde\pi(X)\left(\frac{D(Y-\mu_1(X))}{\pi(X)^2} + \frac{(1-D)(Y-\mu_0(X))}{(1-\pi(X))^2}\right)\right]
@@ -901,8 +904,8 @@ M(\hat\mu) = \underbrace{M(\mu_0)}_{=0} + \partial_\mu M(\mu_0)[\hat\mu-\mu_0] =
 </div>
 </div>
 </section>
-<section id="orthogonality-does-the-heavy-lifting" class="slide level2">
-<h2>Orthogonality does the heavy lifting</h2>
+<section id="the-orthogonality-payoff" class="slide level2">
+<h2>The orthogonality payoff</h2>
 <p><span class="math display">\[
 O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 \]</span></p>
@@ -910,8 +913,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p><span class="math inline">\(O_p(n^{-1/2})\)</span> is the rate that makes ordinary confidence intervals and <span class="math inline">\(t\)</span>-tests valid — the same rate a correctly-specified parametric regression gets “for free.” Hit it, and your DML estimate behaves like textbook regression, even though <span class="math inline">\(\hat\mu,\hat\pi\)</span> came from a random forest.</p>
 <p><strong>Non-orthogonal score:</strong> stuck at <span class="math inline">\(O_p(n^{-1/4})\)</span> — standard errors computed the usual way are simply <strong>wrong</strong>: tight-looking and overconfident, not just “a bit off.”</p>
 </section>
-<section id="orthogonality-is-not-enough-on-its-own" class="slide level2">
-<h2>Orthogonality is not enough on its own</h2>
+<section id="orthogonality-isnt-enough" class="slide level2">
+<h2>Orthogonality isn’t enough</h2>
 <p>Handles the <em>rate</em> problem in population.</p>
 <p>Not <strong>overfitting:</strong> same-data <span class="math inline">\(\hat\eta\)</span> breaks the second-order bound.</p>
 <p>Need: independence between fitting data and evaluation data.</p>
@@ -927,8 +930,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 </ol>
 <p>Every unit is evaluated with nuisances it didn’t help fit.</p>
 </section>
-<section id="cross-fitting-removes-the-overfitting-bias" class="slide level2">
-<h2>Cross-fitting removes the overfitting bias</h2>
+<section id="cross-fitting-fixes-bias" class="slide level2">
+<h2>Cross-fitting fixes bias</h2>
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">
 <div class="callout-title">
@@ -945,8 +948,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p>Without it: overfit residuals ⇒ biased score ⇒ invalid SEs.</p>
 <p>With it: <span class="math inline">\(\hat\tau\)</span> is <span class="math inline">\(\sqrt{n}\)</span>-consistent, asymptotically normal, valid CIs.</p>
 </section>
-<section id="cross-fitted-aipw-formalized" class="slide level2">
-<h2>Cross-fitted AIPW, formalized</h2>
+<section id="cross-fitted-aipw" class="slide level2">
+<h2>Cross-fitted AIPW</h2>
 <p><span class="math inline">\(\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}\)</span>: nuisance fits trained on every fold <strong>except</strong> <span class="math inline">\(k\)</span>.</p>
 <p><span class="math display">\[
 \hat\psi_i = \hat\mu_{1,-k}(X_i)-\hat\mu_{0,-k}(X_i) + \frac{D_i\big(Y_i-\hat\mu_{1,-k}(X_i)\big)}{\hat\pi_{-k}(X_i)} - \frac{(1-D_i)\big(Y_i-\hat\mu_{0,-k}(X_i)\big)}{1-\hat\pi_{-k}(X_i)}
@@ -958,9 +961,9 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 \widehat{\mathrm{Var}}(\hat\theta_{DML}) = \frac{1}{N^2}\sum_{i=1}^N \big(\hat\psi_i - \hat\theta_{DML}\big)^2
 \]</span></p>
 </section>
-<section id="when-does-dml-work-the-formal-statement" class="slide level2">
-<h2>When does DML work? The formal statement</h2>
-<p>Write <span class="math inline">\(\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)\)</span> — the score, evaluated at the truth (same <span class="math inline">\(\psi\)</span> as always, just a shorter name for it here):</p>
+<section id="when-does-dml-work" class="slide level2">
+<h2>When does DML work?</h2>
+<p>Write <span class="math inline">\(\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)\)</span> — the score, evaluated at the truth (same <span class="math inline">\(\psi\)</span> as always, just a shorter name for it here). (<span class="math inline">\(\|\cdot\|_2\)</span> below is the same function-gap idea as “Measuring the function gap” — literally its square root, <span class="math inline">\(\|\hat\mu-\mu_0\|_2 = \sqrt{\|\hat\mu-\mu_0\|^2}\)</span> — just written as the norm itself rather than its square.)</p>
 <p><span class="math display">\[
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
 \]</span></p>
@@ -971,8 +974,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p><strong>Rule of thumb:</strong> both nuisances <span class="math inline">\(o_p(N^{-1/4})\)</span> ⇒ asymptotic normality.</p>
 <p><strong>Caution:</strong> weak overlap ⇒ <span class="math inline">\(R_N\)</span> need not be small, even with cross-fitting.</p>
 </section>
-<section id="doubledebiased-machine-learning-dml" class="slide level2">
-<h2>Double/debiased machine learning (DML)</h2>
+<section id="doubledebiased-ml-dml" class="slide level2">
+<h2>Double/debiased ML (DML)</h2>
 <p><span class="math display">\[
 \boxed{
 \text{DML} = \text{Orthogonal (AIPW-type) score} + \text{Flexible ML nuisance estimators} + \text{Cross-fitting}
@@ -981,8 +984,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 <p>Random forests, lasso, boosting, neural nets for <span class="math inline">\(\hat\mu(X)\)</span> and <span class="math inline">\(\hat\pi(X)\)</span> <strong>without</strong> sacrificing <span class="math inline">\(\sqrt{n}\)</span>-consistency.</p>
 <p><strong>Estimation</strong> technology — not “is <span class="math inline">\(X\)</span> right?”</p>
 </section>
-<section id="aipw-is-efficient-not-just-consistent" class="slide level2">
-<h2>AIPW is efficient, not just consistent</h2>
+<section id="aipw-is-efficient" class="slide level2">
+<h2>AIPW is efficient</h2>
 <p>Semiparametric efficiency bound: smallest variance any well-behaved estimator of the ATE can achieve (given only ignorability and overlap — no extra assumptions). Attained by the <strong>efficient influence function (EIF)</strong>.</p>
 <p><strong>AIPW score = the EIF for the ATE</strong> under unconfoundedness.</p>
 <div class="callout callout-important callout-titled callout-style-default">
@@ -1033,8 +1036,8 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 }
 \]</span></p>
 </section>
-<section id="a-special-case-partially-linear-regression-via-fwl" class="slide level2">
-<h2>A special case: partially linear regression via FWL</h2>
+<section id="special-case-plr-via-fwl" class="slide level2">
+<h2>Special case: PLR via FWL</h2>
 <p>Assume a <strong>constant treatment effect</strong>:</p>
 <p><span class="math display">\[
 Y = \theta_0 D + g_0(X) + \varepsilon
@@ -1047,8 +1050,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </ol>
 <p>The underlying score, <span class="math inline">\(\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(X))\big](D-\eta_D(X))\)</span>, is Neyman orthogonal (Ahrens et al.&nbsp;2026) — same recipe, linear-in-<span class="math inline">\(D\)</span> model.</p>
 </section>
-<section id="is-plr-dml-better-than-aipw-dml" class="slide level2">
-<h2>Is PLR-DML “better” than AIPW-DML?</h2>
+<section id="is-plr-dml-better" class="slide level2">
+<h2>Is PLR-DML better?</h2>
 <ul>
 <li><strong>Constant effects:</strong> same <span class="math inline">\(\theta_0\)</span>; PLR-DML typically <strong>more efficient</strong>.</li>
 <li><strong>Heterogeneous effects:</strong> PLR-DML <strong>not consistent for the ATE</strong> — same Aronow-Samii weighting, now via ML.</li>
@@ -1068,8 +1071,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </div>
 <p><strong>Default to AIPW unless you can defend homogeneous effects.</strong></p>
 </section>
-<section id="diagnosing-a-dml-analysis-questions-to-ask" class="slide level2">
-<h2>Diagnosing a DML analysis: questions to ask</h2>
+<section id="diagnosing-a-dml-analysis" class="slide level2">
+<h2>Diagnosing a DML analysis</h2>
 <ol type="1">
 <li>Is <span class="math inline">\(X\)</span> defended on substantive grounds (Lecture 2), not just “kitchen sink”?</li>
 <li>Was cross-fitting used, and how many folds?</li>
@@ -1099,8 +1102,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </ul>
 <p><strong>The endpoint is deciding why, not just computing.</strong></p>
 </section>
-<section id="what-you-should-be-able-to-do-after-today" class="slide level2">
-<h2>What you should be able to do after today</h2>
+<section id="skills-after-today" class="slide level2">
+<h2>Skills after today</h2>
 <ul>
 <li>Write down OR, IPW, AIPW; connect each to conditional ignorability</li>
 <li>Explain double robustness precisely</li>
@@ -1124,8 +1127,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 <p><strong>What identifying variation can we exploit when conditional ignorability isn’t credible?</strong></p>
 </blockquote>
 </section>
-<section id="this-weeks-readings-in-brief" class="slide level2">
-<h2>This week’s readings, in brief</h2>
+<section id="this-weeks-readings" class="slide level2">
+<h2>This week’s readings</h2>
 <ul>
 <li><strong>Chernozhukov et al.&nbsp;(2018)</strong> — named DML: the general recipe</li>
 <li><strong>Athey, Imbens, and Wager (2018)</strong> — a contrasting sparse-linear strategy</li>
@@ -1133,8 +1136,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 <li><strong>Ahrens et al.&nbsp;(2026)</strong> — a practitioner’s field guide</li>
 </ul>
 </section>
-<section id="chernozhukov-et-al.-2018-the-origin-of-the-recipe" class="slide level2">
-<h2>Chernozhukov et al.&nbsp;(2018): the origin of the recipe</h2>
+<section id="chernozhukov-et-al.-2018" class="slide level2">
+<h2>Chernozhukov et al.&nbsp;(2018)</h2>
 <p>Coined “double/debiased machine learning”: orthogonal scores + cross-fitting — exactly today’s recipe.</p>
 <p>Formalizes two failure modes:</p>
 <ul>
@@ -1143,8 +1146,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </ul>
 <p><strong>DML1</strong> solves per fold, averages <span class="math inline">\(\hat\theta_k\)</span>. <strong>DML2</strong> pools the score, solves once — generally more stable.</p>
 </section>
-<section id="chernozhukov-et-al.-a-menu-of-canonical-applications" class="slide level2">
-<h2>Chernozhukov et al.: a menu of canonical applications</h2>
+<section id="chernozhukov-applications" class="slide level2">
+<h2>Chernozhukov: applications</h2>
 <ul>
 <li><strong>Partially linear regression</strong> (<span class="math inline">\(Y = \theta_0 D + g_0(X) + \varepsilon\)</span>)</li>
 <li><strong>Partially linear IV</strong></li>
@@ -1153,8 +1156,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </ul>
 <p><strong>Takeaway:</strong> the same recipe applies far beyond selection-on-observables.</p>
 </section>
-<section id="chernozhukov-et-al.-the-401k-example" class="slide level2">
-<h2>Chernozhukov et al.: the 401(k) example</h2>
+<section id="chernozhukov-et-al.-401k" class="slide level2">
+<h2>Chernozhukov et al.: 401(k)</h2>
 <p>401(k) <em>eligibility</em> on net financial assets (SIPP data; Chernozhukov and Hansen 2004):</p>
 <ul>
 <li><strong>No controls:</strong> ATE <span class="math inline">\(\approx \$19{,}559\)</span> (SE <span class="math inline">\(1{,}413\)</span>)</li>
@@ -1174,14 +1177,14 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </div>
 </div>
 </section>
-<section id="athey-imbens-and-wager-2018-a-different-bet" class="slide level2">
-<h2>Athey, Imbens, and Wager (2018): a different bet</h2>
+<section id="athey-imbens-wager-2018" class="slide level2">
+<h2>Athey, Imbens, Wager (2018)</h2>
 <p>Same motivation: unconfoundedness more plausible with rich <span class="math inline">\(X\)</span>, but rich <span class="math inline">\(X\)</span> breaks standard estimation.</p>
 <p>Question: in a <strong>high-dimensional linear</strong> outcome model, do we need <span class="math inline">\(\hat\pi(X)\)</span> at all?</p>
 <p><strong>Answer: no.</strong> Sparse linear <span class="math inline">\(\mu_d(X)\)</span> ⇒ <span class="math inline">\(\sqrt{n}\)</span>-consistent inference from <strong>overlap alone</strong>.</p>
 </section>
-<section id="athey-imbens-and-wager-approximate-residual-balancing" class="slide level2">
-<h2>Athey, Imbens, and Wager: approximate residual balancing</h2>
+<section id="residual-balancing-aiw" class="slide level2">
+<h2>Residual balancing (AIW)</h2>
 <ol type="1">
 <li>Regularized (lasso/elastic net) outcome model, per arm.</li>
 <li>Reweight <strong>residuals</strong> to balance covariates (Zubizarreta 2015) — not to fit a propensity model.</li>
@@ -1189,8 +1192,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 <p>Corrects regularization shrinkage bias <strong>without estimating <span class="math inline">\(\pi(X)\)</span></strong>.</p>
 <p><strong>Cost:</strong> commits to linearity/sparsity in <span class="math inline">\(\mu(X)\)</span>.</p>
 </section>
-<section id="kennedy-2024-the-theory-underneath-aipw" class="slide level2">
-<h2>Kennedy (2024): the theory underneath AIPW</h2>
+<section id="kennedy-2024-aipw-theory" class="slide level2">
+<h2>Kennedy (2024): AIPW theory</h2>
 <p>The AIPW formula, <strong>derived</strong> — not asserted.</p>
 <p><span class="math display">\[
 \psi(\hat P) - \psi(P) = -\underbrace{\int \phi(z;\hat P)\,dP(z)}_{\text{first-order bias}} + R_2(\hat P, P).
@@ -1201,8 +1204,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 \]</span></p>
 <p>For the ATE: exactly our AIPW score.</p>
 </section>
-<section id="kennedy-naming-the-two-failure-modes-precisely" class="slide level2">
-<h2>Kennedy: naming the two failure modes precisely</h2>
+<section id="kennedy-two-failure-modes" class="slide level2">
+<h2>Kennedy: two failure modes</h2>
 <p><span class="math display">\[
 \hat\psi - \psi = \underbrace{(P_n - P)\{\hat\phi - \phi\}}_{T_1 \text{: empirical process term}} + \underbrace{R_2(\hat P, P)}_{T_2 \text{: remainder/regularization-bias term}}.
 \]</span></p>
@@ -1212,8 +1215,8 @@ Y = \theta_0 D + g_0(X) + \varepsilon
 </ul>
 <p>Generalizes beyond ATEs — LATEs, stochastic interventions, missing data.</p>
 </section>
-<section id="ahrens-et-al.-2026-the-practitioners-field-guide" class="slide level2">
-<h2>Ahrens et al.&nbsp;(2026): the practitioner’s field guide</h2>
+<section id="ahrens-et-al.-2026-guide" class="slide level2">
+<h2>Ahrens et al.&nbsp;(2026) guide</h2>
 <p>Dube et al.&nbsp;(2020), MTurk monopsony: text-based task features as high-dimensional <span class="math inline">\(X\)</span>.</p>
 <p><span class="math display">\[
 m_{naive}(W;\theta,\eta) = (Y - g(X) - \theta D)D, \qquad
@@ -1221,8 +1224,8 @@ m_{PLM}(W;\theta,\eta) = \big[(Y-\ell(X)) - \theta(D-r(X))\big](D - r(X)).
 \]</span></p>
 <p>Both <strong>identify</strong> <span class="math inline">\(\theta_0\)</span>. Only <span class="math inline">\(m_{PLM}\)</span> is Neyman orthogonal.</p>
 </section>
-<section id="ahrens-et-al.-practical-recommendations-for-ps1" class="slide level2">
-<h2>Ahrens et al.: practical recommendations for PS1</h2>
+<section id="ahrens-et-al.-tips-for-ps1" class="slide level2">
+<h2>Ahrens et al.: tips for PS1</h2>
 <ul>
 <li><strong>Folds:</strong> <span class="math inline">\(K=5\)</span> or <span class="math inline">\(10\)</span></li>
 <li><strong>Repeat cross-fitting</strong> across splits; report the spread</li>

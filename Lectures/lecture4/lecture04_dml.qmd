@@ -69,7 +69,7 @@ Today is about **estimating** a quantity that is already identified. No estimato
 
 ---
 
-## Why isn't more matching the answer?
+## Why not more matching?
 
 Natural instinct: match on more covariates.
 
@@ -79,7 +79,7 @@ Satisfying ignorability and satisfying a matching estimator are **not the same o
 
 ---
 
-## Regression has a subtler problem: the wrong estimand
+## A subtler regression problem
 
 $$
 Y = \alpha + \theta_R D + X'\beta + \varepsilon
@@ -90,6 +90,8 @@ Even with $X$ **sufficient for ignorability**, Aronow and Samii (2016):
 $$
 \hat\theta_R \xrightarrow{p} \frac{E[w_i\theta_i]}{E[w_i]}, \qquad w_i = \big(D_i - E[D_i\mid X_i]\big)^2
 $$
+
+($\xrightarrow{p}$: "converges to, as the sample grows" — formally, convergence in probability. You'll see this arrow throughout today.)
 
 where $\theta_i = Y_i(1)-Y_i(0)$ and $E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]$.
 
@@ -121,12 +123,14 @@ Today: what makes an estimator target $E[Y(1)]-E[Y(0)]$ directly?
 
 ---
 
-## Two ways to use the same identification result
+## Two estimation strategies
 
 $$
 E[Y(1)] = E_X\big[E[Y \mid D=1, X]\big], \qquad
 E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 $$
+
+(Law of iterated expectations: average the within-$X$ mean over the distribution of $X$. This is the step that turns "regress within each $X$" into a population-wide number.)
 
 1. **Outcome regression (OR):** model $E[Y \mid D, X]$, average over $X$.
 2. **Inverse-probability weighting (IPW):** model $P(D=1\mid X)$, reweight.
@@ -149,7 +153,7 @@ $$
 
 ---
 
-## Inverse-probability weighting
+## IPW weighting
 
 Let $\pi(X) = P(D=1 \mid X)$.
 
@@ -219,7 +223,7 @@ Expected treated residual = model error × probability of treatment.
 
 ---
 
-## Step 2: Divide by the propensity score
+## Step 2: Divide by $\pi(X)$
 
 $$
 E\left[
@@ -249,7 +253,7 @@ Removes the $\pi(X)$ scaling.
 
 ---
 
-## Step 3: Average over the distribution of $X$
+## Step 3: Average over $X$
 
 $$
 \begin{aligned}
@@ -280,7 +284,7 @@ $$
 
 ---
 
-## Step 4: Add the outcome-model prediction
+## Step 4: Add the prediction
 
 $$
 \begin{aligned}
@@ -302,7 +306,7 @@ $\hat\mu_1(X)$ cancels.
 
 ---
 
-## Step 5: Connect $\mu_1(X)$ to POs
+## Step 5: Connect to POs
 
 $$
 \mu_1(X)=E[Y\mid D=1,X].
@@ -390,7 +394,7 @@ Two independent chances to get it right.
 
 ---
 
-## Back to the motivating question
+## Back to the motivation
 
 Recall: $\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]$, $w_i=\text{Var}[D_i\mid X_i]$.
 
@@ -402,7 +406,7 @@ Recall: $\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]$, $w_i=\text{Var}[D_
 
 ---
 
-## Where high-dimensional $X$ enters
+## High-dimensional X enters
 
 Lecture 2: adjustment sets are often large.
 
@@ -414,7 +418,7 @@ Natural fix: flexible ML.
 
 ---
 
-## Why naive ML plug-in fails: overview
+## Why naive ML plug-in fails
 
 Plug ML $\hat\mu(X)$, $\hat\pi(X)$ into $\hat\tau_{OR}$, $\hat\tau_{IPW}$, or AIPW; fit and evaluate on the **same data**.
 
@@ -431,9 +435,11 @@ Residuals shrink toward zero — the model memorized $Y_i$.
 
 **Bias that does not vanish as $n \to \infty$.**
 
+*Regularization bias — the other failure mode from the previous slide — gets its own worked concrete treatment later ("Why the naive score fails" and after), once Neyman orthogonality gives us the tools to see exactly where it comes from.*
+
 ---
 
-## A quick notation check: what does $O(\cdot)$ mean?
+## What does $O(\cdot)$ mean?
 
 $O(\text{something})$ = "doesn't grow bigger than a constant times that something."
 
@@ -457,7 +463,7 @@ $$
 
 ---
 
-## What does it mean for a *function* to converge?
+## What convergence means here
 
 $\mu(X)$ is a function — "close" isn't one number.
 
@@ -474,7 +480,7 @@ $$
 
 ---
 
-## Turning a function-to-function gap into one number
+## Measuring the function gap
 
 $$
 \|\hat\mu - \mu\|^2 = E_X\big[(\hat\mu(X) - \mu(X))^2\big]
@@ -486,7 +492,7 @@ Average squared gap, over the distribution of $X$.
 
 ---
 
-## Why flexible estimators converge more slowly
+## ML converges more slowly
 
 . . .
 
@@ -520,7 +526,7 @@ Two ingredients:
 
 ---
 
-## Neyman orthogonality: the idea
+## Neyman orthogonality
 
 Bundle the nuisance functions into one object: $\eta = (\mu_1,\mu_0,\pi)$.
 
@@ -536,7 +542,7 @@ AIPW was already built doubly robust — this is the *local* (derivative) versio
 
 ---
 
-## Why orthogonality controls the error
+## How orthogonality helps
 
 Define $M(\eta) \equiv E[\psi(W;\theta_0,\eta)]$ — the score, averaged, holding $\theta$ at its **true** value. Then $M(\eta_0)=0$: the moment condition holds at the truth.
 
@@ -554,7 +560,7 @@ $$
 
 ---
 
-## Making the derivative precise, when $\eta$ is a function
+## Making derivatives precise
 
 $\eta$ is function-valued, so "$\partial_\eta M(\eta_0)$" isn't ordinary calculus. Reduce it to one dimension: for $r\in[0,1]$,
 
@@ -570,7 +576,7 @@ $f(0)=M(\eta_0)=0$, $f(1)=M(\hat\eta)$ — ordinary one-variable calculus in $r$
 
 ---
 
-## Why the naive score fails: a concrete calculation
+## Why the naive score fails
 
 Same question, for a score that is **not** orthogonal — the plain outcome-regression score, using the **same $\mu_1,\mu_0$** from "Outcome regression" several slides back. (Note: $\pi(X)$ never enters this score at all.)
 
@@ -594,7 +600,7 @@ $$
 
 ---
 
-## Checking the AIPW score directly
+## Checking the AIPW score
 
 The naive score failed this test. Does AIPW pass it? Only two pieces of $\psi$ involve $\mu_1$ — the $\mu_1(X)$ term and the $-\mu_1(X)$ inside the correction term. Perturb $\mu_1$ by $\tilde\mu_1$ and add up their responses:
 
@@ -616,7 +622,7 @@ $$
 
 ---
 
-## The symmetric case: perturbing $\pi$
+## The $\pi$-perturbation case
 
 A genuinely different computation — $\pi$ sits in two denominators, so this needs the quotient rule, not simple substitution:
 
@@ -632,7 +638,7 @@ $$
 
 ---
 
-## Orthogonality does the heavy lifting
+## The orthogonality payoff
 
 $$
 O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
@@ -646,7 +652,7 @@ $O_p(n^{-1/2})$ is the rate that makes ordinary confidence intervals and $t$-tes
 
 ---
 
-## Orthogonality is not enough on its own
+## Orthogonality isn't enough
 
 Handles the *rate* problem in population.
 
@@ -669,7 +675,7 @@ Every unit is evaluated with nuisances it didn't help fit.
 
 ---
 
-## Cross-fitting removes the overfitting bias
+## Cross-fitting fixes bias
 
 ::: {.callout-important}
 ### A structural requirement for valid inference with ML nuisance estimators — not a robustness check.
@@ -681,7 +687,7 @@ With it: $\hat\tau$ is $\sqrt{n}$-consistent, asymptotically normal, valid CIs.
 
 ---
 
-## Cross-fitted AIPW, formalized
+## Cross-fitted AIPW
 
 $\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}$: nuisance fits trained on every fold **except** $k$.
 
@@ -699,9 +705,9 @@ $$
 
 ---
 
-## When does DML work? The formal statement
+## When does DML work?
 
-Write $\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)$ — the score, evaluated at the truth (same $\psi$ as always, just a shorter name for it here):
+Write $\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)$ — the score, evaluated at the truth (same $\psi$ as always, just a shorter name for it here). ($\|\cdot\|_2$ below is the same function-gap idea as "Measuring the function gap" — literally its square root, $\|\hat\mu-\mu_0\|_2 = \sqrt{\|\hat\mu-\mu_0\|^2}$ — just written as the norm itself rather than its square.)
 
 $$
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
@@ -719,7 +725,7 @@ $$
 
 ---
 
-## Double/debiased machine learning (DML)
+## Double/debiased ML (DML)
 
 $$
 \boxed{
@@ -733,7 +739,7 @@ Random forests, lasso, boosting, neural nets for $\hat\mu(X)$ and $\hat\pi(X)$ *
 
 ---
 
-## AIPW is efficient, not just consistent
+## AIPW is efficient
 
 Semiparametric efficiency bound: smallest variance any well-behaved estimator of the ATE can achieve (given only ignorability and overlap — no extra assumptions). Attained by the **efficient influence function (EIF)**.
 
@@ -771,7 +777,7 @@ $$
 
 ---
 
-## A special case: partially linear regression via FWL
+## Special case: PLR via FWL
 
 Assume a **constant treatment effect**:
 
@@ -789,7 +795,7 @@ The underlying score, $\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(
 
 ---
 
-## Is PLR-DML "better" than AIPW-DML?
+## Is PLR-DML better?
 
 - **Constant effects:** same $\theta_0$; PLR-DML typically **more efficient**.
 - **Heterogeneous effects:** PLR-DML **not consistent for the ATE** — same Aronow-Samii weighting, now via ML.
@@ -802,7 +808,7 @@ The underlying score, $\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(
 
 ---
 
-## Diagnosing a DML analysis: questions to ask
+## Diagnosing a DML analysis
 
 1. Is $X$ defended on substantive grounds (Lecture 2), not just "kitchen sink"?
 2. Was cross-fitting used, and how many folds?
@@ -840,7 +846,7 @@ For each: what's demonstrated? What's uncertain? Identification, design, or esti
 
 ---
 
-## What you should be able to do after today
+## Skills after today
 
 - Write down OR, IPW, AIPW; connect each to conditional ignorability
 - Explain double robustness precisely
@@ -866,7 +872,7 @@ Next: when observables aren't enough.
 
 ---
 
-## This week's readings, in brief
+## This week's readings
 
 - **Chernozhukov et al. (2018)** — named DML: the general recipe
 - **Athey, Imbens, and Wager (2018)** — a contrasting sparse-linear strategy
@@ -875,7 +881,7 @@ Next: when observables aren't enough.
 
 ---
 
-## Chernozhukov et al. (2018): the origin of the recipe
+## Chernozhukov et al. (2018)
 
 Coined "double/debiased machine learning": orthogonal scores + cross-fitting — exactly today's recipe.
 
@@ -888,7 +894,7 @@ Formalizes two failure modes:
 
 ---
 
-## Chernozhukov et al.: a menu of canonical applications
+## Chernozhukov: applications
 
 - **Partially linear regression** ($Y = \theta_0 D + g_0(X) + \varepsilon$)
 - **Partially linear IV**
@@ -899,7 +905,7 @@ Formalizes two failure modes:
 
 ---
 
-## Chernozhukov et al.: the 401(k) example
+## Chernozhukov et al.: 401(k)
 
 401(k) *eligibility* on net financial assets (SIPP data; Chernozhukov and Hansen 2004):
 
@@ -912,7 +918,7 @@ Formalizes two failure modes:
 
 ---
 
-## Athey, Imbens, and Wager (2018): a different bet
+## Athey, Imbens, Wager (2018)
 
 Same motivation: unconfoundedness more plausible with rich $X$, but rich $X$ breaks standard estimation.
 
@@ -922,7 +928,7 @@ Question: in a **high-dimensional linear** outcome model, do we need $\hat\pi(X)
 
 ---
 
-## Athey, Imbens, and Wager: approximate residual balancing
+## Residual balancing (AIW)
 
 1. Regularized (lasso/elastic net) outcome model, per arm.
 2. Reweight **residuals** to balance covariates (Zubizarreta 2015) — not to fit a propensity model.
@@ -933,7 +939,7 @@ Corrects regularization shrinkage bias **without estimating $\pi(X)$**.
 
 ---
 
-## Kennedy (2024): the theory underneath AIPW
+## Kennedy (2024): AIPW theory
 
 The AIPW formula, **derived** — not asserted.
 
@@ -951,7 +957,7 @@ For the ATE: exactly our AIPW score.
 
 ---
 
-## Kennedy: naming the two failure modes precisely
+## Kennedy: two failure modes
 
 $$
 \hat\psi - \psi = \underbrace{(P_n - P)\{\hat\phi - \phi\}}_{T_1 \text{: empirical process term}} + \underbrace{R_2(\hat P, P)}_{T_2 \text{: remainder/regularization-bias term}}.
@@ -964,7 +970,7 @@ Generalizes beyond ATEs — LATEs, stochastic interventions, missing data.
 
 ---
 
-## Ahrens et al. (2026): the practitioner's field guide
+## Ahrens et al. (2026) guide
 
 Dube et al. (2020), MTurk monopsony: text-based task features as high-dimensional $X$.
 
@@ -977,7 +983,7 @@ Both **identify** $\theta_0$. Only $m_{PLM}$ is Neyman orthogonal.
 
 ---
 
-## Ahrens et al.: practical recommendations for PS1
+## Ahrens et al.: tips for PS1
 
 - **Folds:** $K=5$ or $10$
 - **Repeat cross-fitting** across splits; report the spread
