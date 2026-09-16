@@ -21,41 +21,37 @@ execute:
 
 ## Where we are going
 
-Last time, we fixed an identification strategy — conditional ignorability given $X$ — and asked how to **construct** the comparison: matching or weighting.
+Same identification strategy as Lecture 3. New question:
 
-Today we keep the **same identification strategy** and ask a different question:
+> **What can flexible estimation repair — and what can't it?**
 
-> **What can flexible estimation repair, and what identification failures remain untouched?**
+Today:
 
-We will focus on:
-
-- outcome regression and inverse-probability weighting as two routes to the same estimand;
-- augmented IPW and double robustness;
-- what happens when $X$ is high-dimensional;
-- why naive plug-in machine learning breaks inference;
-- Neyman orthogonality and cross-fitting; and
-- double/debiased machine learning (DML).
+- OR and IPW
+- AIPW and double robustness
+- High-dimensional $X$
+- Naive ML plug-in failure
+- Neyman orthogonality and cross-fitting
+- DML
 
 ---
 
 ## Today's learning objectives
 
-By the end of today, you should be able to:
-
-1. state conditional ignorability and overlap as the assumptions estimation cannot substitute for;
-2. derive the outcome-regression and IPW estimators from the identification result;
-3. explain double robustness and why it is a property of the estimator, not the design;
-4. explain why high-dimensional $X$ forces flexible (machine-learning) nuisance estimation;
-5. diagnose the two failure modes of naive ML plug-in estimators: regularization/overfitting bias and slow convergence rates;
-6. state the Neyman orthogonality condition and explain why it neutralizes first-order nuisance error;
-7. explain cross-fitting and why it is necessary even with an orthogonal score; and
-8. explain what DML can and cannot fix about a selection-on-observables design.
+1. Ignorability + overlap: what estimation can't replace
+2. Derive OR, IPW from identification
+3. Double robustness = estimator property
+4. High-dimensional $X$ ⇒ ML nuisance estimation
+5. Naive ML failure: regularization + overfitting bias
+6. Neyman orthogonality
+7. Cross-fitting: why it's still needed
+8. What DML fixes, and what it doesn't
 
 ---
 
 ## Start where we left off
 
-Suppose our adjustment set $X$ satisfies conditional ignorability:
+Assume conditional ignorability:
 
 $$
 (Y(1),Y(0)) \perp D \mid X,
@@ -67,84 +63,75 @@ $$
 0 < P(D=1 \mid X) < 1.
 $$
 
-**This assumption is doing all the causal work.**
+**This assumption does all the causal work.**
 
-Everything today — regression, weighting, machine learning, cross-fitting — is about **estimating** a quantity that is already identified.
-
-No estimator, however flexible, creates identification that was not there.
+Today is about **estimating** a quantity that is already identified. No estimator creates identification that wasn't there.
 
 ---
 
 ## Why isn't more matching the answer?
 
-Lecture 3 built the treated-vs-control comparison by matching or weighting on $X$. A natural instinct: if ignorability requires a rich $X$, just match on more covariates.
+Natural instinct: match on more covariates.
 
-**Many covariates make matching unreliable** (Samii et al. 2016). Simulation evidence: as the number of covariates grows — even *irrelevant, noise* covariates — matching-based estimators' bias, standard error, and RMSE all worsen. The curse of dimensionality bites long before you have "enough" covariates for high-dimensional ignorability.
+**Matching degrades with more covariates** (Samii et al. 2016) — bias, SE, and RMSE all worsen, even from irrelevant noise covariates.
 
-Adding covariates to satisfy ignorability and adding covariates to a matching estimator are **not the same operation**, and the second one degrades exactly as the first one demands more of it.
+Satisfying ignorability and satisfying a matching estimator are **not the same operation**.
 
 ---
 
 ## Regression has a subtler problem: the wrong estimand
 
-Suppose you instead regress $Y$ on $D$ and $X$ additively:
-
 $$
 Y = \alpha + \theta_R D + X'\beta + \varepsilon
 $$
 
-Even if $X$ is **sufficient for ignorability** — the confounding problem is solved — Aronow and Samii (2016) show $\hat\theta_R$ does **not** consistently estimate the ATE. Instead:
+Even with $X$ **sufficient for ignorability**, Aronow and Samii (2016):
 
 $$
 \hat\theta_R \xrightarrow{p} \frac{E[w_i\theta_i]}{E[w_i]}, \qquad w_i = \big(D_i - E[D_i\mid X_i]\big)^2
 $$
 
-where $\theta_i = Y_i(1)-Y_i(0)$ is the unit-level effect, and $E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]$.
+where $\theta_i = Y_i(1)-Y_i(0)$ and $E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]$.
 
-**In words:** OLS implicitly weights each unit's treatment effect by how much that unit's treatment status *varies* conditional on $X$ — units near the "margin" of treatment assignment dominate the estimate, regardless of how representative they are of the population you actually want to describe.
+**OLS weights by how much $D$ varies given $X$** — units near the assignment margin dominate.
 
 ---
 
 ## The Jensen (2003) example
 
-Jensen (2003) estimates the effect of regime type on FDI using a cross-national panel.
+Jensen (2003): effect of regime type on FDI, cross-national panel.
 
-Aronow and Samii (2016) compute the **effective sample** implied by that regression — each country weighted by $\text{Var}[D_i\mid X_i]$ — and compare it to the **nominal sample** (every country/year actually in the data):
+Aronow and Samii (2016): **nominal** sample vs. **effective** (variance-weighted) sample.
 
-- Countries near the democracy/autocracy "margin," where regime type is least predictable from covariates, dominate the effective sample.
-- Countries whose regime type is well-predicted by their covariates — nominally in the sample, included in every summary statistic — contribute **almost nothing** to the actual estimate.
+![Aronow and Samii (2016), Figure 1: nominal sample (left) vs. effective sample (right) for Jensen (2003)](jensen_effective_sample.png){fig-align="center" width="85%"}
 
 ::: {.callout-important}
-### The researcher never chose this weighting. It is an invisible artifact of running regression with covariates, and it silently redefines the population the estimate describes.
+### An invisible artifact of running regression with covariates — nobody chose this weighting.
 :::
 
 ---
 
 ## Why this matters for today
 
-Notice what kind of failure this is: $X$ was **sufficient for ignorability** — identification was never in question — and the regression was **correctly specified** in the sense of controlling for the right variables. And yet $\hat\theta_R$ still targets the wrong number under heterogeneous effects.
+$X$ sufficient for ignorability. Regression correctly specified. $\hat\theta_R$ still wrong under heterogeneity.
 
-**This is a failure of the estimator, not of identification.** Choosing the right adjustment set (Lecture 2) and choosing how to turn that adjustment set into a number (today) are two separate jobs, and getting the first one right does not automatically get you the second one for free.
+**A failure of the estimator, not of identification.**
 
-The rest of today asks: what would an estimator need to do differently to avoid this — to target $E[Y(1)]-E[Y(0)]$ directly, rather than letting an implicit weighting scheme decide the estimand for you?
+Today: what makes an estimator target $E[Y(1)]-E[Y(0)]$ directly?
 
 ---
 
 ## Two ways to use the same identification result
-
-Ignorability implies
 
 $$
 E[Y(1)] = E_X\big[E[Y \mid D=1, X]\big], \qquad
 E[Y(0)] = E_X\big[E[Y \mid D=0, X]\big].
 $$
 
-This single equality licenses **two different estimation strategies**:
+1. **Outcome regression (OR):** model $E[Y \mid D, X]$, average over $X$.
+2. **Inverse-probability weighting (IPW):** model $P(D=1\mid X)$, reweight.
 
-1. **Outcome regression (OR):** model $E[Y \mid D, X]$ directly, then average predictions over $X$.
-2. **Inverse-probability weighting (IPW):** model $P(D=1\mid X)$, then reweight observed outcomes.
-
-Both target the same estimand. Neither is "more identified" than the other.
+Same estimand either way.
 
 ---
 
@@ -156,9 +143,9 @@ $$
 \hat\tau_{OR} = \frac{1}{n}\sum_{i=1}^n \big(\hat\mu_1(X_i) - \hat\mu_0(X_i)\big)
 $$
 
-**What has to go right:** $\hat\mu_1, \hat\mu_0$ must be correctly specified (or converge fast enough — more on exactly what that means next).
+**Needs:** $\hat\mu_1, \hat\mu_0$ correct, or converging fast enough (next).
 
-**Failure mode:** misspecify the outcome model in regions with few treated (or few control) units, and the extrapolation is invisible in the fit statistics.
+**Fails:** misspecification where treated or control units are sparse.
 
 ---
 
@@ -170,9 +157,9 @@ $$
 \hat\tau_{IPW} = \frac{1}{n}\sum_{i=1}^n \left(\frac{D_i Y_i}{\hat\pi(X_i)} - \frac{(1-D_i) Y_i}{1-\hat\pi(X_i)}\right)
 $$
 
-**What has to go right:** $\hat\pi(X)$ must be correctly specified, and estimated propensities must stay bounded away from 0 and 1.
+**Needs:** $\hat\pi(X)$ correct, bounded away from 0 and 1.
 
-**Failure mode:** near-zero $\hat\pi(X_i)$ or $1-\hat\pi(X_i)$ produces enormous weights and explodes the variance — the same overlap problem from last lecture, now visible as instability rather than as a diagnostic plot.
+**Fails:** near-0/1 $\hat\pi(X_i)$ ⇒ exploding weights.
 
 ---
 
@@ -186,7 +173,7 @@ $$
 \Bigg]
 $$
 
-This is the outcome-regression estimate **plus a bias-correction term** built from the propensity model.
+OR **plus a bias-correction term**.
 
 . . .
 
@@ -194,16 +181,16 @@ $$
 \underbrace{\hat\mu_1(X_i) - \hat\mu_0(X_i)}_{\text{outcome regression}} \;+\; \underbrace{\frac{D_i(Y_i - \hat\mu_1(X_i))}{\hat\pi(X_i)} - \frac{(1-D_i)(Y_i - \hat\mu_0(X_i))}{1-\hat\pi(X_i)}}_{\text{bias correction}}
 $$
 
-- $D_i(Y_i - \hat\mu_1(X_i))$ is the treated unit's **residual** switched off for controls by $D_i$.
-- Dividing by $\hat\pi(X_i)$ **jacks that residual up**: 
-- The mirror-image term does the same for controls.
+- Treated residual, zeroed out for controls by $D_i$
+- $\hat\pi(X_i)$ scales it up
+- Mirror term for controls
 
 ---
 
 ## How this corrects mistakes
 
-- If $\hat\mu_1,\hat\mu_0$ are **correct**, then $E[Y_i - \hat{\mu}_1(X_i)] = 0$, so correction just gives variance
-- If $\hat\mu_1,\hat\mu_0$ are **wrong but $\hat\pi$ is right**, the residuals systematically encode whatever the outcome model missed. The reweighted average of those residuals estimates exactly that missing piece and adds it back in.
+- $\hat\mu_1,\hat\mu_0$ **correct** ⇒ $E[Y_i - \hat{\mu}_1(X_i)] = 0$: correction is pure noise
+- $\hat\mu_1,\hat\mu_0$ **wrong, $\hat\pi$ right:** reweighted residuals recover exactly the missing piece
 
 ---
 
@@ -211,15 +198,11 @@ $$
 
 Condition on $X$ and define $E[D|X] = P(D=1|X) = \pi(X)$ and $E[Y|D=1,X] = \mu_1(X)$
 
-Start with:
-
 $$
 E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right].
 $$
 
 #### Step 1: Evaluate the conditional expectation
-
-We can write:
 
 $$
 \begin{aligned}
@@ -231,15 +214,12 @@ E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right]
 &= \pi(X)\left(\mu_1(X)-\hat\mu_1(X)\right).
 \end{aligned}
 $$
-So the expected treated-unit residual is the error in our outcome
-model, $\mu_1(X)-\hat\mu_1(X)$, multiplied by the probability of being
-treated, $\pi(X)$.
+
+Expected treated residual = model error × probability of treatment.
 
 ---
 
 ## Step 2: Divide by the propensity score
-
-Now consider the inverse-propensity-weighted residual:
 
 $$
 E\left[
@@ -247,9 +227,6 @@ E\left[
 \mid X
 \right].
 $$
-
-Since $\pi(X)$ is a function of $X$, it is fixed once we condition on
-$X$. Therefore,
 
 $$
 \begin{aligned}
@@ -268,14 +245,11 @@ E[D(Y-\hat\mu_1(X))\mid X] \\
 \end{aligned}
 $$
 
-Thus, dividing by $\pi(X)$ removes the scaling induced by the fact
-that only a $\pi(X)$ fraction of units with covariates $X$ are treated.
+Removes the $\pi(X)$ scaling.
 
 ---
 
 ## Step 3: Average over the distribution of $X$
-
-Using the law of iterated expectations,
 
 $$
 \begin{aligned}
@@ -308,8 +282,6 @@ $$
 
 ## Step 4: Add the outcome-model prediction
 
-Now add $E_X[\hat\mu_1(X)]$:
-
 $$
 \begin{aligned}
 E_X[\hat\mu_1(X)]
@@ -326,20 +298,17 @@ E_X[\mu_1(X)].
 \end{aligned}
 $$
 
-The $\hat\mu_1(X)$ terms cancel. Thus, the inverse-propensity-weighted
-residual acts as a correction for the error in $\hat\mu_1(X)$.
+$\hat\mu_1(X)$ cancels.
 
 ---
 
 ## Step 5: Connect $\mu_1(X)$ to POs
 
-By definition,
-
 $$
 \mu_1(X)=E[Y\mid D=1,X].
 $$
 
-Under consistency,
+Consistency:
 
 $$
 Y=Y(1) \qquad \text{when } D=1, ~~\text{so}~~~\mu_1(X)
@@ -371,8 +340,6 @@ $$
 
 ## Step 6: Average over $X$
 
-Finally, apply the law of iterated expectations:
-
 $$
 \begin{aligned}
 E_X[\mu_1(X)]
@@ -382,8 +349,6 @@ E_X\left[E[Y(1)\mid X]\right] \\
 E[Y(1)].
 \end{aligned}
 $$
-
-Putting everything together,
 
 $$
 \boxed{
@@ -419,123 +384,107 @@ $$
 }
 $$
 
-Two independent chances to get the nuisance functions right.
+Two independent chances to get it right.
 
-**This is still a statement about estimation, conditional on ignorability. It is not a second identification strategy.**
+**Estimation statement, conditional on ignorability — not a second identification strategy.**
 
 ---
 
 ## Back to the motivating question
 
-Recall the regression-weighting problem from earlier: $\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]$ with $w_i=\text{Var}[D_i\mid X_i]$ — a variance-weighted average of unit effects, not the ATE, whenever effects are heterogeneous.
+Recall: $\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]$, $w_i=\text{Var}[D_i\mid X_i]$.
 
-**$\hat\tau_{AIPW}$ does not have this problem.** The Proof slides showed $\hat\tau_{AIPW}$ is built by explicitly averaging $\hat\mu_1(X)-\hat\mu_0(X)$ over the empirical distribution of $X$ — $E_X[\mu_1(X)] = E[Y(1)]$ — with no implicit reweighting term anywhere.
+**$\hat\tau_{AIPW}$ avoids this** — averages $\hat\mu_1(X)-\hat\mu_0(X)$ over $X$ directly: $E_X[\mu_1(X)] = E[Y(1)]$, no implicit reweighting.
 
 ::: {.callout-important}
-### Estimand-targeting is a second reason AIPW is worth the extra machinery, beyond double robustness. It targets $E[Y(1)]-E[Y(0)]$ by construction, regardless of treatment-effect heterogeneity.
+### A second reason AIPW earns its complexity, beyond double robustness: it targets the ATE by construction.
 :::
 
 ---
 
 ## Where high-dimensional $X$ enters
 
-Conditioning arguments from Lecture 2 often demand a **large** adjustment set: many covariates, interactions, nonlinearities, possibly more parameters than observations.
+Lecture 2: adjustment sets are often large.
 
-Parametric $\hat\mu(X)$ and $\hat\pi(X)$ (e.g., linear/logistic) will be misspecified in exactly the settings where ignorability is most defensible.
+Parametric $\hat\mu(X)$, $\hat\pi(X)$ misspecified exactly where ignorability is most defensible.
 
-The natural response: use flexible, machine-learning estimators (random forests, boosting, lasso, neural nets) for $\hat\mu(X)$ and $\hat\pi(X)$.
+Natural fix: flexible ML.
 
-**This creates a new problem — not a causal one, a statistical one.**
+**New problem — statistical, not causal.**
 
 ---
 
 ## Why naive ML plug-in fails: overview
 
-Plug flexible ML estimates of $\hat\mu(X)$, $\hat\pi(X)$ directly into $\hat\tau_{OR}$ or $\hat\tau_{IPW}$ (or even AIPW) and re-estimate $\tau$ on the **same data** used to fit the nuisance models.
+Plug ML $\hat\mu(X)$, $\hat\pi(X)$ into $\hat\tau_{OR}$, $\hat\tau_{IPW}$, or AIPW; fit and evaluate on the **same data**.
 
-Two things go wrong simultaneously:
-
-1. **Regularization/overfitting bias.** ML estimators are tuned to minimize prediction error, not to make the downstream causal estimate unbiased.
-2. **Slow convergence.** Flexible estimators converge at rates like $n^{-1/4}$, not $n^{-1/2}$ — too slow for the causal estimate to be $\sqrt{n}$-consistent.
+1. **Regularization/overfitting bias.**
+2. **Slow convergence:** rate $n^{-1/4}$, not $n^{-1/2}$.
 
 ---
 
 ## Overfitting bias, concretely
 
-Fit $\hat\mu(X)$ by (say) a random forest on the full sample, then evaluate $Y_i - \hat\mu(X_i)$ **on the same units used to train it**.
+Fit $\hat\mu(X)$ on the full sample; evaluate $Y_i - \hat\mu(X_i)$ on the **same units**.
 
-Residuals are mechanically shrunk toward zero — the model partly memorized $Y_i$.
+Residuals shrink toward zero — the model memorized $Y_i$.
 
-Any causal contrast built from these residuals (e.g., the AIPW correction term) inherits this shrinkage as **bias that does not vanish as $n \to \infty$** at the usual rate.
-
-**The problem is not that ML predicts $Y$ poorly. It predicts $Y$ too well, on the wrong sample.**
+**Bias that does not vanish as $n \to \infty$.**
 
 ---
 
 ## Slow convergence, concretely
 
-Formally, the parametric-vs-ML gap:
+Parametric: $\hat\mu(X) - \mu(X) = O_p(n^{-1/2})$.
 
-Parametric estimators: $\hat\mu(X) - \mu(X) = O_p(n^{-1/2})$.
-
-Flexible ML estimators: $\hat\mu(X) - \mu(X) = O_p(n^{-1/4})$ (or slower), because they are trading bias for variance across a large function space.
-
-A causal estimator built by plugging in $\hat\mu, \hat\pi$ naively inherits an error of order
+ML: $\hat\mu(X) - \mu(X) = O_p(n^{-1/4})$ (or slower).
 
 $$
 O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 $$
 
-**only if the score is well-behaved.** For a naive (non-orthogonal) score, first-order nuisance error passes through directly, and the causal estimate converges at the ML rate — too slow for standard inference.
+**only if the score is orthogonal.**
 
 ---
 
 ## What does it mean for a *function* to converge?
 
-$\mu(X)$ is a function, not a single number — so "how close is $\hat\mu$ to $\mu$?" is not as simple as comparing two numbers.
-
-It is tempting to answer this by looking at residuals, $Y_i - \hat\mu(X_i)$. **This is the wrong quantity.** The residual mixes two very different things:
+$\mu(X)$ is a function — "close" isn't one number.
 
 $$
 \underbrace{Y - \hat\mu(X)}_{\text{residual}} = \underbrace{Y - \mu(X)}_{\text{irreducible noise } \varepsilon} + \underbrace{\mu(X) - \hat\mu(X)}_{\text{estimation error}}
 $$
 
-- $\varepsilon$ is genuine unpredictable variation in $Y$ given $X$. **It never shrinks**, no matter how good your estimator is or how much data you collect.
-- $\mu(X) - \hat\mu(X)$ is the gap between your fitted function and the truth. **This is the only piece that shrinks with more data** — and it is the only piece "convergence" refers to.
+- $\varepsilon$: never shrinks
+- $\mu(X) - \hat\mu(X)$: shrinks with data — this is "convergence"
 
 ::: {.callout-important}
-### Small residuals do not mean $\hat\mu$ is close to $\mu$. A model can have tiny residuals by memorizing noise, not by learning the truth.
+### Small residuals ≠ $\hat\mu$ close to $\mu$.
 :::
 
 ---
 
 ## Turning a function-to-function gap into one number
 
-We can't observe $\mu(X) - \hat\mu(X)$ directly ($\mu$ is unknown), but we can define what we *mean* by "close":
-
 $$
 \|\hat\mu - \mu\|^2 = E_X\big[(\hat\mu(X) - \mu(X))^2\big]
 $$
 
-In words: average, over the population distribution of $X$, the squared gap between the fitted function and the true function at each $X$.
+Average squared gap, over the distribution of $X$.
 
-This is a single number that summarizes how good $\hat\mu$ is **as an approximation to the whole function** $\mu$ — not how well it fits any particular sample.
-
-"Converges fast enough" means: as $n$ grows, does $\|\hat\mu - \mu\|^2$ shrink, and how quickly?
+"Converges fast enough" = does $\|\hat\mu - \mu\|^2$ shrink, and how fast?
 
 ---
 
 ## Why flexible estimators converge more slowly
 
-Think about what more data buys you, in each case.
+. . .
+
+**Parametric:** few coefficients — every observation sharpens all of them. Error shrinks proportional to $1/\sqrt{n}$.
 
 . . .
 
-**A correctly-specified low-dimensional model** (e.g., linear regression with the right functional form) has only a handful of unknowns — a few coefficients. Every additional observation sharpens all of them simultaneously. Estimation error shrinks proportional to $1/\sqrt{n}$: quadruple your sample, and error roughly halves.
-
-. . .
-
-**A flexible ML estimator** (random forest, boosting) is approximating an unknown, possibly complicated function while *also* guarding against overfitting to noise. Part of every new observation goes toward controlling model complexity rather than purely sharpening the fit. Error shrinks much more slowly — often close to $1/n^{1/4}$.
+**ML:** also guards against overfitting. Error shrinks much more slowly, often close to $1/n^{1/4}$.
 
 . . .
 
@@ -545,91 +494,85 @@ Think about what more data buys you, in each case.
 | 1,600 (16×) | 0.025 | 0.16 |
 | 25,600 (256×) | 0.006 | 0.08 |
 
-Same growth in $n$; wildly different shrinkage in error. **This is the trade-off "converge fast enough" is asking about.**
-
 ---
 
 ## What we actually need
 
-We want an estimator of $\tau$ that:
+An estimator of $\tau$ that:
 
 1. tolerates $n^{-1/4}$-rate nuisance estimation, and
-2. still converges to $\tau$ at rate $n^{-1/2}$, so that standard confidence intervals are valid.
+2. still converges at rate $n^{-1/2}$.
 
-Two ingredients deliver this:
+Two ingredients:
 
-- **Neyman orthogonality** — a score function whose sensitivity to small nuisance errors is *zero to first order*.
-- **Cross-fitting** — using different data to estimate nuisance functions than to evaluate the causal score, removing overfitting bias.
+- **Neyman orthogonality**
+- **Cross-fitting**
 
 ---
 
 ## Neyman orthogonality: the idea
 
-A moment condition $\psi(W; \tau, \eta)$ (here $\eta = (\mu_1,\mu_0,\pi)$) is **Neyman orthogonal** if
+$\psi(W; \tau, \eta)$ (here $\eta = (\mu_1,\mu_0,\pi)$) is **Neyman orthogonal** if
 
 $$
 \left.\frac{\partial}{\partial \eta}\, E\big[\psi(W;\tau,\eta)\big]\right|_{\eta=\eta_0} = 0.
 $$
 
-Small errors in $\hat\eta$ move $E[\psi]$ only at **second order** — errors multiplied by errors, not errors alone.
+Small $\hat\eta$ errors move $E[\psi]$ only at **second order**.
 
-The AIPW score is exactly this kind of object: it was already built to be doubly robust, which is the finite-sample cousin of orthogonality.
+AIPW: built doubly robust — orthogonality's finite-sample cousin.
 
 ---
 
 ## Why the naive score fails: a concrete calculation
 
-Take the **plain outcome-regression score**, $\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$. A first-order (Taylor) expansion of $\hat\theta$ around the truth $\mu_0(X)$ gives:
+$\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$.
 
 $$
 \hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
 \;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
 $$
 
-**This derivative is not zero — it's the identity.** Whatever bias sits in $\hat\mu_1,\hat\mu_0$ (e.g., lasso shrinkage, or any regularization bias) passes straight through into $\hat\theta$, **undiminished**. This is regularization bias made concrete, not just asserted: the naive score has no protection built in.
+**Derivative = the identity.** Bias in $\hat\mu_1,\hat\mu_0$ passes straight through, undiminished.
 
 ---
 
 ## Checking the AIPW score directly
-
-Does perturbing $\mu_1$ move the AIPW score's expectation? Let $\tilde\mu_1$ be any perturbation direction. Using $\psi = \mu_1(X)-\mu_0(X) + \dfrac{D(Y-\mu_1(X))}{\pi(X)} - \cdots - \theta$:
 
 $$
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
 = E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
 $$
 
-**If $\pi(X)$ is correctly specified**, $E[D\mid X]=\pi(X)$, so the bracketed term is exactly $1-1=0$ — for *every* perturbation direction $\tilde\mu_1$, regardless of how $\hat\mu_1$ is estimated.
+**If $\pi(X)$ correct**, $E[D\mid X]=\pi(X)$, so this is $1-1=0$ — for *every* $\tilde\mu_1$.
 
 ::: {.callout-important}
-### This is Neyman orthogonality, verified rather than asserted: wiggling $\hat\mu_1$ does not move $E[\psi]$ at all, to first order — provided $\pi(X)$ is right.
+### Neyman orthogonality, verified: wiggling $\hat\mu_1$ doesn't move $E[\psi]$, to first order.
 :::
 
-The symmetric calculation for perturbing $\pi$ (holding $\mu_1,\mu_0$ correct) gives the same zero — **this symmetric pair of zero-derivative results is exactly double robustness**, derived rather than pattern-matched.
+Symmetric result for perturbing $\pi$ ⇒ **double robustness**, derived.
 
 ---
 
 ## Orthogonality does the heavy lifting
 
-With an orthogonal score, the estimation error in $\hat\tau$ from nuisance mis-estimation is bounded by a **product** of the outcome-model error and the propensity-model error:
-
 $$
 O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 $$
 
-Two mediocre (slow) nuisance estimators combine into one good (fast) causal estimator — **provided** the score is orthogonal.
+Two slow nuisance estimators combine into one fast causal estimator — **if the score is orthogonal.**
 
-**A non-orthogonal score (e.g., plain outcome regression alone) does not get this protection.**
+**Non-orthogonal score:** no such protection.
 
 ---
 
 ## Orthogonality is not enough on its own
 
-Orthogonality handles the *rate* problem in population.
+Handles the *rate* problem in population.
 
-It does not handle **overfitting**: if $\hat\eta$ is estimated on the same data used to evaluate $\psi$, the empirical process term does not vanish, and the second-order product bound fails in finite samples.
+Not **overfitting:** same-data $\hat\eta$ breaks the second-order bound.
 
-We still need to break the dependence between "the data that fit $\hat\eta$" and "the data that evaluate $\psi$."
+Need: independence between fitting data and evaluation data.
 
 That is cross-fitting.
 
@@ -637,76 +580,64 @@ That is cross-fitting.
 
 ## Cross-fitting
 
-1. Split the sample into $K$ folds (e.g., $K=5$).
-2. For each fold $k$: estimate $\hat\mu_1, \hat\mu_0, \hat\pi$ using **only the other $K-1$ folds**.
-3. Evaluate the orthogonal score $\psi$ for units in fold $k$ using those out-of-fold nuisance estimates.
-4. Average the fold-specific estimates (or solve the pooled moment condition) to get $\hat\tau$.
+1. Split into $K$ folds (e.g., $K=5$).
+2. Fit $\hat\mu_1, \hat\mu_0, \hat\pi$ on the other $K-1$ folds.
+3. Evaluate $\psi$ on the held-out fold.
+4. Average to get $\hat\tau$.
 
-Every unit's causal contribution is evaluated with nuisance functions it did not help fit.
+Every unit is evaluated with nuisances it didn't help fit.
 
 ---
 
 ## Cross-fitting removes the overfitting bias
 
 ::: {.callout-important}
-### Cross-fitting is not a robustness check. It is a structural requirement for valid inference with ML nuisance estimators.
+### A structural requirement for valid inference with ML nuisance estimators — not a robustness check.
 :::
 
-Without it: overfit residuals $\Rightarrow$ biased score $\Rightarrow$ invalid standard errors, even asymptotically.
+Without it: overfit residuals ⇒ biased score ⇒ invalid SEs.
 
-With it: the orthogonality bound applies, $\hat\tau$ is $\sqrt{n}$-consistent and asymptotically normal, and standard confidence intervals are valid.
+With it: $\hat\tau$ is $\sqrt{n}$-consistent, asymptotically normal, valid CIs.
 
 ---
 
 ## Cross-fitted AIPW, formalized
 
-Let $\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}$ denote nuisance fits trained on every fold **except** $k$. For each $i \in I_k$, define the cross-fitted pseudo-outcome:
+$\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}$: nuisance fits trained on every fold **except** $k$.
 
 $$
 \hat\psi_i = \hat\mu_{1,-k}(X_i)-\hat\mu_{0,-k}(X_i) + \frac{D_i\big(Y_i-\hat\mu_{1,-k}(X_i)\big)}{\hat\pi_{-k}(X_i)} - \frac{(1-D_i)\big(Y_i-\hat\mu_{0,-k}(X_i)\big)}{1-\hat\pi_{-k}(X_i)}
 $$
 
-Then
-
 $$
 \hat\theta_{DML} = \frac{1}{N}\sum_{i=1}^N \hat\psi_i.
 $$
-
-This is exactly the cross-fitting algorithm from the previous slide, written as one formula. Standard errors come directly from the empirical variance of the $\hat\psi_i$:
 
 $$
 \widehat{\mathrm{Var}}(\hat\theta_{DML}) = \frac{1}{N^2}\sum_{i=1}^N \big(\hat\psi_i - \hat\theta_{DML}\big)^2
 $$
 
-No separate asymptotic derivation needed — the $\hat\psi_i$ already carry everything a standard error requires.
-
 ---
 
 ## When does DML work? The formal statement
-
-Orthogonality plus cross-fitting together deliver an **asymptotically linear** representation:
 
 $$
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
 $$
 
-where $\|\cdot\|_2$ is exactly the out-of-sample $L^2(P)$ prediction error from the "converging function" slides earlier.
-
-**Sufficient rate condition for valid $\sqrt N$ inference:**
+**Sufficient rate condition:**
 
 $$
 \|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2 = o_p(N^{-1/2})
 $$
 
-**Rule of thumb:** if both nuisances converge at the flexible-ML rate $o_p(N^{-1/4})$, their product is $o_p(N^{-1/2})$, and $\sqrt N(\hat\theta_{DML}-\theta_0)$ is asymptotically normal.
+**Rule of thumb:** both nuisances $o_p(N^{-1/4})$ ⇒ asymptotic normality.
 
-**Caution:** if overlap is weak (propensities near 0/1) or nuisance fits are poor, $R_N$ need not be small even with cross-fitting — inference can still be unstable. Same overlap warning as Lecture 3, now showing up as a rate condition instead of a diagnostic plot.
+**Caution:** weak overlap ⇒ $R_N$ need not be small, even with cross-fitting.
 
 ---
 
 ## Double/debiased machine learning (DML)
-
-Putting the pieces together:
 
 $$
 \boxed{
@@ -714,33 +645,29 @@ $$
 }
 $$
 
-DML is the recipe that lets you use random forests, lasso, boosting, or neural nets for $\hat\mu(X)$ and $\hat\pi(X)$ **without** sacrificing $\sqrt{n}$-consistency or valid standard errors.
+Random forests, lasso, boosting, neural nets for $\hat\mu(X)$ and $\hat\pi(X)$ **without** sacrificing $\sqrt{n}$-consistency.
 
-It is an **estimation** technology. It answers "how do I flexibly model a high-dimensional $X$?" — not "is $X$ the right adjustment set?"
+**Estimation** technology — not "is $X$ right?"
 
 ---
 
 ## AIPW is efficient, not just consistent
 
-Among all regular, asymptotically linear estimators of the ATE under unconfoundedness, there is a **smallest achievable asymptotic variance** — the semiparametric efficiency bound. The estimator that attains it has, as its influence function, the **efficient influence function (EIF)**.
+Semiparametric efficiency bound: smallest variance among regular, asymptotically linear estimators. Attained by the **efficient influence function (EIF)**.
 
-**Key fact:** under standard regularity conditions, the AIPW score *is* the EIF for the ATE under unconfoundedness. So $\hat\theta_{DML}$ doesn't just get you a valid $\sqrt N$-consistent estimate — it gets you the **most precise** valid estimate any regular estimator could achieve, given only conditional ignorability and overlap.
+**AIPW score = the EIF for the ATE** under unconfoundedness.
 
 ::: {.callout-important}
 ### You cannot asymptotically beat AIPW/DML's variance without strengthening the assumptions.
 :::
 
-This is the formal version of the Kennedy (2024) reading — see the paper-specific slides later today.
-
 ---
 
 ## What DML repairs
 
-- Misspecification bias from rigid parametric outcome or propensity models.
-- The need to hand-specify functional form and interactions in high-dimensional $X$.
-- The tension between flexibility (needed for correct specification) and valid inference (needed for correct standard errors).
-
-DML lets flexible prediction and valid causal inference coexist.
+- Misspecification bias from rigid parametric models
+- Hand-specifying functional form in high-dimensional $X$
+- The flexibility-vs.-valid-inference tension
 
 ---
 
@@ -750,9 +677,9 @@ DML lets flexible prediction and valid causal inference coexist.
 ### DML assumes conditional ignorability and overlap. It does not test, weaken, or substitute for them.
 :::
 
-- If $X$ omits a confounder, DML estimates a **precisely wrong** number, with a **tight, convincing-looking** confidence interval.
-- If overlap fails, extreme $\hat\pi(X)$ still destabilizes the estimator — flexible modeling does not create common support that is not in the data.
-- Flexible fit to $X$ does not certify that $X$ is a sufficient adjustment set.
+- Omitted confounder ⇒ **precisely wrong** number, **tight** CI
+- Weak overlap still destabilizes the estimator
+- Good fit to $X$ ≠ sufficient adjustment set
 
 $$
 \boxed{
@@ -764,253 +691,221 @@ $$
 
 ## A special case: partially linear regression via FWL
 
-Suppose you're willing to assume a **constant treatment effect**:
+Assume a **constant treatment effect**:
 
 $$
 Y = \theta_0 D + g_0(X) + \varepsilon
 $$
 
-By Frisch–Waugh–Lovell, $\theta_0$ can be estimated by "partialling out" $X$:
+Frisch–Waugh–Lovell / partialling out:
 
-1. Use ML to estimate $\ell_0(X)=E[Y\mid X]$ and $r_0(X)=E[D\mid X]$.
-2. Form residuals $\tilde Y = Y-\hat\ell(X)$ and $\tilde D = D-\hat r(X)$.
+1. ML for $\ell_0(X)=E[Y\mid X]$, $r_0(X)=E[D\mid X]$.
+2. Residuals $\tilde Y = Y-\hat\ell(X)$, $\tilde D = D-\hat r(X)$.
 3. Regress $\tilde Y$ on $\tilde D$.
 
-The underlying score, $\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(X))\big](D-\eta_D(X))$, is Neyman orthogonal (Ahrens et al. 2026) — the same recipe, applied to a **linear-in-$D$** model instead of the fully nonparametric $\mu_1,\mu_0$.
-
-**This is exactly the residualize-both-and-regress structure discussed earlier this session** — now you can see precisely which assumption makes it valid.
+The underlying score, $\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(X))\big](D-\eta_D(X))$, is Neyman orthogonal (Ahrens et al. 2026) — same recipe, linear-in-$D$ model.
 
 ---
 
 ## Is PLR-DML "better" than AIPW-DML?
 
-Only under an assumption you have to be willing to defend.
-
-- **If treatment effects truly are constant**, PLR-DML and AIPW-DML both consistently estimate the same $\theta_0$, and PLR-DML is typically **more efficient** — a correctly-imposed constraint is free precision.
-- **If effects are heterogeneous**, PLR-DML is **not consistent for the ATE**. It converges to the same variance-weighted average of unit effects as the Aronow and Samii result from earlier in this lecture — now computed with ML nuisances and cross-fitting instead of linear controls.
+- **Constant effects:** same $\theta_0$; PLR-DML typically **more efficient**.
+- **Heterogeneous effects:** PLR-DML **not consistent for the ATE** — same Aronow-Samii weighting, now via ML.
 
 ::: {.callout-important}
-### Orthogonality and cross-fitting fix the estimation problem (regularization bias, overfitting). They do not fix the estimand problem created by a constant-effect specification.
+### Orthogonality and cross-fitting fix estimation. They don't fix the estimand problem from a constant-effect specification.
 :::
 
-**Practical implication:** don't reach for PLR because it is easier to describe. Reach for it only if you are prepared to defend homogeneous effects — otherwise, AIPW's interactive regression model is the safer default.
+**Default to AIPW unless you can defend homogeneous effects.**
 
 ---
 
 ## Diagnosing a DML analysis: questions to ask
 
-Given a paper that reports a DML estimate:
-
-1. What is the claimed adjustment set $X$, and is it defended on substantive grounds (Lecture 2), not just "we threw in everything and let the forest sort it out"?
-2. Was cross-fitting actually used, and how many folds?
-3. Is there any check on overlap — trimming, propensity diagnostics — analogous to Lecture 3?
-4. Does the paper report which specific ML method was used for each nuisance function, and does it matter?
-5. Would a much simpler AIPW estimator (with parametric nuisance models) give a similar answer?
+1. Is $X$ defended on substantive grounds (Lecture 2), not just "kitchen sink"?
+2. Was cross-fitting used, and how many folds?
+3. Any overlap check — trimming, diagnostics?
+4. Which ML method(s), and does it matter?
+5. Does a simpler parametric AIPW give a similar answer?
 
 ---
 
 ## In-class exercise
 
-Consider three hypothetical DML analyses of the same observational comparison:
+Three hypothetical DML analyses of the same comparison:
 
 ### Analysis A
-Rich $X$, defended adjustment set; cross-fitting used; tight CI similar to a simpler parametric AIPW estimate.
+Rich $X$, defended; cross-fitting used; tight CI similar to parametric AIPW.
 
 ### Analysis B
-Rich $X$, "kitchen sink" adjustment set with no substantive defense; cross-fitting used; tight CI very different from any simpler estimate.
+Rich $X$, kitchen sink, no defense; cross-fitting used; tight CI very different from simpler estimates.
 
 ### Analysis C
-Rich $X$, defended adjustment set; no cross-fitting; extremely tight CI.
+Rich $X$, defended; no cross-fitting; extremely tight CI.
 
-For each: What has the analysis demonstrated? What remains uncertain? Is the problem identification, design, or estimation?
+For each: what's demonstrated? What's uncertain? Identification, design, or estimation?
 
 ---
 
 ## What PS1 will ask you to do
 
-In the AIPW/DML re-estimation, you will:
+- Same selection-on-observables design as Lecture 3
+- Re-estimate with AIPW: flexible nuisance models, cross-fitting
+- Compare to Lecture 3's matching/weighting estimate
+- Did **estimation** flexibility change the answer, or something else?
 
-- take the same selection-on-observables design from Lecture 3;
-- re-estimate it with AIPW using flexible (ML) nuisance models and cross-fitting;
-- compare the DML estimate to the conventional matching/weighting estimate from PS1's first part; and
-- assess whether the two estimates differ because of **estimation** flexibility or because they are answering questions about **different populations or assumptions**.
-
-The DML calculation is not the intellectual endpoint.
-
-The endpoint is deciding **whether flexible estimation changed the answer, and why**.
+**The endpoint is deciding why, not just computing.**
 
 ---
 
 ## What you should be able to do after today
 
-Given a paper using AIPW or DML, you should be able to:
-
-- write down the outcome-regression, IPW, and AIPW estimators and connect each to conditional ignorability;
-- explain double robustness precisely;
-- explain why high-dimensional $X$ motivates ML nuisance estimation;
-- diagnose naive plug-in ML bias as overfitting bias plus a slow convergence rate;
-- state the Neyman orthogonality condition and what it buys you;
-- explain why cross-fitting is required in addition to orthogonality; and
-- distinguish what DML fixes (estimation) from what it cannot fix (identification).
+- Write down OR, IPW, AIPW; connect each to conditional ignorability
+- Explain double robustness precisely
+- Explain why high-dimensional $X$ motivates ML nuisance estimation
+- Diagnose naive ML bias: overfitting + slow convergence
+- State Neyman orthogonality and what it buys you
+- Explain why cross-fitting is still needed
+- Distinguish what DML fixes (estimation) from what it can't (identification)
 
 ---
 
 ## What comes next
 
-We have now covered selection-on-observables end to end: identification, conditioning, construction (matching/weighting), and flexible estimation (AIPW/DML).
+Selection-on-observables, end to end: identification, conditioning, construction, estimation.
 
-Next we leave the "observables are enough" world and ask what to do when they are not:
+Next: when observables aren't enough.
 
-- instrumental variables;
-- regression discontinuity; and
-- difference-in-differences.
+- Instrumental variables
+- Regression discontinuity
+- Difference-in-differences
 
-The central question shifts:
-
-> **What identifying variation can we exploit when conditional ignorability is not credible?**
+> **What identifying variation can we exploit when conditional ignorability isn't credible?**
 
 ---
 
 ## This week's readings, in brief
 
-Four papers, four roles:
-
-- **Chernozhukov et al. (2018)** — the paper that named DML: the general recipe and its canonical applications.
-- **Athey, Imbens, and Wager (2018)** — a contrasting debiasing strategy for a narrower (sparse linear) setting.
-- **Kennedy (2024)** — the semiparametric efficiency theory underneath AIPW and DML.
-- **Ahrens et al. (2026)** — a practitioner's field guide to actually running DML.
+- **Chernozhukov et al. (2018)** — named DML: the general recipe
+- **Athey, Imbens, and Wager (2018)** — a contrasting sparse-linear strategy
+- **Kennedy (2024)** — the efficiency theory underneath AIPW/DML
+- **Ahrens et al. (2026)** — a practitioner's field guide
 
 ---
 
 ## Chernozhukov et al. (2018): the origin of the recipe
 
-This is the paper that coined "double/debiased machine learning" and gave it its two-ingredient recipe — Neyman orthogonal scores plus cross-fitting — which is exactly what we built up today.
+Coined "double/debiased machine learning": orthogonal scores + cross-fitting — exactly today's recipe.
 
-It formalizes the two failure modes of naive plug-in estimation:
+Formalizes two failure modes:
 
-- **regularization bias** — first-order sensitivity of the score to nuisance error;
-- **overfitting bias** — dependence between $\hat\eta$ and the very data used to evaluate the score.
+- **regularization bias** — first-order sensitivity to nuisance error
+- **overfitting bias** — dependence between $\hat\eta$ and the evaluation data
 
-It also distinguishes two cross-fitting estimators: **DML1** solves the moment condition separately in each fold and averages the resulting $\hat\theta_k$; **DML2** pools the orthogonal score across all folds and solves once. DML2 is generally the more stable choice in practice.
+**DML1** solves per fold, averages $\hat\theta_k$. **DML2** pools the score, solves once — generally more stable.
 
 ---
 
 ## Chernozhukov et al.: a menu of canonical applications
 
-The paper works out Neyman orthogonal scores for four widely used estimands:
+- **Partially linear regression** ($Y = \theta_0 D + g_0(X) + \varepsilon$)
+- **Partially linear IV**
+- **ATE/ATT under unconfoundedness** (interactive regression model — our AIPW setting)
+- **LATE**, instrumental variables
 
-- the coefficient in a **partially linear regression** ($Y = \theta_0 D + g_0(X) + \varepsilon$);
-- the coefficient in a **partially linear IV model**;
-- the **ATE/ATT under unconfoundedness** (the interactive regression model — this is our AIPW setting); and
-- the **LATE** in an instrumental-variables design.
-
-**Takeaway:** the same orthogonalize-and-cross-fit logic applies far beyond selection-on-observables — it is a general tool for any low-dimensional parameter defined alongside a high-dimensional nuisance function.
+**Takeaway:** the same recipe applies far beyond selection-on-observables.
 
 ---
 
 ## Chernozhukov et al.: the 401(k) example
 
-Using SIPP data (Chernozhukov and Hansen 2004), they estimate the effect of 401(k) *eligibility* on net financial assets, controlling for age, income, family size, education, and other job-related covariates:
+401(k) *eligibility* on net financial assets (SIPP data; Chernozhukov and Hansen 2004):
 
-- **No controls:** ATE $\approx \$19{,}559$ (SE $1{,}413$) — not credible, given the confounding concern.
-- **DML-controlled (partially linear model):** ATE $\approx \$8{,}200$–$9{,}200$, essentially **the same across six different ML learners** (lasso, regression tree, random forest, boosting, neural net, ensemble).
+- **No controls:** ATE $\approx \$19{,}559$ (SE $1{,}413$)
+- **DML-controlled:** ATE $\approx \$8{,}200$–$9{,}200$, essentially **the same across six ML learners**
 
 ::: {.callout-important}
-### Agreement across very different learners is itself a diagnostic. Large disagreement across learners is a warning sign, not a modeling detail to average away.
+### Agreement across learners is a diagnostic. Large disagreement is a warning sign.
 :::
 
 ---
 
 ## Athey, Imbens, and Wager (2018): a different bet
 
-Same motivating problem as today — unconfoundedness is more plausible with many covariates, but many covariates break standard estimation. Their example: does controlling only for age and sex vs. detailed medical histories change how credible unconfoundedness is for a flu-vaccine effect?
+Same motivation: unconfoundedness more plausible with rich $X$, but rich $X$ breaks standard estimation.
 
-Their question: in a **high-dimensional linear** outcome model, do we need to estimate the propensity score at all?
+Question: in a **high-dimensional linear** outcome model, do we need $\hat\pi(X)$ at all?
 
-**Their answer: no.** If $\mu_d(X)$ is well approximated by a sparse linear model, $\sqrt{n}$-consistent inference is possible using only **overlap** — not a consistent $\hat\pi(X)$, and not sparsity of the treatment effect itself.
+**Answer: no.** Sparse linear $\mu_d(X)$ ⇒ $\sqrt{n}$-consistent inference from **overlap alone**.
 
 ---
 
 ## Athey, Imbens, and Wager: approximate residual balancing
 
-A two-stage procedure:
+1. Regularized (lasso/elastic net) outcome model, per arm.
+2. Reweight **residuals** to balance covariates (Zubizarreta 2015) — not to fit a propensity model.
 
-1. Fit a **regularized (lasso/elastic net) linear outcome model** for $Y$ on $X$, separately in each treatment arm.
-2. Reweight the **residuals** using weights chosen not to fit a propensity model, but to **approximately balance** the covariate means between treated and control (following Zubizarreta 2015) — trading exact balance for controlled variance.
+Corrects regularization shrinkage bias **without estimating $\pi(X)$**.
 
-This directly corrects the shrinkage bias that regularized regression introduces, **without ever estimating $\pi(X)$.**
-
-**Cost of the shortcut:** it buys you out of the propensity model, but only by committing to linearity/sparsity in $\mu(X)$ — a functional-form assumption DML's AIPW-based approach does not require.
+**Cost:** commits to linearity/sparsity in $\mu(X)$.
 
 ---
 
 ## Kennedy (2024): the theory underneath AIPW
 
-Read this one if you want to see the AIPW formula **derived**, not just asserted.
-
-Kennedy frames estimation as targeting a functional $\psi(P)$ and uses the **von Mises (distributional Taylor) expansion**:
+The AIPW formula, **derived** — not asserted.
 
 $$
 \psi(\hat P) - \psi(P) = -\underbrace{\int \phi(z;\hat P)\,dP(z)}_{\text{first-order bias}} + R_2(\hat P, P).
 $$
 
-A naive plug-in estimator $\hat\psi_{pi} = \psi(\hat P)$ inherits that first-order bias directly.
-
-The fix — subtract an estimate of that bias term — gives the **one-step estimator**:
+Naive plug-in inherits that bias directly. Fix — subtract it — gives the **one-step estimator**:
 
 $$
 \hat\psi = \psi(\hat P) + P_n\{\phi(Z;\hat P)\}.
 $$
 
-For the ATE, this is exactly $\hat\mu(X) + \dfrac{D(Y-\hat\mu(X))}{\hat\pi(X)} - \cdots$ — our AIPW score, now derived from the efficient influence function rather than pattern-matched from double robustness.
+For the ATE: exactly our AIPW score.
 
 ---
 
 ## Kennedy: naming the two failure modes precisely
 
-Kennedy decomposes the one-step estimator's error into two terms:
-
 $$
 \hat\psi - \psi = \underbrace{(P_n - P)\{\hat\phi - \phi\}}_{T_1 \text{: empirical process term}} + \underbrace{R_2(\hat P, P)}_{T_2 \text{: remainder/regularization-bias term}}.
 $$
 
-- $T_1 \to 0$ requires either low estimator complexity or **sample splitting** — this is cross-fitting's job.
-- $T_2 \to 0$ at rate $o_P(n^{-1/2})$ requires an **orthogonal** influence function plus adequate nuisance convergence rates — this is Neyman orthogonality's job.
+- $T_1 \to 0$: sample splitting — cross-fitting's job
+- $T_2 \to 0$: orthogonality + convergence rates
 
-**This is the same regularization/overfitting distinction from Chernozhukov et al., now derived from first principles rather than asserted.** The framework generalizes well beyond ATEs — to LATEs, stochastic interventions, and missing-data problems, using the same machinery.
+Generalizes beyond ATEs — LATEs, stochastic interventions, missing data.
 
 ---
 
 ## Ahrens et al. (2026): the practitioner's field guide
 
-The newest and most applied of the four readings — written explicitly to help researchers *use* DML correctly.
-
-Their running example, Dube et al. (2020) on monopsony power on MTurk, uses a partially linear regression with **text-based task features** as high-dimensional $X$ — a case where no parametric functional form is defensible.
-
-They contrast a naive score with the orthogonal (partialling-out) score:
+Dube et al. (2020), MTurk monopsony: text-based task features as high-dimensional $X$.
 
 $$
 m_{naive}(W;\theta,\eta) = (Y - g(X) - \theta D)D, \qquad
 m_{PLM}(W;\theta,\eta) = \big[(Y-\ell(X)) - \theta(D-r(X))\big](D - r(X)).
 $$
 
-Both **identify** $\theta_0$. Only $m_{PLM}$ is Neyman orthogonal — the same lesson as today's naive-plug-in slides, now in a different application.
+Both **identify** $\theta_0$. Only $m_{PLM}$ is Neyman orthogonal.
 
 ---
 
 ## Ahrens et al.: practical recommendations for PS1
 
-Their concrete guidance, directly relevant to your replication:
-
-- **Folds:** $K=5$ or $10$ is a reasonable default; more folds help but with diminishing returns.
-- **Repeat cross-fitting** across several random splits and report the spread — large variation across splits is itself a diagnostic, not just noise to average away.
-- **Try multiple learners** (parametric benchmark, lasso, trees, neural net); substantial disagreement across learners is a warning sign, not a detail to average over.
+- **Folds:** $K=5$ or $10$
+- **Repeat cross-fitting** across splits; report the spread
+- **Try multiple learners**; large disagreement is a warning sign
 
 ::: {.callout-important}
-### A caution that matters for your problem set: common ML defaults do not automatically satisfy DML's convergence-rate requirements.
+### Common ML defaults don't automatically satisfy DML's convergence-rate requirements.
 :::
 
-They cite evidence that random forests under standard tuning, and deep regression trees, can fail to converge fast enough for DML's guarantees to hold. "We used a random forest" is not, by itself, a valid DML analysis.
+Random forests, deep trees: can fail to converge fast enough. "We used a random forest" ≠ a valid DML analysis.
 
 ---
 
@@ -1030,10 +925,10 @@ They cite evidence that random forests under standard tuning, and deep regressio
 ## The central lesson
 
 ::: {.callout-important}
-### Double/debiased machine learning is a solution to a statistical problem: how to use flexible estimators without breaking $\sqrt{n}$-inference.
+### DML solves a statistical problem: using flexible estimators without breaking $\sqrt{n}$-inference.
 :::
 
-It is not a solution to the identification problem from Lectures 1–2.
+Not a solution to the identification problem from Lectures 1–2.
 
 $$
 \boxed{
