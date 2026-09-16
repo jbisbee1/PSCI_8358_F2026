@@ -122,11 +122,11 @@ Aronow and Samii (2016) compute the **effective sample** implied by that regress
 
 ## Why this matters for today
 
-This is a **third** failure mode, distinct from misspecification and slow convergence: even a *correctly specified*, *correctly identified* regression can target a quantity nobody asked for.
+Notice what kind of failure this is: $X$ was **sufficient for ignorability** — identification was never in question — and the regression was **correctly specified** in the sense of controlling for the right variables. And yet $\hat\theta_R$ still targets the wrong number under heterogeneous effects.
 
-This is also the sharpened, formal version of a point from earlier: an additive regression of $Y$ on $D$ and $X$ imposes a constant treatment effect *implicitly*; Aronow and Samii show what you get instead when effects are heterogeneous — not "the ATE, roughly," but a specific, derivable, variance-weighted average.
+**This is a failure of the estimator, not of identification.** Choosing the right adjustment set (Lecture 2) and choosing how to turn that adjustment set into a number (today) are two separate jobs, and getting the first one right does not automatically get you the second one for free.
 
-**Look back at today's "Proof" slides:** $\hat\tau_{AIPW}$ was built by explicitly averaging $\hat\mu_1(X)-\hat\mu_0(X)$ over the empirical distribution of $X$ — $E_X[\mu_1(X)] = E[Y(1)]$, with no implicit reweighting term anywhere. That structural difference from OLS-with-controls is a second reason (beyond double robustness) that AIPW-type estimators are worth the extra machinery.
+The rest of today asks: what would an estimator need to do differently to avoid this — to target $E[Y(1)]-E[Y(0)]$ directly, rather than letting an implicit weighting scheme decide the estimand for you?
 
 ---
 
@@ -422,6 +422,18 @@ $$
 Two independent chances to get the nuisance functions right.
 
 **This is still a statement about estimation, conditional on ignorability. It is not a second identification strategy.**
+
+---
+
+## Back to the motivating question
+
+Recall the regression-weighting problem from earlier: $\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]$ with $w_i=\text{Var}[D_i\mid X_i]$ — a variance-weighted average of unit effects, not the ATE, whenever effects are heterogeneous.
+
+**$\hat\tau_{AIPW}$ does not have this problem.** The Proof slides showed $\hat\tau_{AIPW}$ is built by explicitly averaging $\hat\mu_1(X)-\hat\mu_0(X)$ over the empirical distribution of $X$ — $E_X[\mu_1(X)] = E[Y(1)]$ — with no implicit reweighting term anywhere.
+
+::: {.callout-important}
+### Estimand-targeting is a second reason AIPW is worth the extra machinery, beyond double robustness. It targets $E[Y(1)]-E[Y(0)]$ by construction, regardless of treatment-effect heterogeneity.
+:::
 
 ---
 

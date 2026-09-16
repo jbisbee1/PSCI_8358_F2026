@@ -429,9 +429,9 @@ Y = \alpha + \theta_R D + X'\beta + \varepsilon
 </section>
 <section id="why-this-matters-for-today" class="slide level2">
 <h2>Why this matters for today</h2>
-<p>This is a <strong>third</strong> failure mode, distinct from misspecification and slow convergence: even a <em>correctly specified</em>, <em>correctly identified</em> regression can target a quantity nobody asked for.</p>
-<p>This is also the sharpened, formal version of a point from earlier: an additive regression of <span class="math inline">\(Y\)</span> on <span class="math inline">\(D\)</span> and <span class="math inline">\(X\)</span> imposes a constant treatment effect <em>implicitly</em>; Aronow and Samii show what you get instead when effects are heterogeneous — not “the ATE, roughly,” but a specific, derivable, variance-weighted average.</p>
-<p><strong>Look back at today’s “Proof” slides:</strong> <span class="math inline">\(\hat\tau_{AIPW}\)</span> was built by explicitly averaging <span class="math inline">\(\hat\mu_1(X)-\hat\mu_0(X)\)</span> over the empirical distribution of <span class="math inline">\(X\)</span> — <span class="math inline">\(E_X[\mu_1(X)] = E[Y(1)]\)</span>, with no implicit reweighting term anywhere. That structural difference from OLS-with-controls is a second reason (beyond double robustness) that AIPW-type estimators are worth the extra machinery.</p>
+<p>Notice what kind of failure this is: <span class="math inline">\(X\)</span> was <strong>sufficient for ignorability</strong> — identification was never in question — and the regression was <strong>correctly specified</strong> in the sense of controlling for the right variables. And yet <span class="math inline">\(\hat\theta_R\)</span> still targets the wrong number under heterogeneous effects.</p>
+<p><strong>This is a failure of the estimator, not of identification.</strong> Choosing the right adjustment set (Lecture 2) and choosing how to turn that adjustment set into a number (today) are two separate jobs, and getting the first one right does not automatically get you the second one for free.</p>
+<p>The rest of today asks: what would an estimator need to do differently to avoid this — to target <span class="math inline">\(E[Y(1)]-E[Y(0)]\)</span> directly, rather than letting an implicit weighting scheme decide the estimand for you?</p>
 </section>
 <section id="two-ways-to-use-the-same-identification-result" class="slide level2">
 <h2>Two ways to use the same identification result</h2>
@@ -671,6 +671,24 @@ E[Y(1)].
 \]</span></p>
 <p>Two independent chances to get the nuisance functions right.</p>
 <p><strong>This is still a statement about estimation, conditional on ignorability. It is not a second identification strategy.</strong></p>
+</section>
+<section id="back-to-the-motivating-question" class="slide level2">
+<h2>Back to the motivating question</h2>
+<p>Recall the regression-weighting problem from earlier: <span class="math inline">\(\hat\theta_R \xrightarrow{p} E[w_i\theta_i]/E[w_i]\)</span> with <span class="math inline">\(w_i=\text{Var}[D_i\mid X_i]\)</span> — a variance-weighted average of unit effects, not the ATE, whenever effects are heterogeneous.</p>
+<p><strong><span class="math inline">\(\hat\tau_{AIPW}\)</span> does not have this problem.</strong> The Proof slides showed <span class="math inline">\(\hat\tau_{AIPW}\)</span> is built by explicitly averaging <span class="math inline">\(\hat\mu_1(X)-\hat\mu_0(X)\)</span> over the empirical distribution of <span class="math inline">\(X\)</span> — <span class="math inline">\(E_X[\mu_1(X)] = E[Y(1)]\)</span> — with no implicit reweighting term anywhere.</p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Estimand-targeting is a second reason AIPW is worth the extra machinery, beyond double robustness. It targets <span class="math inline">\(E[Y(1)]-E[Y(0)]\)</span> by construction, regardless of treatment-effect heterogeneity.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
 </section>
 <section id="where-high-dimensional-x-enters" class="slide level2">
 <h2>Where high-dimensional <span class="math inline">\(X\)</span> enters</h2>
