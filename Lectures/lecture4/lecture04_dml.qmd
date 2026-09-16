@@ -75,6 +75,61 @@ No estimator, however flexible, creates identification that was not there.
 
 ---
 
+## Why isn't more matching the answer?
+
+Lecture 3 built the treated-vs-control comparison by matching or weighting on $X$. A natural instinct: if ignorability requires a rich $X$, just match on more covariates.
+
+**Many covariates make matching unreliable** (Samii et al. 2016). Simulation evidence: as the number of covariates grows — even *irrelevant, noise* covariates — matching-based estimators' bias, standard error, and RMSE all worsen. The curse of dimensionality bites long before you have "enough" covariates for high-dimensional ignorability.
+
+Adding covariates to satisfy ignorability and adding covariates to a matching estimator are **not the same operation**, and the second one degrades exactly as the first one demands more of it.
+
+---
+
+## Regression has a subtler problem: the wrong estimand
+
+Suppose you instead regress $Y$ on $D$ and $X$ additively:
+
+$$
+Y = \alpha + \theta_R D + X'\beta + \varepsilon
+$$
+
+Even if $X$ is **sufficient for ignorability** — the confounding problem is solved — Aronow and Samii (2016) show $\hat\theta_R$ does **not** consistently estimate the ATE. Instead:
+
+$$
+\hat\theta_R \xrightarrow{p} \frac{E[w_i\theta_i]}{E[w_i]}, \qquad w_i = \big(D_i - E[D_i\mid X_i]\big)^2
+$$
+
+where $\theta_i = Y_i(1)-Y_i(0)$ is the unit-level effect, and $E[w_i\mid X_i] = \text{Var}[D_i\mid X_i]$.
+
+**In words:** OLS implicitly weights each unit's treatment effect by how much that unit's treatment status *varies* conditional on $X$ — units near the "margin" of treatment assignment dominate the estimate, regardless of how representative they are of the population you actually want to describe.
+
+---
+
+## The Jensen (2003) example
+
+Jensen (2003) estimates the effect of regime type on FDI using a cross-national panel.
+
+Aronow and Samii (2016) compute the **effective sample** implied by that regression — each country weighted by $\text{Var}[D_i\mid X_i]$ — and compare it to the **nominal sample** (every country/year actually in the data):
+
+- Countries near the democracy/autocracy "margin," where regime type is least predictable from covariates, dominate the effective sample.
+- Countries whose regime type is well-predicted by their covariates — nominally in the sample, included in every summary statistic — contribute **almost nothing** to the actual estimate.
+
+::: {.callout-important}
+### The researcher never chose this weighting. It is an invisible artifact of running regression with covariates, and it silently redefines the population the estimate describes.
+:::
+
+---
+
+## Why this matters for today
+
+This is a **third** failure mode, distinct from misspecification and slow convergence: even a *correctly specified*, *correctly identified* regression can target a quantity nobody asked for.
+
+This is also the sharpened, formal version of a point from earlier: an additive regression of $Y$ on $D$ and $X$ imposes a constant treatment effect *implicitly*; Aronow and Samii show what you get instead when effects are heterogeneous — not "the ATE, roughly," but a specific, derivable, variance-weighted average.
+
+**Look back at today's "Proof" slides:** $\hat\tau_{AIPW}$ was built by explicitly averaging $\hat\mu_1(X)-\hat\mu_0(X)$ over the empirical distribution of $X$ — $E_X[\mu_1(X)] = E[Y(1)]$, with no implicit reweighting term anywhere. That structural difference from OLS-with-controls is a second reason (beyond double robustness) that AIPW-type estimators are worth the extra machinery.
+
+---
+
 ## Two ways to use the same identification result
 
 Ignorability implies
@@ -510,6 +565,38 @@ The AIPW score is exactly this kind of object: it was already built to be doubly
 
 ---
 
+## Why the naive score fails: a concrete calculation
+
+Take the **plain outcome-regression score**, $\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$. A first-order (Taylor) expansion of $\hat\theta$ around the truth $\mu_0(X)$ gives:
+
+$$
+\hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
+\;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+$$
+
+**This derivative is not zero — it's the identity.** Whatever bias sits in $\hat\mu_1,\hat\mu_0$ (e.g., lasso shrinkage, or any regularization bias) passes straight through into $\hat\theta$, **undiminished**. This is regularization bias made concrete, not just asserted: the naive score has no protection built in.
+
+---
+
+## Checking the AIPW score directly
+
+Does perturbing $\mu_1$ move the AIPW score's expectation? Let $\tilde\mu_1$ be any perturbation direction. Using $\psi = \mu_1(X)-\mu_0(X) + \dfrac{D(Y-\mu_1(X))}{\pi(X)} - \cdots - \theta$:
+
+$$
+\partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
+= E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
+$$
+
+**If $\pi(X)$ is correctly specified**, $E[D\mid X]=\pi(X)$, so the bracketed term is exactly $1-1=0$ — for *every* perturbation direction $\tilde\mu_1$, regardless of how $\hat\mu_1$ is estimated.
+
+::: {.callout-important}
+### This is Neyman orthogonality, verified rather than asserted: wiggling $\hat\mu_1$ does not move $E[\psi]$ at all, to first order — provided $\pi(X)$ is right.
+:::
+
+The symmetric calculation for perturbing $\pi$ (holding $\mu_1,\mu_0$ correct) gives the same zero — **this symmetric pair of zero-derivative results is exactly double robustness**, derived rather than pattern-matched.
+
+---
+
 ## Orthogonality does the heavy lifting
 
 With an orthogonal score, the estimation error in $\hat\tau$ from nuisance mis-estimation is bounded by a **product** of the outcome-model error and the propensity-model error:
@@ -559,6 +646,52 @@ With it: the orthogonality bound applies, $\hat\tau$ is $\sqrt{n}$-consistent an
 
 ---
 
+## Cross-fitted AIPW, formalized
+
+Let $\hat\pi_{-k}, \hat\mu_{1,-k}, \hat\mu_{0,-k}$ denote nuisance fits trained on every fold **except** $k$. For each $i \in I_k$, define the cross-fitted pseudo-outcome:
+
+$$
+\hat\psi_i = \hat\mu_{1,-k}(X_i)-\hat\mu_{0,-k}(X_i) + \frac{D_i\big(Y_i-\hat\mu_{1,-k}(X_i)\big)}{\hat\pi_{-k}(X_i)} - \frac{(1-D_i)\big(Y_i-\hat\mu_{0,-k}(X_i)\big)}{1-\hat\pi_{-k}(X_i)}
+$$
+
+Then
+
+$$
+\hat\theta_{DML} = \frac{1}{N}\sum_{i=1}^N \hat\psi_i.
+$$
+
+This is exactly the cross-fitting algorithm from the previous slide, written as one formula. Standard errors come directly from the empirical variance of the $\hat\psi_i$:
+
+$$
+\widehat{\mathrm{Var}}(\hat\theta_{DML}) = \frac{1}{N^2}\sum_{i=1}^N \big(\hat\psi_i - \hat\theta_{DML}\big)^2
+$$
+
+No separate asymptotic derivation needed — the $\hat\psi_i$ already carry everything a standard error requires.
+
+---
+
+## When does DML work? The formal statement
+
+Orthogonality plus cross-fitting together deliver an **asymptotically linear** representation:
+
+$$
+\hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
+$$
+
+where $\|\cdot\|_2$ is exactly the out-of-sample $L^2(P)$ prediction error from the "converging function" slides earlier.
+
+**Sufficient rate condition for valid $\sqrt N$ inference:**
+
+$$
+\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2 = o_p(N^{-1/2})
+$$
+
+**Rule of thumb:** if both nuisances converge at the flexible-ML rate $o_p(N^{-1/4})$, their product is $o_p(N^{-1/2})$, and $\sqrt N(\hat\theta_{DML}-\theta_0)$ is asymptotically normal.
+
+**Caution:** if overlap is weak (propensities near 0/1) or nuisance fits are poor, $R_N$ need not be small even with cross-fitting — inference can still be unstable. Same overlap warning as Lecture 3, now showing up as a rate condition instead of a diagnostic plot.
+
+---
+
 ## Double/debiased machine learning (DML)
 
 Putting the pieces together:
@@ -572,6 +705,20 @@ $$
 DML is the recipe that lets you use random forests, lasso, boosting, or neural nets for $\hat\mu(X)$ and $\hat\pi(X)$ **without** sacrificing $\sqrt{n}$-consistency or valid standard errors.
 
 It is an **estimation** technology. It answers "how do I flexibly model a high-dimensional $X$?" — not "is $X$ the right adjustment set?"
+
+---
+
+## AIPW is efficient, not just consistent
+
+Among all regular, asymptotically linear estimators of the ATE under unconfoundedness, there is a **smallest achievable asymptotic variance** — the semiparametric efficiency bound. The estimator that attains it has, as its influence function, the **efficient influence function (EIF)**.
+
+**Key fact:** under standard regularity conditions, the AIPW score *is* the EIF for the ATE under unconfoundedness. So $\hat\theta_{DML}$ doesn't just get you a valid $\sqrt N$-consistent estimate — it gets you the **most precise** valid estimate any regular estimator could achieve, given only conditional ignorability and overlap.
+
+::: {.callout-important}
+### You cannot asymptotically beat AIPW/DML's variance without strengthening the assumptions.
+:::
+
+This is the formal version of the Kennedy (2024) reading — see the paper-specific slides later today.
 
 ---
 
@@ -600,6 +747,41 @@ $$
 \text{Flexible nuisance estimation} \not\Rightarrow \text{Conditional ignorability}
 }
 $$
+
+---
+
+## A special case: partially linear regression via FWL
+
+Suppose you're willing to assume a **constant treatment effect**:
+
+$$
+Y = \theta_0 D + g_0(X) + \varepsilon
+$$
+
+By Frisch–Waugh–Lovell, $\theta_0$ can be estimated by "partialling out" $X$:
+
+1. Use ML to estimate $\ell_0(X)=E[Y\mid X]$ and $r_0(X)=E[D\mid X]$.
+2. Form residuals $\tilde Y = Y-\hat\ell(X)$ and $\tilde D = D-\hat r(X)$.
+3. Regress $\tilde Y$ on $\tilde D$.
+
+The underlying score, $\psi(W;\theta,\eta) = \big[(Y-\eta_Y(X))-\theta(D-\eta_D(X))\big](D-\eta_D(X))$, is Neyman orthogonal (Ahrens et al. 2026) — the same recipe, applied to a **linear-in-$D$** model instead of the fully nonparametric $\mu_1,\mu_0$.
+
+**This is exactly the residualize-both-and-regress structure discussed earlier this session** — now you can see precisely which assumption makes it valid.
+
+---
+
+## Is PLR-DML "better" than AIPW-DML?
+
+Only under an assumption you have to be willing to defend.
+
+- **If treatment effects truly are constant**, PLR-DML and AIPW-DML both consistently estimate the same $\theta_0$, and PLR-DML is typically **more efficient** — a correctly-imposed constraint is free precision.
+- **If effects are heterogeneous**, PLR-DML is **not consistent for the ATE**. It converges to the same variance-weighted average of unit effects as the Aronow and Samii result from earlier in this lecture — now computed with ML nuisances and cross-fitting instead of linear controls.
+
+::: {.callout-important}
+### Orthogonality and cross-fitting fix the estimation problem (regularization bias, overfitting). They do not fix the estimand problem created by a constant-effect specification.
+:::
+
+**Practical implication:** don't reach for PLR because it is easier to describe. Reach for it only if you are prepared to defend homogeneous effects — otherwise, AIPW's interactive regression model is the safer default.
 
 ---
 
