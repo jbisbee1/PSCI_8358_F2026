@@ -512,21 +512,37 @@ Two ingredients:
 
 ## Neyman orthogonality: the idea
 
-$\psi(W; \tau, \eta)$ (here $\eta = (\mu_1,\mu_0,\pi)$) is **Neyman orthogonal** if
+Bundle the nuisance functions into one object: $\eta = (\mu_1,\mu_0,\pi)$.
+
+$\psi(W; \theta, \eta)$ is **Neyman orthogonal** if perturbing $\eta$ slightly away from the truth $\eta_0$ doesn't move $E[\psi]$ — to first order:
 
 $$
-\left.\frac{\partial}{\partial \eta}\, E\big[\psi(W;\tau,\eta)\big]\right|_{\eta=\eta_0} = 0.
+\left.\frac{\partial}{\partial \eta}\, E\big[\psi(W;\theta,\eta)\big]\right|_{\eta=\eta_0} = 0.
 $$
 
-Small $\hat\eta$ errors move $E[\psi]$ only at **second order**.
+($\eta$ is function-valued, so this "derivative" means: pick a direction to nudge $\mu_1,\mu_0,\pi$, and check how much $E[\psi]$ responds.)
 
-AIPW: built doubly robust — orthogonality's finite-sample cousin.
+AIPW was already built doubly robust — this is the *local* (derivative) version of that same protection.
+
+---
+
+## Why orthogonality controls the error
+
+Taylor-expand $E[\psi(W;\theta,\hat\eta)]$ around the truth $\eta_0$:
+
+$$
+E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\,0 \text{ at the truth}} \;+\; \underbrace{\partial_\eta E[\psi]\big|_{\eta_0}}_{=\,0 \text{ by orthogonality}}(\hat\eta-\eta_0) \;+\; \text{2nd-order terms}
+$$
+
+**The first-order term vanishes.** What survives is quadratic in $(\hat\eta-\eta_0)$ — a *product* of nuisance errors with themselves, not the error alone.
+
+This is exactly where $O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})$ comes from, two slides ahead.
 
 ---
 
 ## Why the naive score fails: a concrete calculation
 
-$\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$.
+Same question, for a score that is **not** orthogonal: $\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$.
 
 $$
 \hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
@@ -538,6 +554,8 @@ $$
 ---
 
 ## Checking the AIPW score directly
+
+The naive score failed this test. Does AIPW pass it? Perturb $\mu_1$ in direction $\tilde\mu_1$ and compute the same derivative:
 
 $$
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
