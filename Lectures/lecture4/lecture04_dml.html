@@ -694,6 +694,12 @@ E[Y(1)].
 <p>Residuals shrink toward zero — the model memorized <span class="math inline">\(Y_i\)</span>.</p>
 <p><strong>Bias that does not vanish as <span class="math inline">\(n \to \infty\)</span>.</strong></p>
 </section>
+<section id="a-quick-notation-check-what-does-ocdot-mean" class="slide level2">
+<h2>A quick notation check: what does <span class="math inline">\(O(\cdot)\)</span> mean?</h2>
+<p><span class="math inline">\(O(\text{something})\)</span> = “doesn’t grow bigger than a constant times that something.”</p>
+<p>You already know one example: the standard error of a sample mean is <span class="math inline">\(O(1/\sqrt{n})\)</span> — it shrinks proportional to <span class="math inline">\(1/\sqrt{n}\)</span>. Quadruple your sample, and your SE roughly halves.</p>
+<p><span class="math inline">\(O_p(\cdot)\)</span>: same idea, but for a <em>random</em> quantity that depends on your particular sample (like <span class="math inline">\(\hat\mu(X)-\mu(X)\)</span>) — “doesn’t grow bigger than a constant times that something, <strong>with high probability</strong>” across repeated samples.</p>
+</section>
 <section id="slow-convergence-concretely" class="slide level2">
 <h2>Slow convergence, concretely</h2>
 <p>Parametric: <span class="math inline">\(\hat\mu(X) - \mu(X) = O_p(n^{-1/2})\)</span>.</p>
@@ -802,27 +808,61 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2})
 </section>
 <section id="why-orthogonality-controls-the-error" class="slide level2">
 <h2>Why orthogonality controls the error</h2>
-<p>Taylor-expand <span class="math inline">\(E[\psi(W;\theta,\hat\eta)]\)</span> around the truth <span class="math inline">\(\eta_0\)</span>:</p>
+<p>Define <span class="math inline">\(M(\eta) \equiv E[\psi(W;\theta_0,\eta)]\)</span> — the score, averaged, holding <span class="math inline">\(\theta\)</span> at its <strong>true</strong> value. Then <span class="math inline">\(M(\eta_0)=0\)</span>: the moment condition holds at the truth.</p>
+<p>Taylor’s theorem, exactly:</p>
 <p><span class="math display">\[
-E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\,0 \text{ at the truth}} \;+\; \underbrace{\partial_\eta E[\psi]\big|_{\eta_0}}_{=\,0 \text{ by orthogonality}}(\hat\eta-\eta_0) \;+\; \text{2nd-order terms}
+M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}_{=0 \text{ by orthogonality}}(\hat\eta-\eta_0) + O\big((\hat\eta-\eta_0)^2\big)
 \]</span></p>
-<p><strong>The first-order term vanishes.</strong> What survives is quadratic in <span class="math inline">\((\hat\eta-\eta_0)\)</span> — a <em>product</em> of nuisance errors with themselves, not the error alone.</p>
-<p>This is exactly where <span class="math inline">\(O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})\)</span> comes from, two slides ahead.</p>
+<p><span class="math display">\[
+\Rightarrow\; M(\hat\eta) = O\big((\hat\eta-\eta_0)^2\big)
+\]</span></p>
+<p><strong>Quadratic in the mistake, not linear.</strong> This is where <span class="math inline">\(O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})\)</span> comes from, a few slides ahead.</p>
+</section>
+<section id="making-the-derivative-precise-when-eta-is-a-function" class="slide level2">
+<h2>Making the derivative precise, when <span class="math inline">\(\eta\)</span> is a function</h2>
+<p><span class="math inline">\(\eta\)</span> is function-valued, so “<span class="math inline">\(\partial_\eta M(\eta_0)\)</span>” isn’t ordinary calculus. Reduce it to one dimension: for <span class="math inline">\(r\in[0,1]\)</span>,</p>
+<p><span class="math display">\[
+\eta_r = \eta_0 + r(\hat\eta-\eta_0), \qquad f(r) \equiv M(\eta_r)
+\]</span></p>
+<p><span class="math inline">\(f(0)=M(\eta_0)=0\)</span>, <span class="math inline">\(f(1)=M(\hat\eta)\)</span> — ordinary one-variable calculus in <span class="math inline">\(r\)</span> gets the same expansion, rigorously.</p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Neyman orthogonality means <span class="math inline">\(f'(0)=0\)</span> for <em>every</em> possible direction <span class="math inline">\(\hat\eta-\eta_0\)</span> — not just the one you happen to get.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
 </section>
 <section id="why-the-naive-score-fails-a-concrete-calculation" class="slide level2">
 <h2>Why the naive score fails: a concrete calculation</h2>
-<p>Same question, for a score that is <strong>not</strong> orthogonal: <span class="math inline">\(\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta\)</span>.</p>
+<p>Same question, for a score that is <strong>not</strong> orthogonal — the plain outcome-regression score, using the <strong>same <span class="math inline">\(\mu_1,\mu_0\)</span></strong> from “Outcome regression” several slides back. (Note: <span class="math inline">\(\pi(X)\)</span> never enters this score at all.)</p>
 <p><span class="math display">\[
-\hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
-\;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta
 \]</span></p>
-<p><strong>Derivative = the identity.</strong> Bias in <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> passes straight through, undiminished.</p>
+<p><span class="math inline">\(M(\mu)\equiv E[\psi(W;\theta_0,\mu)]\)</span>, so <span class="math inline">\(M(\mu_0)=0\)</span>. Since <span class="math inline">\(\psi\)</span> is <strong>linear</strong> in <span class="math inline">\(\mu\)</span>, the expansion is exact — no remainder term at all:</p>
+<p><span class="math display">\[
+M(\hat\mu) = \underbrace{M(\mu_0)}_{=0} + \partial_\mu M(\mu_0)[\hat\mu-\mu_0] = E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+\]</span></p>
+<p><span class="math inline">\(\partial_\theta\psi=-1\)</span> for every unit, so <span class="math inline">\(\partial_\theta M = -1\)</span> and <span class="math inline">\(\hat\theta-\theta_0 = -M(\hat\mu)\)</span>:</p>
+<p><span class="math display">\[
+\hat\theta - \theta_0 \;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+\]</span></p>
+<p><strong>No approximation here, and no protection either.</strong> Bias in <span class="math inline">\(\hat\mu_1,\hat\mu_0\)</span> passes straight through, undiminished.</p>
 </section>
 <section id="checking-the-aipw-score-directly" class="slide level2">
 <h2>Checking the AIPW score directly</h2>
-<p>The naive score failed this test. Does AIPW pass it? Perturb <span class="math inline">\(\mu_1\)</span> in direction <span class="math inline">\(\tilde\mu_1\)</span> and compute the same derivative:</p>
+<p>The naive score failed this test. Does AIPW pass it? Only two pieces of <span class="math inline">\(\psi\)</span> involve <span class="math inline">\(\mu_1\)</span> — the <span class="math inline">\(\mu_1(X)\)</span> term and the <span class="math inline">\(-\mu_1(X)\)</span> inside the correction term. Perturb <span class="math inline">\(\mu_1\)</span> by <span class="math inline">\(\tilde\mu_1\)</span> and add up their responses:</p>
 <p><span class="math display">\[
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
+\]</span></p>
+<p>Condition on <span class="math inline">\(X\)</span> (same iterated-expectations move as “Two ways to use the same identification result”), so <span class="math inline">\(D\)</span> collapses to <span class="math inline">\(E[D\mid X]\)</span>:</p>
+<p><span class="math display">\[
 = E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
 \]</span></p>
 <p><strong>If <span class="math inline">\(\pi(X)\)</span> correct</strong>, <span class="math inline">\(E[D\mid X]=\pi(X)\)</span>, so this is <span class="math inline">\(1-1=0\)</span> — for <em>every</em> <span class="math inline">\(\tilde\mu_1\)</span>.</p>
@@ -839,7 +879,27 @@ E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\
 </div>
 </div>
 </div>
-<p>Symmetric result for perturbing <span class="math inline">\(\pi\)</span> ⇒ <strong>double robustness</strong>, derived.</p>
+</section>
+<section id="the-symmetric-case-perturbing-pi" class="slide level2">
+<h2>The symmetric case: perturbing <span class="math inline">\(\pi\)</span></h2>
+<p>A genuinely different computation — <span class="math inline">\(\pi\)</span> sits in two denominators, so this needs the quotient rule, not simple substitution:</p>
+<p><span class="math display">\[
+\partial_{\pi} E[\psi]\,[\tilde\pi] = -E\left[\tilde\pi(X)\left(\frac{D(Y-\mu_1(X))}{\pi(X)^2} + \frac{(1-D)(Y-\mu_0(X))}{(1-\pi(X))^2}\right)\right]
+\]</span></p>
+<p><strong>If <span class="math inline">\(\mu_1,\mu_0\)</span> correct</strong>, <span class="math inline">\(E[D(Y-\mu_1(X))\mid X]=0\)</span> and <span class="math inline">\(E[(1-D)(Y-\mu_0(X))\mid X]=0\)</span> — both pieces vanish, for <em>every</em> <span class="math inline">\(\tilde\pi\)</span>.</p>
+<div class="callout callout-important callout-titled callout-style-default">
+<div class="callout-body">
+<div class="callout-title">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<p><strong>Same conclusion, different mechanism. This is what “double robustness, derived” means: two separate zero-derivative results, one per nuisance — not one calculation copied over.</strong></p>
+</div>
+<div class="callout-content">
+
+</div>
+</div>
+</div>
 </section>
 <section id="orthogonality-does-the-heavy-lifting" class="slide level2">
 <h2>Orthogonality does the heavy lifting</h2>
@@ -847,7 +907,8 @@ E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\
 O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 \]</span></p>
 <p>Two slow nuisance estimators combine into one fast causal estimator — <strong>if the score is orthogonal.</strong></p>
-<p><strong>Non-orthogonal score:</strong> no such protection.</p>
+<p><span class="math inline">\(O_p(n^{-1/2})\)</span> is the rate that makes ordinary confidence intervals and <span class="math inline">\(t\)</span>-tests valid — the same rate a correctly-specified parametric regression gets “for free.” Hit it, and your DML estimate behaves like textbook regression, even though <span class="math inline">\(\hat\mu,\hat\pi\)</span> came from a random forest.</p>
+<p><strong>Non-orthogonal score:</strong> stuck at <span class="math inline">\(O_p(n^{-1/4})\)</span> — standard errors computed the usual way are simply <strong>wrong</strong>: tight-looking and overconfident, not just “a bit off.”</p>
 </section>
 <section id="orthogonality-is-not-enough-on-its-own" class="slide level2">
 <h2>Orthogonality is not enough on its own</h2>
@@ -899,6 +960,7 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 </section>
 <section id="when-does-dml-work-the-formal-statement" class="slide level2">
 <h2>When does DML work? The formal statement</h2>
+<p>Write <span class="math inline">\(\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)\)</span> — the score, evaluated at the truth (same <span class="math inline">\(\psi\)</span> as always, just a shorter name for it here):</p>
 <p><span class="math display">\[
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
 \]</span></p>
@@ -921,7 +983,7 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 </section>
 <section id="aipw-is-efficient-not-just-consistent" class="slide level2">
 <h2>AIPW is efficient, not just consistent</h2>
-<p>Semiparametric efficiency bound: smallest variance among regular, asymptotically linear estimators. Attained by the <strong>efficient influence function (EIF)</strong>.</p>
+<p>Semiparametric efficiency bound: smallest variance any well-behaved estimator of the ATE can achieve (given only ignorability and overlap — no extra assumptions). Attained by the <strong>efficient influence function (EIF)</strong>.</p>
 <p><strong>AIPW score = the EIF for the ATE</strong> under unconfoundedness.</p>
 <div class="callout callout-important callout-titled callout-style-default">
 <div class="callout-body">

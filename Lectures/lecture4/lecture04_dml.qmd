@@ -433,6 +433,16 @@ Residuals shrink toward zero — the model memorized $Y_i$.
 
 ---
 
+## A quick notation check: what does $O(\cdot)$ mean?
+
+$O(\text{something})$ = "doesn't grow bigger than a constant times that something."
+
+You already know one example: the standard error of a sample mean is $O(1/\sqrt{n})$ — it shrinks proportional to $1/\sqrt{n}$. Quadruple your sample, and your SE roughly halves.
+
+$O_p(\cdot)$: same idea, but for a *random* quantity that depends on your particular sample (like $\hat\mu(X)-\mu(X)$) — "doesn't grow bigger than a constant times that something, **with high probability**" across repeated samples.
+
+---
+
 ## Slow convergence, concretely
 
 Parametric: $\hat\mu(X) - \mu(X) = O_p(n^{-1/2})$.
@@ -528,37 +538,73 @@ AIPW was already built doubly robust — this is the *local* (derivative) versio
 
 ## Why orthogonality controls the error
 
-Taylor-expand $E[\psi(W;\theta,\hat\eta)]$ around the truth $\eta_0$:
+Define $M(\eta) \equiv E[\psi(W;\theta_0,\eta)]$ — the score, averaged, holding $\theta$ at its **true** value. Then $M(\eta_0)=0$: the moment condition holds at the truth.
+
+Taylor's theorem, exactly:
 
 $$
-E[\psi(W;\theta,\hat\eta)] \;\approx\; \underbrace{E[\psi(W;\theta,\eta_0)]}_{=\,0 \text{ at the truth}} \;+\; \underbrace{\partial_\eta E[\psi]\big|_{\eta_0}}_{=\,0 \text{ by orthogonality}}(\hat\eta-\eta_0) \;+\; \text{2nd-order terms}
+M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}_{=0 \text{ by orthogonality}}(\hat\eta-\eta_0) + O\big((\hat\eta-\eta_0)^2\big)
 $$
 
-**The first-order term vanishes.** What survives is quadratic in $(\hat\eta-\eta_0)$ — a *product* of nuisance errors with themselves, not the error alone.
+$$
+\Rightarrow\; M(\hat\eta) = O\big((\hat\eta-\eta_0)^2\big)
+$$
 
-This is exactly where $O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})$ comes from, two slides ahead.
+**Quadratic in the mistake, not linear.** This is where $O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})$ comes from, a few slides ahead.
+
+---
+
+## Making the derivative precise, when $\eta$ is a function
+
+$\eta$ is function-valued, so "$\partial_\eta M(\eta_0)$" isn't ordinary calculus. Reduce it to one dimension: for $r\in[0,1]$,
+
+$$
+\eta_r = \eta_0 + r(\hat\eta-\eta_0), \qquad f(r) \equiv M(\eta_r)
+$$
+
+$f(0)=M(\eta_0)=0$, $f(1)=M(\hat\eta)$ — ordinary one-variable calculus in $r$ gets the same expansion, rigorously.
+
+::: {.callout-important}
+### Neyman orthogonality means $f'(0)=0$ for *every* possible direction $\hat\eta-\eta_0$ — not just the one you happen to get.
+:::
 
 ---
 
 ## Why the naive score fails: a concrete calculation
 
-Same question, for a score that is **not** orthogonal: $\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta$.
+Same question, for a score that is **not** orthogonal — the plain outcome-regression score, using the **same $\mu_1,\mu_0$** from "Outcome regression" several slides back. (Note: $\pi(X)$ never enters this score at all.)
 
 $$
-\hat\theta - \theta_0 \;\approx\; \underbrace{\partial_\mu E[\psi(W;\theta_0,\mu_0)]}_{\text{sensitivity to } \mu\text{-error}}\,[\hat\mu-\mu_0]
-\;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+\psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta
 $$
 
-**Derivative = the identity.** Bias in $\hat\mu_1,\hat\mu_0$ passes straight through, undiminished.
+$M(\mu)\equiv E[\psi(W;\theta_0,\mu)]$, so $M(\mu_0)=0$. Since $\psi$ is **linear** in $\mu$, the expansion is exact — no remainder term at all:
+
+$$
+M(\hat\mu) = \underbrace{M(\mu_0)}_{=0} + \partial_\mu M(\mu_0)[\hat\mu-\mu_0] = E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+$$
+
+$\partial_\theta\psi=-1$ for every unit, so $\partial_\theta M = -1$ and $\hat\theta-\theta_0 = -M(\hat\mu)$:
+
+$$
+\hat\theta - \theta_0 \;=\; E\big[(\hat\mu_1-\mu_1)(X)\big] - E\big[(\hat\mu_0-\mu_0)(X)\big]
+$$
+
+**No approximation here, and no protection either.** Bias in $\hat\mu_1,\hat\mu_0$ passes straight through, undiminished.
 
 ---
 
 ## Checking the AIPW score directly
 
-The naive score failed this test. Does AIPW pass it? Perturb $\mu_1$ in direction $\tilde\mu_1$ and compute the same derivative:
+The naive score failed this test. Does AIPW pass it? Only two pieces of $\psi$ involve $\mu_1$ — the $\mu_1(X)$ term and the $-\mu_1(X)$ inside the correction term. Perturb $\mu_1$ by $\tilde\mu_1$ and add up their responses:
 
 $$
 \partial_{\mu_1} E[\psi]\,[\tilde\mu_1] = E\left[\tilde\mu_1(X)\left(1-\frac{D}{\pi(X)}\right)\right]
+$$
+
+Condition on $X$ (same iterated-expectations move as "Two ways to use the same identification result"), so $D$ collapses to $E[D\mid X]$:
+
+$$
 = E\left[\tilde\mu_1(X)\left(1-\frac{E[D\mid X]}{\pi(X)}\right)\right]
 $$
 
@@ -568,7 +614,21 @@ $$
 ### Neyman orthogonality, verified: wiggling $\hat\mu_1$ doesn't move $E[\psi]$, to first order.
 :::
 
-Symmetric result for perturbing $\pi$ ⇒ **double robustness**, derived.
+---
+
+## The symmetric case: perturbing $\pi$
+
+A genuinely different computation — $\pi$ sits in two denominators, so this needs the quotient rule, not simple substitution:
+
+$$
+\partial_{\pi} E[\psi]\,[\tilde\pi] = -E\left[\tilde\pi(X)\left(\frac{D(Y-\mu_1(X))}{\pi(X)^2} + \frac{(1-D)(Y-\mu_0(X))}{(1-\pi(X))^2}\right)\right]
+$$
+
+**If $\mu_1,\mu_0$ correct**, $E[D(Y-\mu_1(X))\mid X]=0$ and $E[(1-D)(Y-\mu_0(X))\mid X]=0$ — both pieces vanish, for *every* $\tilde\pi$.
+
+::: {.callout-important}
+### Same conclusion, different mechanism. This is what "double robustness, derived" means: two separate zero-derivative results, one per nuisance — not one calculation copied over.
+:::
 
 ---
 
@@ -580,7 +640,9 @@ $$
 
 Two slow nuisance estimators combine into one fast causal estimator — **if the score is orthogonal.**
 
-**Non-orthogonal score:** no such protection.
+$O_p(n^{-1/2})$ is the rate that makes ordinary confidence intervals and $t$-tests valid — the same rate a correctly-specified parametric regression gets "for free." Hit it, and your DML estimate behaves like textbook regression, even though $\hat\mu,\hat\pi$ came from a random forest.
+
+**Non-orthogonal score:** stuck at $O_p(n^{-1/4})$ — standard errors computed the usual way are simply **wrong**: tight-looking and overconfident, not just "a bit off."
 
 ---
 
@@ -639,6 +701,8 @@ $$
 
 ## When does DML work? The formal statement
 
+Write $\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)$ — the score, evaluated at the truth (same $\psi$ as always, just a shorter name for it here):
+
 $$
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
 $$
@@ -671,7 +735,7 @@ Random forests, lasso, boosting, neural nets for $\hat\mu(X)$ and $\hat\pi(X)$ *
 
 ## AIPW is efficient, not just consistent
 
-Semiparametric efficiency bound: smallest variance among regular, asymptotically linear estimators. Attained by the **efficient influence function (EIF)**.
+Semiparametric efficiency bound: smallest variance any well-behaved estimator of the ATE can achieve (given only ignorability and overlap — no extra assumptions). Attained by the **efficient influence function (EIF)**.
 
 **AIPW score = the EIF for the ATE** under unconfoundedness.
 
