@@ -435,8 +435,6 @@ Residuals shrink toward zero — the model memorized $Y_i$.
 
 **Bias that does not vanish as $n \to \infty$.**
 
-*Regularization bias — the other failure mode from the previous slide — gets its own worked concrete treatment later ("Why the naive score fails" and after), once Neyman orthogonality gives us the tools to see exactly where it comes from.*
-
 ---
 
 ## What does $O(\cdot)$ mean?
@@ -556,7 +554,7 @@ $$
 \Rightarrow\; M(\hat\eta) = O\big((\hat\eta-\eta_0)^2\big)
 $$
 
-**Quadratic in the mistake, not linear.** This is where $O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})$ comes from, a few slides ahead.
+**Quadratic in the mistake, not linear.** This is exactly why two $O_p(n^{-1/4})$ nuisance errors can combine into an $O_p(n^{-1/2})$ causal estimate.
 
 ---
 
@@ -578,7 +576,7 @@ $f(0)=M(\eta_0)=0$, $f(1)=M(\hat\eta)$ — ordinary one-variable calculus in $r$
 
 ## Why the naive score fails
 
-Same question, for a score that is **not** orthogonal — the plain outcome-regression score, using the **same $\mu_1,\mu_0$** from "Outcome regression" several slides back. (Note: $\pi(X)$ never enters this score at all.)
+Same question, for a score that is **not** orthogonal — the plain outcome-regression score, using the **same $\mu_1,\mu_0$** defined in outcome regression. (Note: $\pi(X)$ never enters this score at all.)
 
 $$
 \psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta
@@ -707,7 +705,7 @@ $$
 
 ## When does DML work?
 
-Write $\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)$ — the score, evaluated at the truth (same $\psi$ as always, just a shorter name for it here). ($\|\cdot\|_2$ below is the same function-gap idea as "Measuring the function gap" — literally its square root, $\|\hat\mu-\mu_0\|_2 = \sqrt{\|\hat\mu-\mu_0\|^2}$ — just written as the norm itself rather than its square.)
+Write $\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)$ — the score, evaluated at the truth (same $\psi$ as always, just a shorter name for it here). ($\|\hat\mu-\mu_0\|_2$ is the same function-gap idea as $\|\hat\mu-\mu_0\|^2$, just the norm itself, $\sqrt{\|\hat\mu-\mu_0\|^2}$, rather than its square.)
 
 $$
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)

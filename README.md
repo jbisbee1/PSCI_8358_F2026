@@ -126,7 +126,9 @@ The final project is an **independent causal audit** of a published observationa
 
 ## September 16 — Doubly Robust Estimation and Double Machine Learning
 
-<!-- MATERIALS:4 --><!-- /MATERIALS:4 -->
+<!-- MATERIALS:4 -->
+<div class="readings"><strong>Materials:</strong><ul><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Lectures/lecture4/lecture04_dml.html">Lecture 4 slides: Doubly Robust Estimation and Double Machine Learning</a></li></ul></div>
+<!-- /MATERIALS:4 -->
 
 <!-- READINGS:4 -->
 <div class="readings"><strong>Readings:</strong><ul><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/ahrens_et_al_2026_dml.pdf">Ahrens Et Al 2026 Dml</a></li><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/athey_imbens_wager_2018_approximate_residual.pdf">Athey Imbens Wager 2018 Approximate Residual</a></li><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/chern_et_al_2018_dml_structural.pdf">Chern Et Al 2018 Dml Structural</a></li><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/glynn_quinn_2010_augmented_inverse_propensity.pdf">Glynn Quinn 2010 Augmented Inverse Propensity</a></li><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/kennedy_2024_semiparametric_doubly_robust.pdf">Kennedy 2024 Semiparametric Doubly Robust</a></li></ul></div>

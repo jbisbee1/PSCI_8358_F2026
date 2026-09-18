@@ -695,7 +695,6 @@ E[Y(1)].
 <p>Fit <span class="math inline">\(\hat\mu(X)\)</span> on the full sample; evaluate <span class="math inline">\(Y_i - \hat\mu(X_i)\)</span> on the <strong>same units</strong>.</p>
 <p>Residuals shrink toward zero — the model memorized <span class="math inline">\(Y_i\)</span>.</p>
 <p><strong>Bias that does not vanish as <span class="math inline">\(n \to \infty\)</span>.</strong></p>
-<p><em>Regularization bias — the other failure mode from the previous slide — gets its own worked concrete treatment later (“Why the naive score fails” and after), once Neyman orthogonality gives us the tools to see exactly where it comes from.</em></p>
 </section>
 <section id="what-does-ocdot-mean" class="slide level2">
 <h2>What does <span class="math inline">\(O(\cdot)\)</span> mean?</h2>
@@ -819,7 +818,7 @@ M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}
 <p><span class="math display">\[
 \Rightarrow\; M(\hat\eta) = O\big((\hat\eta-\eta_0)^2\big)
 \]</span></p>
-<p><strong>Quadratic in the mistake, not linear.</strong> This is where <span class="math inline">\(O_p(n^{-1/4})\times O_p(n^{-1/4})=O_p(n^{-1/2})\)</span> comes from, a few slides ahead.</p>
+<p><strong>Quadratic in the mistake, not linear.</strong> This is exactly why two <span class="math inline">\(O_p(n^{-1/4})\)</span> nuisance errors can combine into an <span class="math inline">\(O_p(n^{-1/2})\)</span> causal estimate.</p>
 </section>
 <section id="making-derivatives-precise" class="slide level2">
 <h2>Making derivatives precise</h2>
@@ -844,7 +843,7 @@ M(\hat\eta) = \underbrace{M(\eta_0)}_{=0} + \underbrace{\partial_\eta M(\eta_0)}
 </section>
 <section id="why-the-naive-score-fails" class="slide level2">
 <h2>Why the naive score fails</h2>
-<p>Same question, for a score that is <strong>not</strong> orthogonal — the plain outcome-regression score, using the <strong>same <span class="math inline">\(\mu_1,\mu_0\)</span></strong> from “Outcome regression” several slides back. (Note: <span class="math inline">\(\pi(X)\)</span> never enters this score at all.)</p>
+<p>Same question, for a score that is <strong>not</strong> orthogonal — the plain outcome-regression score, using the <strong>same <span class="math inline">\(\mu_1,\mu_0\)</span></strong> defined in outcome regression. (Note: <span class="math inline">\(\pi(X)\)</span> never enters this score at all.)</p>
 <p><span class="math display">\[
 \psi(W;\theta,\mu) = \mu_1(X)-\mu_0(X)-\theta
 \]</span></p>
@@ -963,7 +962,7 @@ O_p(n^{-1/4}) \times O_p(n^{-1/4}) = O_p(n^{-1/2}).
 </section>
 <section id="when-does-dml-work" class="slide level2">
 <h2>When does DML work?</h2>
-<p>Write <span class="math inline">\(\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)\)</span> — the score, evaluated at the truth (same <span class="math inline">\(\psi\)</span> as always, just a shorter name for it here). (<span class="math inline">\(\|\cdot\|_2\)</span> below is the same function-gap idea as “Measuring the function gap” — literally its square root, <span class="math inline">\(\|\hat\mu-\mu_0\|_2 = \sqrt{\|\hat\mu-\mu_0\|^2}\)</span> — just written as the norm itself rather than its square.)</p>
+<p>Write <span class="math inline">\(\phi_0(W_i) \equiv \psi(W_i;\theta_0,\eta_0)\)</span> — the score, evaluated at the truth (same <span class="math inline">\(\psi\)</span> as always, just a shorter name for it here). (<span class="math inline">\(\|\hat\mu-\mu_0\|_2\)</span> is the same function-gap idea as <span class="math inline">\(\|\hat\mu-\mu_0\|^2\)</span>, just the norm itself, <span class="math inline">\(\sqrt{\|\hat\mu-\mu_0\|^2}\)</span>, rather than its square.)</p>
 <p><span class="math display">\[
 \hat\theta_{DML} - \theta_0 = \frac{1}{N}\sum_{i=1}^N \phi_0(W_i) + R_N, \qquad R_N = O_p\big(\|\hat\mu-\mu_0\|_2\,\|\hat\pi-\pi_0\|_2\big)
 \]</span></p>
