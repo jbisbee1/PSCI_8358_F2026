@@ -193,31 +193,49 @@ $$
 
 ## How this corrects mistakes
 
-- $\hat\mu_1,\hat\mu_0$ **correct** ⇒ $E[Y_i - \hat{\mu}_1(X_i)] = 0$: correction is pure noise
+- $\hat\mu_1,\hat\mu_0$ **correct, $\hat\pi$ wrong:** $E[D(Y-\mu_1(X))\mid X]=0$, so the correction term is mean-zero noise — whatever $\hat\pi$ is
 - $\hat\mu_1,\hat\mu_0$ **wrong, $\hat\pi$ right:** reweighted residuals recover exactly the missing piece
+
+The next slides prove the second bullet for the treated half of the estimator. The first bullet then falls out in one line.
 
 ---
 
-## Proof
+## Proof: setup and claim
 
-Condition on $X$ and define $E[D|X] = P(D=1|X) = \pi(X)$ and $E[Y|D=1,X] = \mu_1(X)$
+Work with the **treated half** of AIPW (controls are the mirror image):
 
 $$
-E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right].
+\psi_1 \;=\; \hat\mu_1(X) + \frac{D\big(Y-\hat\mu_1(X)\big)}{\hat\pi(X)}.
 $$
 
-#### Step 1: Evaluate the conditional expectation
+**Assumptions.** Consistency $Y = DY(1) + (1-D)Y(0)$; ignorability $Y(1) \perp D \mid X$; overlap $0 < \pi(X) < 1$.
+
+**Notation.** $\pi(X) = P(D=1\mid X) = E[D\mid X]$ and $\mu_1(X) = E[Y\mid D=1, X]$.
+
+**One more thing.** Treat $\hat\mu_1(\cdot)$ and $\hat\pi(\cdot)$ as *fixed* functions of $X$ — as if fit on a separate sample. (Cross-fitting, later, is what makes this legitimate.)
+
+**Claim.** $E[\psi_1] = E[Y(1)]$ whenever $\hat\pi = \pi$, for *any* $\hat\mu_1$.
+
+---
+
+## Step 1: Condition on $X$
+
+Start with the numerator of the correction term:
 
 $$
 \begin{aligned}
 E\left[D\left(Y-\hat\mu_1(X)\right)\mid X\right]
-&= E[DY\mid X]
-   - E[D\hat\mu_1(X)\mid X] \\
-&= \pi(X)\mu_1(X)
-   - \pi(X)\hat\mu_1(X) \\
+&= E[DY\mid X] - E[D\,\hat\mu_1(X)\mid X] \
+&= \pi(X)\mu_1(X) - \hat\mu_1(X)\,E[D\mid X] \
+&= \pi(X)\mu_1(X) - \pi(X)\hat\mu_1(X) \
 &= \pi(X)\left(\mu_1(X)-\hat\mu_1(X)\right).
 \end{aligned}
 $$
+
+Two moves in the second line:
+
+- $E[DY\mid X] = P(D=1\mid X)\,E[Y\mid D=1,X] + P(D=0\mid X)\,E[0\mid D=0,X] = \pi(X)\mu_1(X)$
+- $\hat\mu_1(X)$ is a function of $X$ alone, so it comes out of the conditional expectation
 
 Expected treated residual = model error × probability of treatment.
 
@@ -225,62 +243,35 @@ Expected treated residual = model error × probability of treatment.
 
 ## Step 2: Divide by $\pi(X)$
 
-$$
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\mid X
-\right].
-$$
+Now set $\hat\pi = \pi$ (the "propensity right" case). $1/\pi(X)$ is also a function of $X$ alone, so it comes out too:
 
 $$
 \begin{aligned}
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\mid X
-\right]
-&=
-\frac{1}{\pi(X)}
-E[D(Y-\hat\mu_1(X))\mid X] \\
-&=
-\frac{1}{\pi(X)}
-\pi(X)(\mu_1(X)-\hat\mu_1(X)) \\
-&=
-\mu_1(X)-\hat\mu_1(X).
+E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)}\;\middle|\; X\right]
+&= \frac{1}{\pi(X)}\,E[D(Y-\hat\mu_1(X))\mid X] \
+&= \frac{1}{\pi(X)}\,\pi(X)\left(\mu_1(X)-\hat\mu_1(X)\right) \
+&= \mu_1(X)-\hat\mu_1(X).
 \end{aligned}
 $$
 
-Removes the $\pi(X)$ scaling.
+Dividing by $\pi(X)$ undoes the $\pi(X)$ scaling from Step 1. Overlap ($\pi(X) > 0$) is what makes the division legal.
 
 ---
 
 ## Step 3: Average over $X$
 
+Law of iterated expectations, $E[\,\cdot\,] = E_X\big[E[\,\cdot \mid X]\big]$:
+
 $$
 \begin{aligned}
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\right]
-&=
-E_X\left[
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\mid X
-\right]
-\right] \\
-&=
-E_X[\mu_1(X)-\hat\mu_1(X)].
+E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)}\right]
+&= E_X\left[E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)}\;\middle|\; X\right]\right] \
+&= E_X\left[\mu_1(X)-\hat\mu_1(X)\right] \
+&= E_X[\mu_1(X)] - E_X[\hat\mu_1(X)].
 \end{aligned}
 $$
 
-Equivalently,
-
-$$
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\right]
-=
-E_X[\mu_1(X)]-E_X[\hat\mu_1(X)].
-$$
+The correction term, on average, equals the average error of the outcome model.
 
 ---
 
@@ -288,89 +279,103 @@ $$
 
 $$
 \begin{aligned}
-E_X[\hat\mu_1(X)]
-&+
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\right] \\
-&=
-E_X[\hat\mu_1(X)]
-+
-E_X[\mu_1(X)-\hat\mu_1(X)] \\
-&=
-E_X[\mu_1(X)].
+E[\psi_1]
+&= E_X[\hat\mu_1(X)] + E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)}\right] \
+&= E_X[\hat\mu_1(X)] + E_X[\mu_1(X)] - E_X[\hat\mu_1(X)] \
+&= E_X[\mu_1(X)].
 \end{aligned}
 $$
 
-$\hat\mu_1(X)$ cancels.
+$\hat\mu_1$ cancels. However wrong the outcome model is, the correction term pays back exactly its average error.
+
+Left to show: $E_X[\mu_1(X)] = E[Y(1)]$. That is identification, not estimation.
 
 ---
 
-## Step 5: Connect to POs
+## Step 5: Connect to potential outcomes
+
+By definition, $\mu_1(X) = E[Y\mid D=1,X]$.
+
+**Consistency:** $Y = DY(1) + (1-D)Y(0)$, so on the event $D=1$, $Y = Y(1)$:
 
 $$
-\mu_1(X)=E[Y\mid D=1,X].
+\mu_1(X) = E[Y(1)\mid D=1,X].
 $$
 
-Consistency:
+**Conditional ignorability:** $Y(1)\perp D\mid X$, so conditioning on $D=1$ changes nothing:
 
 $$
-Y=Y(1) \qquad \text{when } D=1, ~~\text{so}~~~\mu_1(X)
-=
-E[Y(1)\mid D=1,X].
+E[Y(1)\mid D=1,X] = E[Y(1)\mid X].
 $$
 
-Under conditional ignorability,
+Therefore
 
 $$
-Y(1)\perp D\mid X,
-$$
-
-which implies
-
-$$
-E[Y(1)\mid D=1,X]
-=
-E[Y(1)\mid X].
-$$
-
-Therefore,
-
-$$
-\mu_1(X)=E[Y(1)\mid X].
+\mu_1(X) = E[Y(1)\mid X].
 $$
 
 ---
 
-## Step 6: Average over $X$
+## Step 6: Average over $X$ once more
 
 $$
-\begin{aligned}
-E_X[\mu_1(X)]
-&=
-E_X\left[E[Y(1)\mid X]\right] \\
-&=
-E[Y(1)].
-\end{aligned}
+E_X[\mu_1(X)] = E_X\big[E[Y(1)\mid X]\big] = E[Y(1)].
 $$
+
+Chain everything together:
 
 $$
 \boxed{
-\begin{aligned}
-E_X[\hat\mu_1(X)]
-&+
-E\left[
-\frac{D(Y-\hat\mu_1(X))}{\pi(X)}
-\right] \\
-&=
-E_X[\mu_1(X)] \\
-&=
-E_X\left[E[Y(1)\mid X]\right] \\
-&=
-E[Y(1)].
-\end{aligned}
+E[\psi_1]
+= E_X[\hat\mu_1(X)] + E\left[\frac{D(Y-\hat\mu_1(X))}{\pi(X)}\right]
+= E_X[\mu_1(X)]
+= E[Y(1)]
 }
 $$
+
+**Controls, by symmetry:** replace $D \to 1-D$, $\hat\mu_1 \to \hat\mu_0$, $\pi \to 1-\pi$ to get $E[\psi_0] = E[Y(0)]$.
+
+So $E[\psi_1 - \psi_0] = E[Y(1)] - E[Y(0)] = \tau$, and $\hat\tau_{AIPW}$ is the sample mean of $\psi_1 - \psi_0$. $\blacksquare$ (for the $\hat\pi$-right case)
+
+---
+
+## The other case: $\hat\mu_1$ right, $\hat\pi$ wrong
+
+Rerun Step 1 with $\hat\mu_1 = \mu_1$:
+
+$$
+E\left[D\left(Y-\mu_1(X)\right)\mid X\right] = \pi(X)\left(\mu_1(X)-\mu_1(X)\right) = 0.
+$$
+
+Now divide by *any* fixed $\hat\pi(X)$ bounded away from 0. It comes out of the conditional expectation, and zero times anything is zero:
+
+$$
+E\left[\frac{D(Y-\mu_1(X))}{\hat\pi(X)}\;\middle|\; X\right] = \frac{1}{\hat\pi(X)}\cdot 0 = 0.
+$$
+
+So $E[\psi_1] = E_X[\mu_1(X)] + 0 = E[Y(1)]$ by Steps 5–6. The correction is mean-zero noise, exactly as claimed. $\blacksquare$
+
+---
+
+## Both cases at once: the bias is a product
+
+Drop both assumptions. Condition on $X$ with arbitrary $\hat\mu_1$ and $\hat\pi$ (Steps 1–2 with $\hat\pi$ in the denominator):
+
+$$
+E[\psi_1 \mid X] = \hat\mu_1(X) + \frac{\pi(X)}{\hat\pi(X)}\big(\mu_1(X)-\hat\mu_1(X)\big).
+$$
+
+Subtract the target $E[Y(1)\mid X] = \mu_1(X)$ and factor:
+
+$$
+\boxed{
+E[\psi_1\mid X] - E[Y(1)\mid X]
+= \big(\mu_1(X)-\hat\mu_1(X)\big)\cdot\frac{\pi(X)-\hat\pi(X)}{\hat\pi(X)}
+}
+$$
+
+- Outcome-model error **times** propensity error. Either factor zero ⇒ bias zero. That *is* double robustness.
+- Both factors small but nonzero ⇒ bias is **second order** in the nuisance errors. Hold that thought: it is the whole DML rate argument.
 
 ---
 
