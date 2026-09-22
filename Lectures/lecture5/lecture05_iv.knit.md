@@ -133,20 +133,11 @@ for any $\pi_d$. Under constant effects, defiers cancel exactly. Monotonicity is
 
 ## What heterogeneity costs: R
 
-```{r}
-#| eval: false
-# Population shares and subgroup effects
-pi_c <- 0.4; tau_c <- 2
-pi_d <- 0.1; tau_d <- -8
 
-itt_y <- pi_c * tau_c - pi_d * tau_d
-itt_d <- pi_c - pi_d
-wald  <- itt_y / itt_d
+::: {.cell}
 
-c(itt_y = itt_y, itt_d = itt_d, wald = wald)
-#>  itt_y  itt_d   wald
-#>    1.6    0.3   5.33
-```
+:::
+
 
 The complier effect is 2. The defier effect is $-8$. The Wald estimate, 5.33, lies outside the range of both — not a weighted average of any real subgroup effect, because the defier weight in the ratio is effectively negative.
 
@@ -218,7 +209,7 @@ $$
 ITT_Y = E[Y_i\mid Z_i=1]-E[Y_i\mid Z_i=0]
 $$
 
-**Independence** makes type shares equal across the $Z=1$ and $Z=0$ groups — two random samples of the same population. This lets us decompose the contrast by type:
+**Independence** makes type shares equal across the $Z=1$ and $Z=0$ groups — two random samples of the same population, in Samii's phrasing. This lets us decompose the contrast by type:
 
 $$
 ITT_Y = \sum_{t\in\{c,a,n\}} \pi_t\Big(E[Y_i\mid Z_i=1,t] - E[Y_i\mid Z_i=0,t]\Big)
@@ -271,50 +262,21 @@ $\kappa_i=1$ when $(Z_i,D_i)=(1,1)$ or $(0,0)$; $\kappa_i<0$ when $(Z_i,D_i)=(1,
 
 ## Worked in R: setting up $\kappa$
 
-```{r}
-#| eval: false
-# Simulated population: compliers, always-takers, never-takers,
-# each with a different covariate distribution. Random
-# assignment of Z means the always-/never-taker X distribution
-# does not depend on Z -- that is what kappa exploits.
 
-dat_kappa <- tibble(
-  type = sample(c("complier", "always", "never"),
-                 N2, replace = TRUE, prob = c(0.5, 0.25, 0.25)),
-  X = case_when(
-    type == "complier" ~ rnorm(N2, 40, 8),
-    type == "always"   ~ rnorm(N2, 60, 8),
-    type == "never"    ~ rnorm(N2, 20, 8)
-  ),
-  Z = rbinom(N2, 1, p_z)
-) %>%
-  mutate(D = case_when(
-    type == "always" ~ 1,
-    type == "never"  ~ 0,
-    type == "complier" ~ Z
-  ))
-```
+::: {.cell}
+
+:::
+
 
 ---
 
 ## Worked in R: computing and using $\kappa$
 
-```{r}
-#| eval: false
-dat_kappa <- dat_kappa %>%
-  mutate(kappa = 1 - D * (1 - Z) / (1 - p_z) - (1 - D) * Z / p_z)
 
-complier_mean_X_hat <- with(dat_kappa, sum(kappa * X) / sum(kappa))
+::: {.cell}
 
-complier_mean_X_true <- dat_kappa %>%
-  filter(type == "complier") %>%
-  summarize(mean(X)) %>%
-  pull()
+:::
 
-c(kappa_estimate = complier_mean_X_hat, truth = complier_mean_X_true)
-#> kappa_estimate          truth
-#>           40.0           40.0
-```
 
 Type is never used in the estimate, only to check it. `toy_data_iv.R`, section 2, runs the full simulation.
 
@@ -378,22 +340,11 @@ Kitagawa (2015) extends this to continuous $Y$: $f(y,D{=}1\mid Z{=}1)$ must domi
 
 ## Worked in R: the Kitagawa check
 
-```{r}
-#| eval: false
-kit_tab <- tribble(
-  ~y,     ~p_y_d1_z1, ~p_y_d1_z0, ~p_y_d0_z1, ~p_y_d0_z0,
-  "low",   0.10,       0.05,       0.25,       0.30,
-  "mid",   0.20,       0.15,       0.10,       0.20,
-  "high",  0.30,       0.20,       0.05,       0.10
-)
 
-kit_tab %>%
-  mutate(
-    d1_dominance_holds = p_y_d1_z1 >= p_y_d1_z0,
-    d0_dominance_holds = p_y_d0_z0 >= p_y_d0_z1
-  )
-#> # all TRUE: data pass the test
-```
+::: {.cell}
+
+:::
+
 
 Flip one cell — $P(Y{=}\text{high},D{=}1\mid Z{=}1)$ at 0.15 instead of 0.30 — and `d1_dominance_holds` turns `FALSE` at `high`. `toy_data_iv.R`, section 3, runs both versions.
 
@@ -421,26 +372,11 @@ $$
 
 ## Worked in R: Conley bounds
 
-```{r}
-#| eval: false
-theta_hat_2sls <- 2.0
-pi_first_stage <- 0.5
 
-conley_bounds <- function(gamma_max, theta_hat, pi_fs) {
-  tibble(gamma_max = gamma_max,
-         lower = theta_hat - gamma_max / pi_fs,
-         upper = theta_hat + gamma_max / pi_fs)
-}
+::: {.cell}
 
-map_dfr(c(0, 0.1, 0.25, 0.5, 1.0), conley_bounds,
-        theta_hat = theta_hat_2sls, pi_fs = pi_first_stage)
-#> gamma_max lower upper
-#>      0.00   2.0   2.0
-#>      0.10   1.8   2.2
-#>      0.25   1.5   2.5
-#>      0.50   1.0   3.0
-#>      1.00   0.0   4.0
-```
+:::
+
 
 At $\gamma_{\max}=1.0$ the identified set touches zero — the conclusion does not survive a direct effect that large. The bound $\gamma_{\max}$ is a substantive claim, defended the way exclusion itself is defended, not read off the data.
 
@@ -536,3 +472,4 @@ $$
 $$
 
 Next time: what happens when the instrument has to be built rather than found.
+
