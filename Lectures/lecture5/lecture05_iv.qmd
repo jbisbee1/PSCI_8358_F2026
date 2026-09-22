@@ -25,31 +25,27 @@ Lectures 3–4 covered selection on observables: identification, conditioning, c
 
 . . .
 
-Every one of those tools shares a single load-bearing assumption: we have measured enough of $X$ to make $D$ as good as random.
+All of that work rests on one assumption: that we have measured enough of $X$ to make $D$ as good as randomly assigned, conditional on $X$.
 
 . . .
 
-> What do we do when we don't believe that?
-
-Today's answer is instrumental variables — a genuinely different identification argument, not a fancier estimator.
+Today we ask what to do when we do not believe that. The answer is instrumental variables, which is a different identification argument, not a better way of estimating the same one.
 
 ---
 
 ## Today's plan
 
-1. Two-slide recap: what DML fixed, and what it left alone
-2. The textbook, constant-effects IV model — and exactly what it's assuming
-3. Potential-outcomes IV: LATE and compliers
-4. Characterizing compliers: Abadie's $\kappa$, worked in R
-5. What 2SLS estimates once effects are heterogeneous
+1. A short recap of what DML fixed last time, and what it left untouched
+2. The textbook, constant-effects IV model, and what that assumption is doing for it
+3. The potential-outcomes formulation of IV: LATE and compliers
+4. Characterizing compliers using Abadie's $\kappa$, worked through in R
+5. What 2SLS estimates once we allow heterogeneous effects
 6. Weak instruments
-7. Testing IV validity, and — separately — living with what you can't test
-
-We'll build each piece from a question, not hand you the formula first.
+7. Testing IV validity where we can, and assessing sensitivity where we cannot
 
 ---
 
-## Recap: the assumption Lectures 1–4 ran on
+## Recap: the assumption Lectures 1–4 relied on
 
 $$
 (Y(1),Y(0)) \perp D \mid X, \qquad 0 < P(D=1\mid X) < 1.
@@ -57,11 +53,11 @@ $$
 
 . . .
 
-Everything in Lecture 4 — AIPW, double robustness, Neyman orthogonality, cross-fitting — sits on top of this line. None of it questions the line.
+Everything in Lecture 4 — AIPW, double robustness, Neyman orthogonality, cross-fitting — is built on top of this line. None of those tools has anything to say about whether the line itself is true.
 
 . . .
 
-DML answers a narrower question: *given* that this assumption holds, how do we estimate well with flexible, high-dimensional $X$?
+DML answers a narrower question than identification: given that conditional ignorability holds, how do we estimate the resulting treatment effect well when $X$ is high-dimensional?
 
 ---
 
@@ -77,67 +73,67 @@ $$
 
 . . .
 
-If $D$ and $Y$ share a confounder that isn't in $X$, DML doesn't fail loudly. It returns a precise, confident, wrong number.
+If $D$ and $Y$ share a confounder that is not in $X$, DML does not fail in any way you would notice. It returns a precise, confident estimate that is simply wrong.
 
 . . .
 
-So: what do we do when we don't believe we've measured everything that confounds $D$ and $Y$?
+So the question for today is what identifying variation we can use when we do not believe we have measured everything that confounds $D$ and $Y$.
 
 ---
 
-## A confounder that stays hidden
+## A confounder that will not go away
 
-Take the classic case: schooling and wages, confounded by ability.
-
-. . .
-
-Test scores, family background, school quality — plausible proxies, all of them. None of them *is* ability.
+Consider the standard example: schooling and wages, confounded by ability.
 
 . . .
 
-Adding more covariates doesn't rescue us here. It's not a specification problem. If the confounder isn't in $X$, no amount of $X$ closes it off — DML included.
+Test scores, family background, and school quality are all plausible proxies for ability, but none of them is ability itself.
 
 . . .
 
-Selection on observables isn't an option in this setting. Not because the estimator is bad — because the identifying assumption isn't credible. We need a different source of identifying variation altogether.
+Adding more covariates does not solve this. The problem is not a specification choice we got wrong; it is that the confounder is not in $X$ at all, and no flexible model of $X$ — including a DML one — can adjust for a variable it never sees.
+
+. . .
+
+In this setting, selection on observables is not available to us. That is not a criticism of any particular estimator; it means the identifying assumption itself is not credible here, and we need a different source of identifying variation.
 
 ---
 
 ## The instrumental-variables idea
 
-Find a variable $Z$ that satisfies three things.
+We look for a variable $Z$ that satisfies three conditions.
 
 . . .
 
-**1. Relevance.** $Z$ moves $D$.
+First, relevance: $Z$ moves $D$.
 
 . . .
 
-**2. Independence.** $Z$ is as good as randomly assigned.
+Second, independence: $Z$ is as good as randomly assigned.
 
 . . .
 
-**3. Exclusion.** $Z$ affects $Y$ only through $D$.
+Third, exclusion: $Z$ affects $Y$ only through $D$.
 
 ---
 
-## What having such a $Z$ buys you
+## What such a $Z$ gives us
 
-If $Z$ satisfies all three, we can use the variation in $D$ that $Z$ drives — and that variation is not confounded, because $Z$ itself is not.
-
-. . .
-
-Notice what this is *not*: we are not conditioning our way out of confounding, the way Lectures 1–4 tried to. We are substituting a clean source of variation in $D$ for the murky, possibly-confounded variation we were stuck with before.
+If all three conditions hold, we can use the variation in $D$ that $Z$ generates, and that variation is not confounded, because $Z$ itself is not.
 
 . . .
 
-That substitution is the whole idea. Everything else today is about what it costs and what it buys.
+This is worth pausing on, because it is a different move from Lectures 1–4. There we tried to condition our way out of confounding by controlling for $X$. Here we are not conditioning at all; we are replacing the confounded variation in $D$ we cannot use with a different, unconfounded source of variation in $D$ that we can.
+
+. . .
+
+Everything else today is about what that replacement costs, in the form of new assumptions, and what it buys, in the form of a causal estimate we can trust.
 
 ---
 
 ## The textbook IV model
 
-Start where most people start — the model you'd see in a first-year econometrics course:
+Begin with the version most people meet first, in a standard econometrics course:
 
 $$
 Y_i = \alpha + \theta D_i + \varepsilon_i, \qquad D_i = \pi_0 + \pi_1 Z_i + \nu_i
@@ -151,13 +147,13 @@ $$
 
 . . .
 
-and — read past it once, because we're about to stop reading past it — $\theta_i = \theta$ for every unit $i$.
+and one assumption that is easy to read past without noticing: $\theta_i = \theta$ for every unit $i$. The treatment effect is the same for everyone.
 
 ---
 
 ## The 2SLS estimator
 
-Under that model,
+Under that model, the two-stage least squares estimator is
 
 $$
 \hat\theta_{2SLS} = \frac{\text{Cov}(Z,Y)}{\text{Cov}(Z,D)}
@@ -165,36 +161,32 @@ $$
 
 . . .
 
-Clean formula. One coefficient. Feels like it should just work.
-
-. . .
-
-Here's the question for the next several slides: what is the constant-effects line — $\theta_i=\theta$ for everyone — actually buying you? What breaks if it's false?
+The question for the next several slides is what that constant-effects assumption is actually buying us, and what happens to this estimator once it is false.
 
 ---
 
-## Suppose we don't assume constant effects
+## Suppose effects are not constant
 
-Let $\tau_i = Y_i(1)-Y_i(0)$ — possibly different for every unit.
-
-. . .
-
-Split the population by how each unit's treatment responds to $Z$. Four logical types:
+Let $\tau_i = Y_i(1)-Y_i(0)$, allowed to differ across units.
 
 . . .
 
-- **complier** — takes $D=1$ only if $Z=1$
-- **defier** — takes $D=1$ only if $Z=0$
-- **always-taker** — takes $D=1$ regardless of $Z$
-- **never-taker** — takes $D=0$ regardless of $Z$
+Split the population by how each unit's treatment status responds to $Z$. There are four logically possible types:
 
 . . .
 
-Don't assume any of these types is empty yet. We're being deliberately permissive.
+- a **complier** takes $D=1$ only if $Z=1$
+- a **defier** takes $D=1$ only if $Z=0$
+- an **always-taker** takes $D=1$ regardless of $Z$
+- a **never-taker** takes $D=0$ regardless of $Z$
+
+. . .
+
+For now we assume none of these groups is empty. We will come back to whether that is reasonable.
 
 ---
 
-## Building the reduced form, one type at a time
+## Building the reduced form by type
 
 $$
 ITT_Y \equiv E[Y_i\mid Z_i=1]-E[Y_i\mid Z_i=0]
@@ -202,11 +194,11 @@ $$
 
 . . .
 
-Always-takers and never-takers: their treatment status doesn't move with $Z$ at all, so — under exclusion — their contribution to this contrast is zero. (We'll prove this properly in a few slides; take it on faith for now.)
+For always-takers and never-takers, treatment status does not respond to $Z$ at all, so under exclusion their outcomes do not respond to $Z$ either — their contribution to this contrast is zero. We will prove this carefully in a few slides; for now, take it as given.
 
 . . .
 
-Compliers and defiers are the only types left standing:
+That leaves compliers and defiers:
 
 $$
 ITT_Y = \pi_c\,E[\tau\mid c] \;-\; \pi_d\,E[\tau\mid d]
@@ -214,11 +206,11 @@ $$
 
 . . .
 
-The minus sign on the defier term isn't decoration — defiers move *opposite* the instrument, so their contribution flips sign.
+The defier term enters with a minus sign because defiers move opposite the instrument: when $Z$ turns on, a defier's treatment status turns off, so their contribution to the contrast is reversed.
 
 ---
 
-## The first stage, same logic
+## The first stage, by the same logic
 
 $$
 ITT_D \equiv E[D_i\mid Z_i=1]-E[D_i\mid Z_i=0] = \pi_c - \pi_d
@@ -226,11 +218,11 @@ $$
 
 . . .
 
-Compliers add a unit of $D$ when $Z$ turns on. Defiers subtract one. Always- and never-takers contribute nothing, same as before.
+Compliers add one unit of treatment when $Z$ switches on; defiers subtract one; always-takers and never-takers contribute nothing, as before.
 
 . . .
 
-Now put the two together — this ratio is what 2SLS actually computes:
+Putting the two together gives the ratio that 2SLS actually computes:
 
 $$
 \hat\theta_{2SLS} \;=\; \frac{ITT_Y}{ITT_D} \;=\; \frac{\pi_c E[\tau\mid c] - \pi_d E[\tau\mid d]}{\pi_c - \pi_d}
@@ -238,9 +230,9 @@ $$
 
 ---
 
-## Now bring back constant effects
+## Reintroducing constant effects
 
-If $\tau_i = \theta$ for *every* unit — compliers and defiers alike — then $E[\tau\mid c] = E[\tau\mid d] = \theta$.
+If $\tau_i = \theta$ for every unit, compliers and defiers included, then $E[\tau\mid c] = E[\tau\mid d] = \theta$.
 
 . . .
 
@@ -250,27 +242,27 @@ $$
 
 . . .
 
-for **any** value of $\pi_d$. The defier share cancels out of the ratio completely.
+for any value of $\pi_d$: the defier share cancels out of the ratio entirely.
 
 . . .
 
 ::: {.callout-note}
-Under constant effects, it doesn't matter whether defiers exist. Monotonicity is not needed. This is the whole reason the textbook model never mentions it.
+Under constant effects, it does not matter whether defiers are present in the population. The textbook model never has to rule them out, because their presence has no effect on what 2SLS recovers.
 :::
 
 ---
 
-## What happens once effects differ
+## What changes once effects differ
 
-Drop constant effects, keep some defiers around, and give compliers and defiers genuinely different effects.
-
-. . .
-
-Say $\pi_c=0.4$ with $E[\tau\mid c]=2$, and a small defier share $\pi_d=0.1$ with $E[\tau\mid d]=-8$.
+Now drop constant effects, and let compliers and defiers have genuinely different average treatment effects, with defiers still present.
 
 . . .
 
-We'll compute the Wald ratio in R rather than by hand — same formula, just let the arithmetic run.
+Take $\pi_c=0.4$ with $E[\tau\mid c]=2$, and a small defier share $\pi_d=0.1$ with $E[\tau\mid d]=-8$.
+
+. . .
+
+We will compute the resulting Wald ratio in R, using the same formula as before.
 
 ---
 
@@ -298,131 +290,135 @@ c(itt_y = itt_y, itt_d = itt_d, wald = wald)
 
 ---
 
-## Read that number again
+## What that number means
 
-The complier effect is 2. The defier effect is $-8$. The Wald estimate is **5.33**.
-
-. . .
-
-5.33 is not between $-8$ and $2$. It is not a weighted average of anything real in this population — because a weighted average of two numbers, with weights that sum to something between $0$ and $1$, cannot land outside the interval between them.
+The true complier effect is 2. The true defier effect is $-8$. The Wald estimate is 5.33.
 
 . . .
 
-The defier weight in this ratio is effectively negative. That's what lets the estimate escape the range of the true subgroup effects entirely.
+That value falls outside the interval $[-8,2]$. A weighted average of two numbers, with nonnegative weights summing to one, always lies between them; it cannot land outside their range. So 5.33 is not a weighted average of anything real in this population.
 
 . . .
 
-`toy_data_iv.R`, section 1, simulates this population directly at $N=100{,}000$ and confirms the same number — then drops the defiers and confirms the Wald estimator recovers $\tau_c=2$ exactly once they're gone.
+What has happened is that the defier weight in this ratio is effectively negative, because of the minus sign in $ITT_Y$ and $ITT_D$. A negative weight is what allows the ratio to escape the range of the true subgroup effects.
+
+. . .
+
+`toy_data_iv.R`, section 1, simulates this population directly at $N=100{,}000$ and reproduces this number, then removes the defiers and confirms that the Wald estimator recovers $\tau_c=2$ exactly once they are gone.
 
 ---
 
-## So heterogeneity isn't the problem, exactly
+## Locating the actual problem
 
-Heterogeneity alone doesn't break identification. What breaks it is heterogeneity *combined with* defiers.
+Heterogeneity on its own does not break identification. What breaks it is heterogeneity combined with the presence of defiers.
 
 . . .
 
-Rule out defiers — assume $D_i(1)\geq D_i(0)$ for everyone, "monotonicity" — and the cancellation from two slides ago goes through again, this time without needing constant effects at all.
+If we instead assume $D_i(1)\geq D_i(0)$ for every unit — no defiers, an assumption called monotonicity — the cancellation from two slides ago goes through again, without needing constant effects.
 
 . . .
 
 ::: {.callout-note}
-Constant effects makes an estimator's target well defined for free. Give it up, and you buy the interpretability back with a different assumption — monotonicity, not exclusion, not independence.
+Constant effects gives an estimator a well-defined target without any further assumptions. Give it up, and you have to buy that back with a different assumption. For 2SLS, the assumption that does the job is monotonicity, not exclusion or independence.
 :::
 
 ---
 
-## The parallel to Lecture 4
+## A parallel to Lecture 4
 
-This is the same shape of problem as $\hat\theta_R$ under OLS.
-
-. . .
-
-OLS needed full covariate interactions to avoid Aronow and Samii's variance-weighting result. The Wald estimator needs monotonicity to avoid this defier problem.
+This is the same kind of problem we saw with $\hat\theta_R$ under OLS.
 
 . . .
 
-Same lesson, different estimator: a convenient constant-effects assumption is quietly doing identification work. Once you drop it, something else has to do that work instead.
+There, OLS needed full covariate interactions to avoid the Aronow–Samii variance-weighting result. Here, the Wald estimator needs monotonicity to avoid the defier problem we just derived.
+
+. . .
+
+In both cases, a convenient constant-effects assumption was quietly carrying the identification work. Once we drop it, some other assumption has to take its place, and it is worth knowing exactly which one.
 
 ---
 
-## A cleaner formulation
+## Toward a cleaner formulation
 
-The type-by-type bookkeeping we just did — compliers, defiers, always-takers, never-takers — is really a potential-outcomes argument wearing a textbook-regression costume.
+The type-by-type argument we just went through — compliers, defiers, always-takers, never-takers — is a potential-outcomes argument, even though we built it inside a regression framework.
 
 . . .
 
-Angrist, Imbens & Rubin (1996) build it properly, with no constant-effects assumption anywhere. Let's redo the setup their way.
+Angrist, Imbens, and Rubin (1996) set up the same problem properly, in potential-outcomes notation from the start, with no constant-effects assumption anywhere. We redo the setup their way.
 
 ---
 
 ## Potential-outcomes IV: the setup
 
-Binary instrument $Z_i\in\{0,1\}$, binary treatment $D_i\in\{0,1\}$.
+Let $Z_i\in\{0,1\}$ be a binary instrument and $D_i\in\{0,1\}$ a binary treatment.
 
 . . .
 
-**Potential treatments:** $D_i(1)$, $D_i(0)$ — the treatment $i$ *would* take under each value of $Z$, only one of which we ever observe.
+The potential treatments are $D_i(1)$ and $D_i(0)$: the treatment status $i$ would have under each value of the instrument. We observe only one of these for any given unit.
 
 . . .
 
-**Potential outcomes, in general:** $Y_i(z,d)$ — indexed by both the instrument and the treatment, because in principle $Z$ could matter for reasons other than moving $D$.
+In general, the potential outcome is $Y_i(z,d)$, indexed by both the instrument and the treatment, since in principle $Z$ could affect $Y$ through some channel other than $D$.
 
 . . .
 
-Observed values: $D_i = D_i(Z_i)$, and $Y_i = Y_i\big(Z_i, D_i(Z_i)\big)$.
+What we observe is $D_i = D_i(Z_i)$ and $Y_i = Y_i\big(Z_i, D_i(Z_i)\big)$.
 
 ---
 
-## The four assumptions, one at a time
-
-**Independence.**
+## Independence
 
 $$
 \big(Y_i(1),Y_i(0),D_i(1),D_i(0)\big) \perp Z_i
 $$
 
-$Z$ carries no information about who a unit is, causally. This is the "as good as random" condition, and it is what a randomized encouragement design or a natural experiment is supposed to buy you.
+. . .
+
+$Z$ carries no information about a unit's potential outcomes or potential treatments. This is the formal statement of "as good as randomly assigned," and it is what a randomized encouragement design or a credible natural experiment is meant to deliver.
 
 ---
 
-## The four assumptions, one at a time
-
-**Exclusion.**
+## Exclusion
 
 $$
 Y_i(z,d) = Y_i(d) \quad \text{for all } z
 $$
 
-The two-argument $Y_i(z,d)$ collapses to a one-argument $Y_i(d)$. $Z$ has no path to $Y$ except through $D$. This is the assumption that cannot be tested directly — it has to be argued.
+. . .
+
+This collapses the two-argument potential outcome $Y_i(z,d)$ to a one-argument $Y_i(d)$: $Z$ has no path to $Y$ except through $D$.
+
+. . .
+
+Unlike independence, exclusion cannot be checked directly against data. It has to be argued from institutional knowledge of how $Z$ operates.
 
 ---
 
-## The four assumptions, one at a time
-
-**Relevance.**
+## Relevance and monotonicity
 
 $$
 E[D_i(1)] \neq E[D_i(0)]
 $$
 
-$Z$ actually moves $D$ on average. Directly testable — it's the first stage.
-
 . . .
 
-**Monotonicity.**
+Relevance says $Z$ moves $D$ on average, and it is directly testable — it is the first-stage regression.
+
+. . .
 
 $$
 D_i(1) \geq D_i(0) \quad \text{for all } i
 $$
 
-No defiers. This is new — the constant-effects model never needed it, for the reason we just derived.
+. . .
+
+Monotonicity says there are no defiers. This assumption has no counterpart in the textbook constant-effects model, for the reason we derived a few slides ago: under constant effects, defiers cancel out regardless of how many of them there are.
 
 ---
 
-## Naming the types again, properly
+## The four types, written out
 
-Type is defined by the pair $(D_i(1),D_i(0))$ — unobserved, since we only ever see $D_i(Z_i)$, never both potential treatments for the same unit.
+Type is defined by the pair $(D_i(1),D_i(0))$. It is unobserved, because for any unit we see only $D_i(Z_i)$, never both potential treatments.
 
 | $D_i(1)$ | $D_i(0)$ | $D_i(1)-D_i(0)$ | Type |
 |---|---|---|---|
@@ -437,17 +433,17 @@ Monotonicity rules out the last row.
 
 ---
 
-## Seeing the population split
+## The population split, visualized
 
 ![Population shares by compliance type, under each value of $Z$. Shaded = treated ($D=1$). Samii, Instrumental Variables II (2014), slide 13.](compliance_types_diagram.png){fig-align="center" width="62%"}
 
 . . .
 
-Read left to right. Moving from $Z=0$ to $Z=1$, the always-taker block stays shaded, the never-taker block stays unshaded — only the complier block switches. That switch is the entire source of identifying variation IV has to work with.
+Compare the two columns. Moving from $Z=0$ to $Z=1$, the always-taker block remains shaded and the never-taker block remains unshaded; only the complier block changes from unshaded to shaded. That change is the entire source of identifying variation available to an instrument.
 
 ---
 
-## Deriving LATE: where we start
+## Deriving LATE: the starting point
 
 $$
 ITT_Y = E[Y_i\mid Z_i=1]-E[Y_i\mid Z_i=0]
@@ -455,17 +451,17 @@ $$
 
 . . .
 
-We want to break this into a piece we understand (an average treatment effect for some subpopulation) plus pieces that vanish. Two assumptions, two different jobs.
+We want to decompose this into a term we can interpret as an average treatment effect for some subpopulation, plus terms that vanish. Two assumptions will do the two halves of that work, and it is worth being precise about which does which.
 
 ---
 
-## Step 1: independence lets us split by type
+## Step 1: independence lets us compare by type
 
-Independence says $Z_i \perp$ type. The $Z=1$ group and the $Z=0$ group have identical type composition — two random samples of the same population.
+Independence means $Z_i$ is independent of type, so the $Z=1$ group and the $Z=0$ group have the same type composition. They are two random samples from the same underlying population.
 
 . . .
 
-That licenses a decomposition by type:
+That justifies decomposing the contrast by type:
 
 $$
 ITT_Y = \sum_{t\in\{c,a,n\}} \pi_t\Big(E[Y_i\mid Z_i=1,t] - E[Y_i\mid Z_i=0,t]\Big)
@@ -473,63 +469,63 @@ $$
 
 . . .
 
-We still need to know what each of these type-conditional means *is*. That's exclusion's job, next.
+We still need to know what each of these type-conditional means equals. That is what exclusion tells us next.
 
 ---
 
-## Step 2: exclusion tells us what's inside each mean
+## Step 2: exclusion fixes what each mean equals
 
-Exclusion says $Y_i = Y_i\big(D_i(Z_i)\big)$ — realized outcome is a function of realized treatment alone, nothing else about $Z$.
+Exclusion says $Y_i = Y_i\big(D_i(Z_i)\big)$: realized outcome is a function of realized treatment only.
 
 . . .
 
-So within a type, we just need to track what $D_i(Z_i)$ equals as $Z$ moves from 0 to 1. That's mechanical, and it's different for each type.
+So within each type, all we need to track is what $D_i(Z_i)$ equals as $Z$ goes from 0 to 1, which is different for each of the three types.
 
 ---
 
 ## Step 3: the always-taker
 
-$D_i(1)=D_i(0)=1$ — realized treatment is 1 whether $Z=1$ or $Z=0$.
+For an always-taker, $D_i(1)=D_i(0)=1$: realized treatment is 1 whether $Z_i=1$ or $Z_i=0$.
 
 . . .
 
-By exclusion, $Y_i\mid Z=1 = Y_i(1)$ and $Y_i\mid Z=0 = Y_i(1)$ too.
+By exclusion, that means $Y_i\mid Z=1 = Y_i(1)$ and also $Y_i\mid Z=0 = Y_i(1)$, since realized treatment is 1 in both cases.
 
 . . .
 
-Same potential outcome on both sides. Contrast is zero.
+The two are the same potential outcome, so the contrast is zero for this type.
 
 . . .
 
-Notice *why*: it's because realized $d$ didn't move, not because $Z$ being random makes the two group means equal on its own. Independence and exclusion are doing genuinely different things here.
+The zero contrast comes from the fact that realized treatment does not move with $Z$ for an always-taker, combined with exclusion telling us that the outcome depends only on realized treatment. Independence alone, without exclusion, would not give us this result.
 
 ---
 
 ## Step 4: the never-taker
 
-$D_i(1)=D_i(0)=0$ — realized treatment is 0 under both values of $Z$.
+For a never-taker, $D_i(1)=D_i(0)=0$: realized treatment is 0 under both values of $Z$.
 
 . . .
 
-Same argument, mirror image: $Y_i\mid Z=1=Y_i(0)$ and $Y_i\mid Z=0=Y_i(0)$.
+The same argument applies with $Y_i(0)$ in place of $Y_i(1)$: $Y_i\mid Z=1=Y_i(0)$ and $Y_i\mid Z=0=Y_i(0)$.
 
 . . .
 
-Contrast is zero, for exactly the same reason as the always-taker.
+The contrast is zero, for the same reason as the always-taker.
 
 ---
 
 ## Step 5: the complier
 
-$D_i(1)=1,\;D_i(0)=0$ — this is the one type whose realized treatment actually responds to $Z$.
+For a complier, $D_i(1)=1$ and $D_i(0)=0$: this is the one type whose realized treatment status actually changes with $Z$.
 
 . . .
 
-$Y_i\mid Z=1 = Y_i(1)$, but $Y_i\mid Z=0 = Y_i(0)$.
+Here $Y_i\mid Z=1 = Y_i(1)$, while $Y_i\mid Z=0 = Y_i(0)$ — two different potential outcomes.
 
 . . .
 
-The contrast is $Y_i(1)-Y_i(0)$ — the unit-level treatment effect. Not zero. This is the only type contributing anything to $ITT_Y$.
+The contrast is $Y_i(1)-Y_i(0)$, the unit-level treatment effect. Compliers are the only type that contributes a nonzero term to $ITT_Y$.
 
 ---
 
@@ -547,53 +543,53 @@ $$
 
 . . .
 
-Same ratio as the textbook 2SLS formula. What's changed is that we now know exactly whose effect it is — and that knowing required both independence and exclusion, doing separate jobs, not one assumption standing in for both.
+This is the same ratio the textbook 2SLS formula computes. What we have added is a precise statement of whose effect it identifies, and a derivation showing that both independence and exclusion are needed to get there, doing two distinct jobs rather than one assumption standing in for both.
 
 ---
 
 ## Why always- and never-takers drop out
 
-Say this plainly, because it's the crux: those two types drop out because their realized treatment does not change with $Z$.
+The reason is that their realized treatment status does not change with $Z$.
 
 . . .
 
-Independence guarantees the always-taker subpopulation looks the same whether you condition on $Z=1$ or $Z=0$ — same size, same potential-outcome distribution.
+Independence guarantees that the always-taker subpopulation is the same whether we condition on $Z=1$ or $Z=0$: same size, same distribution of potential outcomes.
 
 . . .
 
-Exclusion then says that, given the same realized $d$, the outcome takes the same value regardless of $z$.
+Exclusion then guarantees that, given the same realized treatment, the outcome takes the same value regardless of what $Z$ happened to be.
 
 . . .
 
-Take either assumption away and the zero contrast doesn't follow. Both are load-bearing.
+Remove either assumption and the zero contrast no longer follows. Both are necessary for the result, not just convenient.
 
 ---
 
-## We just proved something narrower than it sounds
+## What LATE actually tells us
 
-A valid instrument does not identify "the effect of treatment." It identifies the effect **for compliers** — the one type whose behavior the instrument actually changes.
-
-. . .
-
-Always-takers and never-takers are invisible to IV. There is no variation in their treatment status for the instrument to exploit, so there is nothing IV can tell you about them.
+A valid instrument does not identify the effect of treatment in general. It identifies the effect for compliers: the one type whose treatment status the instrument actually changes.
 
 . . .
 
-Natural next question: since we can't point to who the compliers are, can we at least describe them?
+Always-takers and never-takers are invisible to an instrumental-variables design, because there is no variation in their treatment status for the instrument to exploit. IV can tell us nothing about the effect of treatment on either group.
+
+. . .
+
+That raises a natural next question. If we cannot point to which units are compliers, can we still say something about who they are?
 
 ---
 
 ## Characterizing compliers: the question
 
-Type is unobserved — no dataset has a "complier" column.
+Type is unobserved. No dataset has a column that says "complier."
 
 . . .
 
-But we do know the complier *share*: it's $ITT_D$. Can we go further and learn what compliers look like — their covariates, their outcomes — without ever labeling a single unit?
+We do know the complier share, since it equals $ITT_D$. The harder question is whether we can go further and describe what compliers look like — their covariates, their outcomes — without ever assigning a type label to any individual unit.
 
 . . .
 
-Abadie (2003): yes, using a clever reweighting.
+Abadie (2003) shows that we can, using a reweighting scheme.
 
 ---
 
@@ -615,27 +611,27 @@ $$
 
 . . .
 
-Every quantity on the right is observed. No type label required.
+Every term on the right-hand side is observed. Type never enters the calculation.
 
 ---
 
-## Reading $\kappa$ before computing it
+## Reading the weights before computing them
 
-$(Z_i,D_i)=(1,1)$ or $(0,0)$ — the two cells where a unit's behavior is at least *consistent* with being a complier: $\kappa_i=1$.
-
-. . .
-
-$(Z_i,D_i)=(1,0)$ or $(0,1)$ — the two cells that are impossible for a complier: $\kappa_i<0$.
+When $(Z_i,D_i)=(1,1)$ or $(0,0)$, a unit's behavior is at least consistent with being a complier, and $\kappa_i=1$.
 
 . . .
 
-Those negative weights aren't noise. They subtract off exactly the always-taker and never-taker contamination sitting in the two "consistent" cells — because some of the units with $(Z,D)=(1,1)$ are always-takers, not compliers, and this reweighting cancels their contribution in expectation.
+When $(Z_i,D_i)=(1,0)$ or $(0,1)$, a unit's behavior is inconsistent with being a complier, and $\kappa_i$ is negative.
+
+. . .
+
+The negative weights are doing real work, not just canceling noise. The two "consistent" cells also contain always-takers and never-takers — an always-taker with $Z=1$ looks the same as a complier with $Z=1$, both have $D=1$ — and the negative weights in the other two cells subtract off exactly that contamination, in expectation.
 
 ---
 
-## Setting up the check in R
+## Setting up a check in R
 
-We'll simulate a population where we *do* know type, purely so we can check that $\kappa$ recovers the truth without using that information.
+We will simulate a population where type is known to us, so that we can confirm $\kappa$ recovers the truth without ever using that information in the calculation.
 
 ```{r}
 #| eval: false
@@ -658,7 +654,7 @@ dat_kappa <- tibble(
 
 ---
 
-## Computing $\kappa$ and checking it
+## Computing $\kappa$ and checking the result
 
 ```{r}
 #| eval: false
@@ -684,113 +680,113 @@ c(kappa_estimate = complier_mean_X_hat, truth = complier_mean_X_true)
 
 . . .
 
-The word "complier" never appears on the left-hand side of the estimate. `toy_data_iv.R`, section 2, has the full simulation.
+The estimate uses `type` nowhere; it is included only to check the answer. `toy_data_iv.R`, section 2, has the full simulation.
 
 ---
 
 ## Using $\kappa$ on real data
 
-Set $g(Y,D,X)=X_j$ for each covariate in turn — compare complier means to full-sample means. Who does the instrument actually move?
+Setting $g(Y,D,X)=X_j$ for each covariate and comparing the resulting complier means to the full-sample means tells you who the instrument actually moves.
 
 . . .
 
-Set $g$ to the outcome, restricted appropriately to $D=1$ and $D=0$, to get complier outcome means under each arm.
+Setting $g$ to the outcome, restricted appropriately to $D=1$ and $D=0$, gives complier outcome means under each arm.
 
 . . .
 
-Report this alongside every LATE you publish. A LATE for a narrow, unrepresentative complier population is a different empirical finding from a LATE for a broadly representative one — even when the point estimate is identical.
+This is worth reporting alongside every LATE. A LATE estimated for a narrow, unrepresentative complier population is a different empirical finding from one estimated for a broadly representative population, even when the point estimate is identical.
 
 ---
 
-## Back to 2SLS: the single-instrument case
+## Returning to 2SLS: the single-instrument case
 
-With one binary instrument and no covariates, we've now shown 2SLS equals the Wald ratio equals the LATE for that instrument's compliers.
+With one binary instrument and no covariates, we have now shown that 2SLS equals the Wald ratio, which equals the LATE for that instrument's compliers.
 
 . . .
 
-Real applications rarely stop there — covariates, multiple instruments, continuous instruments. Does the clean interpretation survive?
+Most applications do not stop there — they add covariates, use multiple instruments, or work with a continuous instrument. The question is whether the clean interpretation survives.
 
 ---
 
 ## 2SLS with covariates or multiple instruments
 
-Not cleanly. 2SLS becomes a weighted average of LATEs across different complier subpopulations, with weights proportional to each subgroup's share of first-stage variance.
+It does not, in general. 2SLS becomes a weighted average of LATEs across different complier subpopulations, with weights proportional to each subgroup's share of first-stage variance.
 
 . . .
 
-That's the same variance-weighting logic behind $\hat\theta_R$ in Lecture 4 — a different mechanism, same shape of problem.
+This is the same variance-weighting logic behind $\hat\theta_R$ in Lecture 4, arising through a different mechanism but with the same practical consequence.
 
 . . .
 
 ::: {.callout-note}
-There is no single "the LATE" once you add covariates or instruments. Mogstad, Santos & Torgovitsky (2018): 2SLS in these richer designs does not target a policy-relevant parameter without further assumptions.
+There is no single "the LATE" once covariates or multiple instruments are involved. Mogstad, Santos, and Torgovitsky (2018) show that 2SLS in these richer designs does not target a policy-relevant parameter without additional assumptions.
 :::
 
 ---
 
 ## Weak instruments: the problem
 
-Everything so far assumed relevance holds comfortably. What if it barely holds — $ITT_D$ close to zero?
+Everything so far has assumed relevance holds comfortably. Consider what happens when it barely holds — when $ITT_D$ is close to zero.
 
 . . .
 
-Dividing by a denominator near zero amplifies whatever sampling noise is in the numerator.
+Dividing by a denominator near zero amplifies whatever sampling noise is present in the numerator.
 
 . . .
 
-2SLS is biased toward the (confounded) OLS estimate in finite samples, and conventional $t$-tests and confidence intervals become unreliable — even when the first stage looks "significant" by ordinary standards.
+As a result, 2SLS is biased toward the confounded OLS estimate in finite samples, and conventional $t$-tests and confidence intervals become unreliable, even when the first stage passes an ordinary significance test.
 
 ---
 
 ## Weak instruments: the diagnostic
 
-Check the first-stage $F$-statistic.
+The standard diagnostic is the first-stage $F$-statistic.
 
 . . .
 
-$F>10$ is a floor people cite, not a guarantee of anything. It's a rule of thumb from a specific set of simulations, not a law of nature.
+The common rule of thumb, $F>10$, comes from a specific set of simulations and should be treated as a rough floor, not a guarantee that inference is valid.
 
 . . .
 
-When in doubt, use weak-instrument-robust inference — Anderson–Rubin confidence sets — rather than trusting the conventional standard errors.
+When there is any doubt, weak-instrument-robust methods such as Anderson–Rubin confidence sets are the safer choice over conventional standard errors.
 
 ---
 
-## Now step back: we've assumed a lot
+## Taking stock of what we have assumed
 
-Independence, exclusion, relevance, monotonicity — four assumptions, and we've been assuming all four hold throughout today.
-
-. . .
-
-Relevance we can check directly. The other three, we can't verify the same way. So what can we actually do?
+We have used independence, exclusion, relevance, and monotonicity throughout today.
 
 . . .
 
-Two different things, and it matters which one you're doing.
+Relevance can be checked directly, since it is the first stage. The other three cannot be verified in the same way. That leaves the question of what evidence, if any, we can bring to bear on them.
+
+. . .
+
+There are two distinct things we can do here, and it matters which one we are doing at any given moment.
 
 ---
 
 ## Testing versus sensitivity
 
-**Testable implications** derive inequalities the data must satisfy *if* the LATE assumptions are true. A violation rejects them.
+A testable implication derives an inequality the data must satisfy if the LATE assumptions hold. A violation of that inequality rejects the assumptions.
 
 . . .
 
-Passing does not confirm them. Kitagawa (2015) proves these are the strongest testable implications available for LATE validity — they can only refute, never verify, no matter how much data you have.
+Satisfying the inequality does not confirm them. Kitagawa (2015) shows that these are the strongest testable implications available for LATE validity: no amount of data can turn a passed test into proof, because the test is designed only to detect violations, not to certify their absence.
 
 . . .
 
-**Sensitivity analysis** is a different exercise entirely. It assumes a bounded amount of assumption violation and asks how far the estimate moves as that bound widens. It doesn't test anything — it tells you how much your conclusion depends on the assumption holding exactly.
+A sensitivity analysis is a different kind of exercise. It assumes a bounded amount of violation in an assumption we cannot test, and asks how much the estimate moves as that bound widens. It does not test whether the assumption holds; it tells us how much our conclusion depends on it holding exactly.
 
 . . .
 
-Both matter. Neither substitutes for the other. We'll do one of each.
+We will work through one example of each.
 
 ---
 
 ## Testable implications: the instrumental inequality
 
-Balke & Pearl (1997), for binary $Z,D,Y$: four inequalities that must all hold if exclusion, independence, and monotonicity are true. One of them:
+Balke and Pearl (1997) show that for a binary instrument, treatment, and outcome, four inequalities must all hold if exclusion, independence, and monotonicity are true. One of them is
 
 $$
 P(Y{=}0,D{=}0\mid Z{=}0) + P(Y{=}1,D{=}0\mid Z{=}1) \leq 1
@@ -798,13 +794,13 @@ $$
 
 . . .
 
-If this fails in your data, at least one of the three assumptions is false. The test can't tell you which.
+If this inequality fails in the data, at least one of the three assumptions is false. The test does not tell us which one.
 
 ---
 
 ## Extending to continuous outcomes
 
-Kitagawa (2015) generalizes the same idea past binary $Y$:
+Kitagawa (2015) extends the same idea beyond binary $Y$:
 
 $$
 f(y,D{=}1\mid Z{=}1) \text{ must dominate } f(y,D{=}1\mid Z{=}0) \text{ pointwise in } y
@@ -816,13 +812,13 @@ $$
 
 . . .
 
-Same logic as the binary case, just stated as a stochastic-dominance condition rather than four discrete inequalities.
+This is the same logic as the binary case, restated as a stochastic-dominance condition rather than a finite list of inequalities.
 
 ---
 
 ## Worked in R: setting up the check
 
-Ordinal $Y \in \{\text{low},\text{mid},\text{high}\}$. Build the joint distributions $P(Y{=}y,D{=}1\mid Z)$ and check dominance:
+Take an ordinal outcome $Y \in \{\text{low},\text{mid},\text{high}\}$, and build the joint distributions $P(Y{=}y,D{=}1\mid Z)$ needed to check dominance.
 
 ```{r}
 #| eval: false
@@ -843,12 +839,12 @@ kit_tab %>%
     d1_dominance_holds = p_y_d1_z1 >= p_y_d1_z0,
     d0_dominance_holds = p_y_d0_z0 >= p_y_d0_z1
   )
-#> # both TRUE at every row: data pass the test
+#> both conditions hold at every row: these data pass the test
 ```
 
 ---
 
-## What a failure looks like
+## What a violation looks like
 
 ```{r}
 #| eval: false
@@ -862,27 +858,27 @@ kit_tab_violation
 
 . . .
 
-Change one cell — suppose the true share at $(Y{=}\text{high},D{=}1,Z{=}1)$ had come in lower than at $Z=0$ — and the test rejects immediately. `toy_data_iv.R`, section 3, runs both versions.
+Suppose the true share at $(Y{=}\text{high},D{=}1,Z{=}1)$ had come in lower than at $Z=0$, as shown here. The dominance condition fails at that row, and the test rejects the assumptions. `toy_data_iv.R`, section 3, runs both versions.
 
 ---
 
-## Testable implications: what they leave out
+## What testable implications leave out
 
-The instrumental inequality and Kitagawa's test can reject. They cannot tell you exclusion is fine.
-
-. . .
-
-Exclusion in particular is often the assumption with the least direct evidence — there's usually no data-generating mechanism that would make it show up as a testable-implication violation even when it's false.
+The instrumental inequality and Kitagawa's test can reject the LATE assumptions. Neither can confirm that exclusion holds.
 
 . . .
 
-So: how much is your conclusion actually riding on exclusion holding exactly?
+Exclusion is often the assumption with the least direct evidence behind it, because there is frequently no mechanism by which its failure would show up as a violation of these testable implications.
+
+. . .
+
+The next question is how much a given conclusion actually depends on exclusion holding exactly, which is what a sensitivity analysis addresses.
 
 ---
 
 ## Sensitivity analysis: plausibly exogenous instruments
 
-Conley, Hansen & Rossi (2012) start by refusing to assume exclusion holds exactly:
+Conley, Hansen, and Rossi (2012) do not assume exclusion holds exactly. Instead they allow a direct effect of $Z$ on $Y$:
 
 $$
 Y_i = \theta D_i + \gamma Z_i + \varepsilon_i, \qquad D_i = \pi Z_i + \nu_i
@@ -890,7 +886,7 @@ $$
 
 . . .
 
-$\gamma=0$ is exact exclusion — the usual assumption. Instead, specify a *plausible range* $\gamma \in [-\gamma_{\max},\gamma_{\max}]$ from domain knowledge, and see what happens to $\theta$ across that range.
+Setting $\gamma=0$ recovers exact exclusion, the usual assumption. Their approach instead specifies a plausible range $\gamma \in [-\gamma_{\max},\gamma_{\max}]$, based on domain knowledge, and asks what happens to $\theta$ as $\gamma$ ranges over that interval.
 
 ---
 
@@ -902,7 +898,7 @@ $$
 
 . . .
 
-Divide through by $\text{Cov}(Z,D) = \pi\,\text{Var}(Z)$:
+Dividing through by $\text{Cov}(Z,D) = \pi\,\text{Var}(Z)$ gives
 
 $$
 \theta(\gamma) = \hat\theta_{2SLS} - \frac{\gamma}{\pi}
@@ -910,11 +906,13 @@ $$
 
 . . .
 
+so the identified set for $\theta$, given the plausible range for $\gamma$, is
+
 $$
 \theta \in \Big[\hat\theta_{2SLS} - \gamma_{\max}/\pi,\; \hat\theta_{2SLS} + \gamma_{\max}/\pi\Big]
 $$
 
-Wider plausible violations of exclusion produce a wider identified set for $\theta$ — the direct translation of "how much are we trusting exclusion" into "how much does our conclusion move."
+A larger plausible violation of exclusion produces a wider identified set — this translates directly from how much we are willing to trust exclusion into how much we can actually conclude.
 
 ---
 
@@ -950,21 +948,21 @@ map_dfr(c(0, 0.1, 0.25, 0.5, 1.0), conley_bounds,
 
 ## Reading the bounds
 
-At $\gamma_{\max}=0.1$ — a small plausible direct effect — the identified set is $[1.8,2.2]$. Comfortably away from zero.
+At $\gamma_{\max}=0.1$, a small plausible direct effect, the identified set is $[1.8,2.2]$, well away from zero.
 
 . . .
 
-At $\gamma_{\max}=1.0$, the set is $[0,4]$. It touches zero. A direct effect of that size, and the finding stops being distinguishable from no effect at all.
+At $\gamma_{\max}=1.0$, the identified set is $[0,4]$, which touches zero. A direct effect of that size would make the finding indistinguishable from no effect at all.
 
 . . .
 
-The number $\gamma_{\max}$ is not read off the data — it's a substantive judgment call, defended the same way you'd defend exclusion itself. What this exercise buys you is a map from "how much you trust that judgment" to "how much you can conclude."
+The choice of $\gamma_{\max}$ is not read off the data; it is a substantive judgment, defended in the same way exclusion itself would be defended. What this exercise provides is a way to see how much a given amount of trust in that judgment is worth, in terms of what can be concluded.
 
 ---
 
 ## A second testable bound: Huber–Mellace
 
-Back to territory we can test. Under the LATE assumptions,
+Return to an assumption we can test directly. Under the LATE assumptions,
 
 $$
 E(Y\mid D{=}1,Z{=}1) = \frac{\pi_a}{\pi_a+\pi_c}E(Y_1\mid a) + \frac{\pi_c}{\pi_a+\pi_c}E(Y_1\mid c), \qquad E(Y_1\mid a) = E(Y\mid D{=}1,Z{=}0)
@@ -980,93 +978,93 @@ $$
 
 . . .
 
-A mirror-image inequality bounds the never-taker mean. Four testable moment inequalities total, all estimable directly from data — Huber & Mellace (2015).
+A mirror-image inequality bounds the never-taker mean. Together these give four testable moment inequalities, each estimable directly from data — Huber and Mellace (2015).
 
 ---
 
 ## Putting the toolkit together
 
-No single test here proves the assumptions hold — Kitagawa's result rules that out in general. What the full kit gives you instead:
+No single tool here proves the LATE assumptions hold; Kitagawa's result rules that out in general. What the full set of tools gives us instead:
 
 . . .
 
-1. Instrumental inequality / Kitagawa — rule out some violations decisively
-2. Huber–Mellace — bound the always-taker and never-taker means
-3. Abadie $\kappa$ — describe who the compliers actually are
-4. First-stage $F$ — flag weak identification before trusting a point estimate
-5. Conley bounds — show how much the conclusion depends on exclusion, the one assumption you can't test at all
+1. the instrumental inequality and Kitagawa's test can rule out some violations decisively
+2. the Huber–Mellace bounds constrain the always-taker and never-taker means
+3. Abadie's $\kappa$ describes who the compliers actually are
+4. the first-stage $F$-statistic flags weak identification before we trust a point estimate
+5. Conley bounds show how much a conclusion depends on exclusion, the one assumption none of the other tools can test
 
 . . .
 
-Exclusion is argued, not estimated. Everything above tells you how much is riding on that argument.
+Exclusion has to be argued rather than estimated. What the tools above provide is a way of showing how much is riding on that argument.
 
 ---
 
 ## In-class exercise
 
-Three IV designs, same treatment and outcome. For each: which assumption is most at risk, and which tool from today would you reach for first?
+Consider three IV designs for the same treatment and outcome. For each, ask which assumption is most at risk, and which tool from today you would reach for first.
 
 . . .
 
-**Design A.** $Z$: randomized encouragement to enroll. Strong first stage. Balanced covariates across $Z$. No plausible direct path from encouragement to $Y$.
+Design A uses randomized encouragement to enroll as the instrument. The first stage is strong, covariates are balanced across $Z$, and there is no plausible direct path from encouragement to the outcome.
 
 . . .
 
-**Design B.** $Z$: distance to nearest facility. Moderate first stage. Distance correlates with local infrastructure quality — a plausible direct determinant of $Y$.
+Design B uses distance to the nearest facility as the instrument. The first stage is moderate, and distance is correlated with local infrastructure quality, which is a plausible direct determinant of the outcome.
 
 . . .
 
-**Design C.** $Z$: a policy varying by birth-cohort cutoff. Weak first stage ($F=4$). Reduced form is "significant."
+Design C uses a policy that varies by birth-cohort cutoff. The first stage is weak ($F=4$), and the reduced form is statistically significant.
 
 ---
 
 ## What comes next
 
-Today: canonical IV, built from the ground up — LATE, compliers, testing, sensitivity.
+Today built the canonical case from the ground up: LATE, compliers, testing, and sensitivity.
 
 . . .
 
-Every instrument today was something the researcher *found* — an encouragement, a distance, a cutoff. What happens when the instrument has to be *built* out of pieces that are only partly random?
+In every example today, the instrument was something a researcher found — an encouragement, a distance, a cutoff. The next question is what happens when an instrument has to be built out of components that are only partly random.
 
 . . .
 
-**Next (Sep 30):** judge and leniency instruments, jackknife IV (JIVE), shift-share and Bartik instruments — and how to figure out which piece of a constructed instrument is actually doing the identifying work.
+Next time, on September 30, we look at judge and leniency instruments, jackknife IV, and shift-share and Bartik instruments, and at how to work out which component of a constructed instrument is actually doing the identifying work.
 
 ---
 
 ## Skills after today
 
 - State what DML repairs and what it presupposes
-- Show why monotonicity, not exclusion, is the price of dropping constant effects — using the defier example
-- Write independence, exclusion, relevance, monotonicity in potential-outcomes notation, and say which assumption does which step of the LATE proof
+- Show why monotonicity, rather than exclusion, is the assumption that dropping constant effects requires, using the defier example
+- Write independence, exclusion, relevance, and monotonicity in potential-outcomes notation, and explain which assumption does which step of the LATE proof
 - Compute Abadie's $\kappa$ in R and use it to describe compliers
-- State what 2SLS estimates once you add covariates or multiple instruments
+- State what 2SLS estimates once covariates or multiple instruments are involved
 - Diagnose weak instruments
-- Distinguish a testable implication from a sensitivity analysis, and run both
+- Distinguish a testable implication from a sensitivity analysis, and carry out both
 
 ---
 
 ## This week's readings
 
-- **Angrist, Imbens & Rubin (1996)** — potential-outcomes IV, LATE
-- **Abadie (2003)** — semiparametric characterization and reweighting of compliers
-- **Huber & Mellace (2015)** — testable bounds on always-taker and never-taker means
-- **Mercatanti & Li (2014)** — an applied design to check against today's list
-- **Mogstad, Santos & Torgovitsky (2018)** — what 2SLS estimates with covariates
+- Angrist, Imbens, and Rubin (1996), for the potential-outcomes formulation of IV and the LATE theorem
+- Abadie (2003), for the semiparametric characterization and reweighting of compliers
+- Huber and Mellace (2015), for testable bounds on the always-taker and never-taker means
+- Mercatanti and Li (2014), as an applied design to check against today's list of assumptions
+- Mogstad, Santos, and Torgovitsky (2018), on what 2SLS estimates once covariates are included
 
 . . .
 
-Previewed from next week: **Kitagawa (2015)**. Not assigned, useful background: **Conley, Hansen & Rossi (2012)**, "Plausibly Exogenous," *Review of Economics and Statistics*.
+Previewed from next week: Kitagawa (2015). Not assigned, but useful background: Conley, Hansen, and Rossi (2012), "Plausibly Exogenous," *Review of Economics and Statistics*.
 
 ---
 
 ## The central lesson
 
-An instrument does not identify the effect of treatment.
+An instrument does not identify the effect of treatment in general.
 
 . . .
 
-It identifies the effect for whoever the instrument actually moves — and only under independence, exclusion, and monotonicity.
+It identifies the effect for whoever the instrument actually moves, and only under independence, exclusion, and monotonicity.
 
 . . .
 
@@ -1077,4 +1075,4 @@ $$
 }
 $$
 
-Next time: what happens when the instrument has to be built rather than found.
+Next time, we take up what happens when the instrument has to be built rather than found.
