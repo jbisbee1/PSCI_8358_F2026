@@ -1,0 +1,435 @@
+---
+title: "Lecture 5: Instrumental Variables — Identification Beyond the Textbook Model"
+author: "Advanced Observational Causal Inference"
+date: "September 23"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+execute:
+  enabled: false
+---
+
+## Where we are going
+
+Lectures 3–4: selection on observables, end to end — identification, conditioning, construction, estimation.
+
+> **What identifying variation can we exploit when conditional ignorability isn't credible?**
+
+Today:
+
+- Two-minute recap: what DML fixed, and what it didn't
+- Why IV is a different kind of identification argument
+- The potential-outcomes formulation of IV
+- LATE and compliers
+- What 2SLS actually estimates
+- Weak instruments
+- Testable implications of IV validity
+
+---
+
+## Today's learning objectives
+
+1. State precisely what DML repairs and what it presupposes
+2. Explain why an instrument is not "just another control"
+3. Write the four IV assumptions in potential-outcomes notation
+4. Derive the LATE theorem and interpret compliers
+5. Explain what 2SLS estimates under effect heterogeneity
+6. Diagnose weak instruments
+7. State what evidence can and cannot validate IV assumptions
+
+---
+
+## Recap: where Lecture 4 left off
+
+Lectures 1–4 assumed:
+
+$$
+(Y(1),Y(0)) \perp D \mid X, \qquad 0 < P(D=1\mid X) < 1.
+$$
+
+DML's contribution was entirely about **estimation**:
+
+- AIPW: doubly robust, targets the ATE directly
+- Neyman orthogonality + cross-fitting: flexible ML nuisance models without breaking $\sqrt{n}$-inference
+
+::: {.callout-important}
+### DML never touches whether conditional ignorability is true. It only changes how well you can estimate under it.
+:::
+
+---
+
+## The central lesson of Lecture 4, restated
+
+$$
+\boxed{
+\text{Cross-fitted, orthogonal, ML-based estimation}
+\not\Rightarrow
+\text{conditional ignorability holds}
+}
+$$
+
+If there is an unobserved confounder of $D$ and $Y$, DML returns a **precise, confident, wrong** number.
+
+Today's question is not "how do we estimate better?" It's:
+
+> **What do we do when we don't believe we've measured everything that confounds $D$ and $Y$?**
+
+---
+
+## Why not just add more controls?
+
+Recall Lecture 4: adding covariates doesn't rescue you from an *unobserved* confounder — no amount of $X$ helps if the confounder isn't in $X$.
+
+Example: returns to schooling. Ability confounds education and wages. Ability is not fully captured by any observable proxy.
+
+**Selection-on-observables is not an option here** — not because the tools are bad, but because the identifying assumption is not credible.
+
+We need identifying variation that does not require conditioning on the confounder at all.
+
+---
+
+## Instrumental variables: the idea
+
+Find a variable $Z$ that:
+
+1. moves $D$ (**relevance**),
+2. is "as good as randomly assigned" (**independence**),
+3. affects $Y$ **only** through $D$ (**exclusion**).
+
+If such a $Z$ exists, we can learn about the effect of $D$ on $Y$ using variation in $D$ that is *driven by* $Z$ — variation we know is not itself confounded.
+
+**This is a completely different identification argument from Lectures 1–4.** Nothing here conditions our way out of confounding.
+
+---
+
+## The textbook (constant-effects) IV model
+
+$$
+Y_i = \alpha + \theta D_i + \varepsilon_i, \qquad D_i = \pi_0 + \pi_1 Z_i + \nu_i
+$$
+
+Assumptions, textbook version:
+
+- $\text{Cov}(Z_i,\varepsilon_i)=0$ (instrument exogenous)
+- $\pi_1 \neq 0$ (relevance / first stage)
+- $\theta$ is **the same for every unit**
+
+$$
+\hat\theta_{2SLS} = \frac{\text{Cov}(Z,Y)}{\text{Cov}(Z,D)}
+$$
+
+This is a fine starting point. It is also silent on what "the effect of $D$" means when effects differ across people — exactly the problem we saw with $\hat\theta_R$ in Lecture 4.
+
+---
+
+## Why the constant-effects model isn't enough
+
+Just as $\hat\theta_R$ implicitly reweighted units in Lecture 3–4, $\hat\theta_{2SLS}$ implicitly selects **which units' effects it is even capable of learning about** — once we allow heterogeneous effects.
+
+Angrist, Imbens & Rubin (1996): reformulate IV entirely in **potential outcomes**, with no constant-effects assumption at all.
+
+This is where the causal content of "the instrument identifies an effect" actually lives.
+
+---
+
+## Potential-outcomes setup
+
+Binary instrument $Z_i \in \{0,1\}$, binary treatment $D_i \in \{0,1\}$.
+
+**Potential treatments:** $D_i(1)$, $D_i(0)$ — the treatment unit $i$ would take under each value of the instrument.
+
+**Potential outcomes indexed by the instrument:** $Y_i(z,d)$ — but under exclusion, this collapses to $Y_i(d)$.
+
+**Observed treatment and outcome:**
+
+$$
+D_i = D_i(Z_i), \qquad Y_i = Y_i(D_i(Z_i))
+$$
+
+Everything downstream follows from how $D_i(1)$ and $D_i(0)$ relate to each other.
+
+---
+
+## The four IV assumptions
+
+1. **Independence (as-if random assignment):**
+$$
+\big(Y_i(1),Y_i(0),D_i(1),D_i(0)\big) \perp Z_i
+$$
+
+2. **Exclusion:** $Z_i$ affects $Y_i$ only through $D_i$: $Y_i(z,d) = Y_i(d)$ for all $z$.
+
+3. **Relevance (nonzero first stage):**
+$$
+E[D_i(1)] \neq E[D_i(0)]
+$$
+
+4. **Monotonicity:** $D_i(1) \geq D_i(0)$ for all $i$ (or all $\leq$ — pick a direction and hold it).
+
+Independence and exclusion do the work that "$Z_i$ uncorrelated with $\varepsilon_i$" was hiding. Monotonicity is new — the constant-effects model didn't need it.
+
+---
+
+## Compliance types
+
+Every unit has a **type** defined by $(D_i(1), D_i(0))$:
+
+| $D_i(1)$ | $D_i(0)$ | Type |
+|---|---|---|
+| 1 | 0 | **Complier** — takes treatment iff instrument on |
+| 0 | 1 | **Defier** — takes treatment iff instrument off |
+| 1 | 1 | **Always-taker** — takes treatment regardless |
+| 0 | 0 | **Never-taker** — never takes treatment regardless |
+
+Types are **unobserved** — we never see both $D_i(1)$ and $D_i(0)$ for the same unit.
+
+Monotonicity says: **no defiers.**
+
+---
+
+## Why monotonicity matters
+
+Without monotonicity, compliers and defiers can offset each other in a way that makes the IV estimand an uninterpretable mix — positive effects for compliers and negative effects for defiers could produce **any** sign.
+
+With monotonicity (no defiers), only three types remain: compliers, always-takers, never-takers.
+
+**Substantive question, not a technical one:** could anyone plausibly do the *opposite* of what the instrument nudges them toward? If yes for even a subset, monotonicity is suspect.
+
+---
+
+## The reduced form and the first stage
+
+**Intent-to-treat effect on the outcome:**
+$$
+ITT_Y = E[Y_i \mid Z_i=1] - E[Y_i \mid Z_i=0]
+$$
+
+**Intent-to-treat effect on treatment (the first stage):**
+$$
+ITT_D = E[D_i \mid Z_i=1] - E[D_i \mid Z_i=0] = P(\text{complier})
+$$
+
+Both are estimable directly from data — no potential outcomes needed, just comparing groups by $Z_i$. (Independence is what makes this comparison causal.)
+
+---
+
+## The LATE theorem
+
+Under independence, exclusion, relevance, and monotonicity:
+
+$$
+\frac{ITT_Y}{ITT_D} = E\big[Y_i(1)-Y_i(0) \mid \text{complier}\big] \;\equiv\; \text{LATE}
+$$
+
+This ratio is the **Wald estimator**, and with covariates or a continuous instrument it's what 2SLS computes.
+
+**In words:** the IV estimand is the average treatment effect *for compliers* — the subpopulation whose treatment status is moved by the instrument. Not the ATE. Not the ATT.
+
+---
+
+## Proof sketch: why compliers?
+
+Decompose $ITT_Y$ by (unobserved) type, using independence to compare $Z=1$ vs.\ $Z=0$ groups that have identical type composition:
+
+$$
+ITT_Y = \pi_c\,E[Y(1)-Y(0)\mid c] + \pi_a\underbrace{E[Y(1)-Y(1)\mid a]}_{=0} + \pi_n\underbrace{E[Y(0)-Y(0)\mid n]}_{=0}
+$$
+
+Always-takers get $D=1$ under both values of $Z$ — no contrast. Never-takers get $D=0$ under both — no contrast. **Only compliers contribute**, because they are the only type whose treatment status actually changes with $Z$.
+
+$$
+ITT_Y = \pi_c \cdot \text{LATE}, \qquad ITT_D = \pi_c
+$$
+
+Divide: $ITT_Y / ITT_D = \text{LATE}$.
+
+---
+
+## "Whose effect does an instrument identify, and why?"
+
+Because always-takers and never-takers contribute **zero** to both the numerator and the denominator, they drop out of the ratio entirely.
+
+IV cannot tell you anything about the effect on always-takers or never-takers — there is no variation in $D$ for them to exploit.
+
+::: {.callout-important}
+### The instrument doesn't identify "the effect of $D$." It identifies the effect for the specific people the instrument actually moves.
+:::
+
+---
+
+## Characterizing compliers
+
+You cannot list who the compliers are (types are unobserved), but you **can** describe the complier subpopulation:
+
+- $\pi_c = ITT_D$ — their share is estimable
+- Abadie (2003): reweight the observed data (using $\kappa$-weights built from $Z$, $D$, and covariates) to recover the **covariate distribution of compliers**
+- Compare complier covariate means to the full sample — who does the instrument actually move?
+
+**Always report this.** A LATE for a narrow, unrepresentative complier population is a different finding than a LATE for a broadly representative one, even with the same point estimate.
+
+---
+
+## What exactly does 2SLS estimate?
+
+With a **single binary instrument, no covariates:** 2SLS = Wald estimator = LATE for compliers relative to that instrument.
+
+With **covariates, multiple instruments, or a continuous instrument:** 2SLS is a weighted average of complier subgroup LATEs, weights proportional to each subgroup's contribution to the first-stage variance (same $\text{Var}(D_i\mid X_i)$-type weighting logic as $\hat\theta_R$ in Lecture 4).
+
+::: {.callout-important}
+### There is no single "the LATE" in these richer designs — there is a first-stage-variance-weighted average of many local effects, potentially over different complier populations.
+:::
+
+Mogstad, Santos & Torgovitsky (2018): make this explicit — 2SLS with covariates does not target a policy-relevant parameter without further assumptions.
+
+---
+
+## Weak instruments
+
+If relevance barely holds ($ITT_D \approx 0$, or $\pi_1 \approx 0$ in the first stage):
+
+- $ITT_Y / ITT_D$ divides by something close to zero — small sampling noise in the denominator is amplified
+- 2SLS point estimates are badly biased toward the (biased) OLS estimate in finite samples
+- Conventional $t$-tests and confidence intervals are unreliable, even with a "significant" first stage
+
+**Diagnostic:** first-stage $F$-statistic. Rule of thumb $F>10$ is a floor, not a guarantee — treat weak-instrument-robust inference (e.g., Anderson-Rubin) as the safer default when in doubt.
+
+---
+
+## What evidence can and can't validate IV assumptions
+
+**Relevance:** directly testable — look at the first stage.
+
+**Independence:** not directly testable, but supportable —
+
+- covariate balance across $Z$ (like a randomized trial check)
+- placebo outcomes: things $Z$ should have no effect on
+
+**Exclusion:** not directly testable in general —
+
+- find a subpopulation/setting where the first stage should be (near) zero; if a reduced-form $Z\to Y$ effect survives there, that's evidence *against* exclusion
+
+**Monotonicity:** substantive judgment, partially testable (next slides).
+
+---
+
+## Testing implications of the LATE assumptions
+
+A violation of the testable implications below means **at least one** of exclusion, independence, or monotonicity fails — it does not tell you *which*.
+
+**Balke & Pearl (1997), instrumental inequality** (binary $Z,D,Y$): four inequalities must all hold, e.g.
+
+$$
+P(Y{=}0,D{=}0\mid Z{=}0) + P(Y{=}1,D{=}0\mid Z{=}1) \leq 1
+$$
+
+Intuition: each term bounds the share of a compliance type consistent with a given $Y$ value; if IV validity holds, these can't jointly exceed 1.
+
+**Kitagawa (2015):** continuous-$Y$ generalization via stochastic dominance; proves these are the *strongest* testable implications — passing can never confirm validity, only fail to refute it.
+
+---
+
+## Huber & Mellace (2015): bounding the always-taker/never-taker means
+
+Under the LATE assumptions:
+
+$$
+E(Y\mid D{=}1,Z{=}1) = \frac{\pi_a}{\pi_a+\pi_c}E(Y_1\mid a) + \frac{\pi_c}{\pi_a+\pi_c}E(Y_1\mid c), \quad E(Y_1\mid a) = E(Y\mid D{=}1,Z{=}0)
+$$
+
+This implies a **testable trimming inequality**:
+
+$$
+E(Y\mid D{=}1,Z{=}1,Y\leq y_q) \;\leq\; E(Y\mid D{=}1,Z{=}0) \;\leq\; E(Y\mid D{=}1,Z{=}1,Y\geq y_{1-q})
+$$
+
+with $q=\pi_a/(\pi_a+\pi_c)$. A symmetric inequality holds for never-takers. Together: four testable moment inequalities, estimable from data.
+
+---
+
+## Putting the diagnostics together
+
+None of these tests can **prove** IV validity — Kitagawa's result is general. What they can do:
+
+1. Rule out some violations decisively (instrumental inequality fails ⇒ something is wrong)
+2. Make the complier-only interpretation concrete (Abadie reweighting)
+3. Flag weak identification before you trust a point estimate (first-stage $F$)
+4. Force you to argue for exclusion using domain knowledge, not statistics — statistics alone cannot supply it
+
+---
+
+## In-class exercise
+
+Three IV designs, same outcome and treatment:
+
+### Design A
+$Z$: randomized encouragement to enroll in a program. Strong first stage. Balanced covariates across $Z$. No plausible direct effect of encouragement on $Y$.
+
+### Design B
+$Z$: distance to nearest facility. Moderate first stage. Distance correlates with local infrastructure quality (plausibly affects $Y$ directly).
+
+### Design C
+$Z$: a policy that varies by birth-cohort cutoff. Weak first stage ($F=4$). Reduced form is "significant."
+
+For each: which assumption is most at risk, and what diagnostic would you run first?
+
+---
+
+## What comes next
+
+Today: canonical IV, LATE, compliers, testing validity.
+
+**Next (Sep 30):** modern IV designs that don't fit the canonical binary-instrument case —
+
+- Judge/leniency instruments and jackknife IV (JIVE)
+- Shift-share / Bartik instruments
+- Decomposing identifying variation: which shares, which shifts actually drive the estimate?
+
+> **When the instrument is constructed rather than found, how do you know what's doing the identifying work?**
+
+---
+
+## Skills after today
+
+- Explain why IV is a different identification strategy from Lectures 1–4, not a fix for unmeasured confounding via more controls
+- Write independence, exclusion, relevance, monotonicity in potential-outcomes notation
+- Derive the LATE theorem and explain why always-takers/never-takers drop out
+- Explain what 2SLS estimates with covariates or multiple instruments
+- Diagnose weak instruments and know why it matters for inference
+- State what the instrumental inequality and Huber-Mellace bounds can and cannot tell you
+
+---
+
+## This week's readings
+
+- **Angrist, Imbens & Rubin (1996)** — the potential-outcomes formulation of IV; LATE
+- **Abadie (2003)** — semiparametric characterization and reweighting of compliers
+- **Huber & Mellace (2015)** — testable bounds on always-taker/never-taker means
+- **Mercatanti & Li (2014)** — an applied IV design to examine against today's checklist
+- **Mogstad, Santos & Torgovitsky (2018)** — what 2SLS estimates with covariates; policy-relevant treatment parameters
+
+---
+
+## The central lesson
+
+::: {.callout-important}
+### An instrument doesn't identify "the effect of treatment." It identifies the effect for whoever the instrument actually moves — and only if independence, exclusion, and monotonicity hold for them.
+:::
+
+$$
+\boxed{
+\text{Valid instrument} \;\neq\; \text{ATE} \qquad
+\text{Valid instrument} \;=\; \text{LATE for compliers}
+}
+$$
+
+Next time: what happens when the instrument itself has to be built.
