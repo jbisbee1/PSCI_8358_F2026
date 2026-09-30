@@ -1,0 +1,678 @@
+---
+title: "Lecture 6: Judges, Jackknives, and Bartik"
+author: "Advanced Observational Causal Inference"
+date: "September 30"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+execute:
+  enabled: false
+---
+
+## Where we are going
+
+Lecture 5 covered the single binary instrument: LATE, compliers, testing and sensitivity.
+
+> When an instrument is built from many pieces, which pieces drive the estimate, and what does averaging over them cost?
+
+Today:
+
+- Judge/leniency designs — an instrument built from decision-makers
+- Many-instrument bias — why, and the jackknife (JIVE) fix
+- Bartik instruments — shares-exogenous, shocks-exogenous, and tests for each
+
+---
+
+## Learning objectives
+
+1. Set up a judge/leniency design. State judge monotonicity in potential outcomes.
+2. Explain many-judge 2SLS bias. Build a leave-one-out instrument.
+3. State the many-instrument asymptotic result behind JIVE. Connect it to weak instruments.
+4. Write down a Bartik instrument. State the shares-exogenous assumption.
+5. Reproduce the Goldsmith-Pinkham–Sorkin–Swift decomposition. Explain Rotemberg weights.
+6. State the shocks-exogenous assumption. State Borusyak–Hull–Jaravel's many-shocks asymptotics.
+7. Run diagnostics matched to whichever assumption you rely on.
+
+---
+
+## Recap: Lecture 5, briefly
+
+Single binary $Z$: independence, exclusion, relevance, monotonicity $\Rightarrow$ LATE for compliers. 2SLS = Wald estimator.
+
+Add covariates, multiple instruments, a continuous instrument: 2SLS becomes a **weighted average of LATEs**. Weights track first-stage variance. Not guaranteed positive (Mogstad, Santos & Torgovitsky 2018).
+
+$$
+\boxed{\text{An instrument built from more than one piece creates a weighting problem.}}
+$$
+
+Today covers three designs where this problem arises, and the remedy in each.
+
+---
+
+## Today's motivating question
+
+In each of today's designs, the instrument is constructed:
+
+- the decision-maker who drew your case (judges),
+- a first stage from many included dummies, estimated on the same sample (many instruments $\to$ JIVE),
+- a weighted sum of many national industry shocks (Bartik).
+
+The exogeneity question then becomes: is this combination exogenous, and which pieces matter most?
+
+---
+
+# Part I: Judge instruments
+
+## Judge IV: setup
+
+Cases $i$ assigned to decision-makers $j(i)\in\{1,\dots,J\}$ — judges, asylum officers, bail commissioners, disability examiners. Assignment: quasi-random, by rotation, not by case type.
+
+Judges vary in **leniency**: propensity to grant treatment $D_i$ (bail, benefits, disability award).
+
+The instrument is the assigned judge. Assignment is random, it shifts the probability of treatment, and it should affect the outcome only through treatment.
+
+Examples: White (2019) jail time and voter turnout; Kling (2006) sentencing and earnings; Aizer & Doyle (2015) juvenile incarceration; Dobbie, Goldin & Yang (2018) bail.
+
+---
+
+## Judge leniency
+
+Judge identity is categorical ($J-1$ dummies). In practice it is summarized by judge $j$'s **leniency**,
+
+$$
+Z_i = \frac{1}{n_{j(i)}-1}\sum_{i' \neq i,\; j(i')=j(i)} D_{i'}
+$$
+
+This is the mean treatment rate among the judge's other cases, excluding case $i$. Part II explains why case $i$ is left out.
+
+---
+
+## Judge design: assumptions
+
+1. **Random assignment** — case-to-judge assignment is as-good-as-random. Check case covariates against judge identity. If assignment is random only within locations (e.g. court districts), include location fixed effects.
+2. **Exclusion** — the judge affects the outcome only through the treatment decision.
+3. **Relevance** — judges differ in leniency.
+4. **Judge monotonicity** — defined on the next slide.
+
+---
+
+## Judge monotonicity, formally
+
+Let $\mu_D(j) = E[D_i(j)]$ be judge $j$'s leniency. Monotonicity requires $D_i(j)$ to be weakly increasing in $\mu_D(j)$ for *every* case $i$:
+
+$$
+\mu_D(j) \geq \mu_D(j') \;\Rightarrow\; D_i(j) \geq D_i(j') \quad \text{for all } i
+$$
+
+Equivalently, there are no rank reversals: if judge $j$ is stricter than $j'$ for one case, $j$ is stricter than $j'$ for all cases.
+
+This is stronger than monotonicity with a binary instrument, since it rules out any crossing of case-specific response curves across judges.
+
+---
+
+## When judge monotonicity fails
+
+Suppose judges specialize: judge $A$ is lenient on drug cases and strict on violent ones, and judge $B$ is the reverse. Neither is uniformly more lenient.
+
+This is analogous to defiers in Lecture 5. 2SLS becomes a weighted average across judge-pair margins, and some weights can be negative, so the estimate can fall outside the range of the subgroup effects.
+
+A weaker condition, average first-stage monotonicity, is sufficient for a LATE interpretation and is testable: check that the first stage is positive within subgroups of cases (Goldsmith-Pinkham, Hull & Kolesár 2025).
+
+---
+
+## What judge IV estimates
+
+2SLS on the leniency instrument estimates a weighted average of local effects, one per adjacent judge pair on the leniency ranking. Same weighting result as Mogstad-Santos-Torgovitsky, "judge" standing in for "multiple instruments."
+
+$$
+\hat\theta_{2SLS} \xrightarrow{p} \sum_{(j,j')\text{ adjacent}} \omega_{jj'}\,\text{LATE}_{jj'}, \qquad \omega_{jj'}\geq 0 \iff \text{monotonicity holds}
+$$
+
+---
+
+## Where the weights come from
+
+Angrist & Imbens (1995), ordered instrument. Two ingredients per margin.
+
+**First-stage jump** — how much treatment probability moves at that step:
+$$
+\Delta_{jj'} = E[D\mid \text{judge}=j'] - E[D\mid \text{judge}=j]
+$$
+A larger jump means more compliers at that margin.
+
+**Mass-weighted distance from mean leniency** — that margin's share of $\text{Cov}(Z,D)$, same variance-weighting logic as Lecture 5:
+$$
+\omega_{jj'} \;\propto\; \Delta_{jj'} \times \Big(\textstyle\sum_{k\geq j'}(z_k-\bar Z)f(z_k)\Big), \qquad \textstyle\sum \omega_{jj'}=1
+$$
+
+A margin with a small first-stage jump, or near the average leniency, receives little weight. If monotonicity fails at a margin, its weight can be negative.
+
+---
+
+## Why leave-one-out
+
+A naive alternative uses judge $j(i)$'s full-sample mean, including case $i$.
+
+Then $Z_i$ is mechanically correlated with $D_i$ through $i$'s own contribution to the average, not through judge assignment. With small caseloads this produces a spurious first stage and biases 2SLS toward OLS.
+
+Part II treats the general version of this problem.
+
+---
+
+## R: own-observation bias
+
+```{r}
+#| eval: false
+# Judge caseload n=20; true instrument has no effect (placebo check)
+set.seed(1)
+n_judges <- 50; n_per_judge <- 20
+dat <- tibble(judge = rep(1:n_judges, each = n_per_judge)) %>%
+  mutate(D = rbinom(n(), 1, 0.4))   # D unrelated to any real leniency
+
+# naive: judge's own-included mean
+naive_Z <- ave(dat$D, dat$judge)
+cor(naive_Z, dat$D)
+#> [1] 0.23   -- spurious correlation from including own D
+
+# leave-one-out
+loo_Z <- (ave(dat$D, dat$judge, FUN = sum) - dat$D) / (n_per_judge - 1)
+cor(loo_Z, dat$D)
+#> [1] 0.00   -- no mechanical correlation
+```
+
+---
+
+# Part II: Jackknife IV (JIVE)
+
+## What does 2SLS actually predict?
+
+Suppose
+
+$$
+D_i = \mathbf{Z}_i'\pi + v_i, \qquad Y_i = \beta D_i + \varepsilon_i
+$$
+
+with
+
+$$
+\text{Cov}(\mathbf{Z}_i,\varepsilon_i)=0, \qquad \text{Cov}(v_i,\varepsilon_i)\neq 0.
+$$
+
+First-stage fitted treatment: $\hat D = HD$, $H=\mathbf{Z}(\mathbf{Z}'\mathbf{Z})^{-1}\mathbf{Z}'$.
+
+For observation $i$:
+$$
+\hat D_i = H_{ii}D_i + \sum_{j\neq i}H_{ij}D_j
+$$
+
+---
+
+## Decomposing the fitted value
+
+Substitute $D_j = \mathbf{Z}_j'\pi + v_j$:
+
+$$
+\hat D_i = \underbrace{\sum_j H_{ij}\mathbf{Z}_j'\pi}_{\text{instrument-generated}} \;+\; \underbrace{H_{ii}v_i}_{\text{own endogenous noise}} \;+\; \underbrace{\sum_{j\neq i}H_{ij}v_j}_{\text{other units' noise}}
+$$
+
+Only the middle term threatens identification, as the next slide shows.
+
+---
+
+## Why the middle term biases 2SLS
+
+2SLS uses $\hat D_i$ as the instrument for $D_i$. Identification needs $\text{Cov}(\hat D_i,\varepsilon_i)=0$.
+
+Check each piece against $\varepsilon_i$:
+
+- instrument-generated: $\mathbf{Z}_j\perp\varepsilon_i$ by exogeneity — contributes 0
+- other units' noise: $v_j\perp\varepsilon_i$ for $j\neq i$, if units are independent — contributes 0
+- own endogenous noise: $H_{ii}v_i$, and $\text{Cov}(v_i,\varepsilon_i)\neq 0$ — survives
+
+$$
+\text{Cov}(\hat D_i,\varepsilon_i) = H_{ii}\,\text{Cov}(v_i,\varepsilon_i)
+$$
+
+---
+
+## From leverage to Bekker's bias formula
+
+$H_{ii}$ — leverage: how much unit $i$'s own $D_i$ feeds its own fitted value. $\text{tr}(H)=K$, so average leverage $\bar H_{ii} = K/n$.
+
+$$
+\text{plim}\,\hat\theta_{2SLS} - \beta \;\propto\; \bar H_{ii}\cdot\frac{\text{Cov}(v,\varepsilon)}{\text{Var}(D)} \;=\; \frac{K/n}{1-K/n}\cdot\frac{\text{Cov}(v,\varepsilon)}{\text{Var}(D)}
+$$
+
+This is Bekker's (1994) result: the bias grows with $K/n$ because average leverage does.
+
+---
+
+## The JIVE estimator
+
+JIVE removes the $H_{ii}v_i$ term by using leave-one-out fitted values:
+
+$$
+\hat D_i^{(-i)} = \mathbf{Z}_i'\hat\pi^{(-i)} = \underbrace{\sum_{j\neq i}H_{ij}^{(-i)}\mathbf{Z}_j'\pi}_{\text{instrument-generated}} \;+\; \underbrace{\sum_{j\neq i}H_{ij}^{(-i)}v_j}_{\text{other units' noise}}, \qquad \hat\pi^{(-i)} \text{ estimated on all observations except } i
+$$
+
+Without the $H_{ii}v_i$ term, $\text{Cov}(\hat D_i^{(-i)},\varepsilon_i)=0$ for any $K$.
+
+$$
+\hat\theta_{JIVE} = \frac{\sum_i \hat D_i^{(-i)}(Y_i-\bar Y)}{\sum_i \hat D_i^{(-i)}(D_i-\bar D)}
+$$
+
+The cost is efficiency. $H_{ii}v_i$ is correlated with $D_i$ as well as with $\varepsilon_i$, so removing it weakens the first stage, with the same variance cost as a weaker instrument. (JIVE1 and JIVE2 differ in how the leave-one-out fit is weighted.)
+
+---
+
+## JIVE and the judge design
+
+The leave-one-out leniency instrument from Part I is a JIVE instrument for a single categorical instrument (judge identity).
+
+More generally, any instrument that aggregates many small pieces of variation — many judges, many industry cells — should be built leave-one-out to avoid own-observation bias.
+
+- **UJIVE** (unbiased jackknife IV) further corrects for bias when there are many decision-makers or controls (e.g. court-district fixed effects), by residualizing before the leave-one-out step (Kolesár 2013; Goldsmith-Pinkham, Hull & Kolesár 2025).
+- **Standard errors** — when assignment is as-good-as-random, non-clustered heteroskedasticity-robust SEs are appropriate, as in a randomized trial (Goldsmith-Pinkham, Hull & Kolesár 2025).
+
+---
+
+## R: 2SLS vs. JIVE
+
+```{r}
+#| eval: false
+# n=500, K=100 weak instruments, true theta = 0
+set.seed(2)
+n <- 500; K <- 100
+Z <- matrix(rnorm(n*K), n, K)
+v <- rnorm(n); D <- Z %*% rep(0.02, K) + v          # weak first stage
+eps <- 0.8*v + rnorm(n)                              # D endogenous
+Y <- 0*D + eps                                       # true theta = 0
+
+Dhat_2sls <- fitted(lm(D ~ Z))
+theta_2sls <- coef(lm(Y ~ Dhat_2sls))["Dhat_2sls"]
+
+# leave-one-out fitted values (JIVE1, schematic)
+H <- Z %*% solve(t(Z) %*% Z) %*% t(Z)
+Dhat_jive <- (H %*% D - diag(H) * D) / (1 - diag(H))
+theta_jive <- coef(lm(Y ~ Dhat_jive))["Dhat_jive"]
+
+c(theta_2sls = theta_2sls, theta_jive = theta_jive)
+#> theta_2sls  theta_jive
+#>       0.31        0.02   -- 2SLS biased toward OLS; JIVE near truth
+```
+
+---
+
+## Weak vs. many instruments
+
+The two problems are related but distinct. Even a strong instrument can suffer many-instrument bias when it is one of many, because first-stage strength is spread across them.
+
+Diagnostic: compare joint first-stage $F$ to $K$. Report JIVE (or LIML) alongside 2SLS whenever $K$ isn't small relative to $n$.
+
+---
+
+# Part III: Bartik instruments
+
+## The causal problem
+
+Autor, Dorn, Hanson & Majlesi (2020) ask whether places more exposed to Chinese imports shifted toward Republican and more ideologically extreme candidates. They build on Autor, Dorn & Hanson (2013), which studied the effect on manufacturing employment.
+
+- $D_l$: change in import exposure, location $l$
+- $Y_l$: change in Republican presidential vote share, 2000–2016
+
+Two threats to a regression of $Y_l$ on $D_l$:
+
+- $D_l \leftarrow Y_l$ — reverse causality: politically pivotal places may win trade protection for their industries, which changes their import exposure.
+- $D_l \leftarrow U_l \rightarrow Y_l$ — confounding: places with import-competing manufacturing may already have been trending Republican, for example through the realignment of non-college white voters.
+
+We need an instrument: variation in $D_l$ that is plausibly unrelated to local political and economic trends.
+
+---
+
+## Exposure from shares and shocks
+
+Three cities, three industries, with base-year employment shares:
+
+| | Computers | Furniture | Textiles |
+|---|---|---|---|
+| City A | 50% | 30% | 20% |
+| City B | 10% | 70% | 20% |
+| City C | 20% | 20% | 60% |
+| **National import shock** | **Large** | **Small** | **Medium** |
+
+Using only these shares and shocks, which city is most exposed?
+
+Predicted exposure combines each city's initial shares with the shocks to its industries:
+
+$$
+Z_l = \sum_k s_{lk}\, g_k
+$$
+
+---
+
+## The accounting identity
+
+For industry $k$ in location $l$, employment growth equals national industry growth plus a local deviation:
+
+$$
+\Delta L_{lk,t} = L_{lk,t-1}\underbrace{\big[US_{k,t}/US_{k,t-1} - 1\big]}_{g_k:\ \text{national industry growth}} + \text{local deviation}_{lk}
+$$
+
+Summing over industries:
+
+$$
+\Delta L_{l,t} = \underbrace{\sum_k L_{lk,t-1}\, g_k}_{\text{predicted}} + \underbrace{\sum_k \text{local deviation}_{lk}}_{\text{removed}}
+$$
+
+This is an accounting identity and involves no assumptions. ($g_k$ can be further split into a macro shift and a sectoral deviation.)
+
+The predicted term uses only initial composition and national industry growth, so it excludes variation generated by the location itself.
+
+---
+
+## The Bartik instrument
+
+The predicted component is the Bartik (shift-share) instrument:
+
+$$
+Z_l = \sum_k s_{lk,t-1}\, g_k
+$$
+
+- $s_{lk,t-1}$ — location $l$'s exposure to industry $k$ before the shock (the shares)
+- $g_k$ — the shock to industry $k$ (the shifts)
+- $Z_l$ — predicted exposure
+
+ADH use lagged shares and the growth of Chinese imports into other high-income countries, which removes US-specific demand shocks:
+
+$$
+Z_l = \sum_k \underbrace{\frac{L_{lk,t-1}}{L_{k,t-1}}}_{\text{share}}\cdot\underbrace{\frac{\Delta M^{oc}_{k,t}}{L_{l,t-1}}}_{\text{shift}}
+$$
+
+The share is location $l$'s share of national employment in industry $k$; the shift is the growth in Chinese imports in industry $k$, per worker in $l$.
+
+This describes how the instrument is built, not why it is valid.
+
+---
+
+## What makes Bartik an IV?
+
+$$
+Z_l = \sum_k \underbrace{s_{lk}}_{\text{shares}}\;\underbrace{g_k}_{\text{shocks}}
+$$
+
+Which component is assumed to be as-good-as-random?
+
+- **Perspective 1** — the shares provide the identifying variation; the $g_k$ are treated as fixed weights.
+- **Perspective 2** — the shocks provide the identifying variation; the $s_{lk}$ are treated as exposure weights.
+
+Under either perspective the standard IV conditions apply: relevance, unconfoundedness (of shares, shocks, or both), exclusion, and monotonicity.
+
+---
+
+## Perspective 1: shares as instruments
+
+Goldsmith-Pinkham, Sorkin & Swift (GPSS 2020). Treat the $g_k$ as fixed numbers.
+
+Then $Z_l$ is a fixed linear combination of $K$ share instruments, $s_{l1}, \dots, s_{lK}$, and the Bartik 2SLS estimate is a weighted average of $K$ just-identified IV estimates:
+
+$$
+\hat\theta^{Bartik} = \sum_k \hat\alpha_k\,\hat\theta_k, \qquad \sum_k \hat\alpha_k = 1
+$$
+
+$\hat\theta_k$ is the IV estimate using industry $k$'s share alone, and $\hat\alpha_k$ is its **Rotemberg weight**, which depends on the shifts. The traditional Bartik / Blanchard–Katz argument belongs to this perspective.
+
+---
+
+## Which shares drive the estimate?
+
+Rotemberg weights show which industry shares the estimate relies on.
+
+In GPSS's analysis of the ADH instrument, five industries receive over half the weight:
+
+- electronic computers
+- games & toys
+- household audio & video
+- telephone apparatus
+- computer equipment
+
+Rotemberg weights depend on the instrument and the first stage, not on the outcome. With the same exposure measure and sample, an estimate of the effect on Republican vote share relies on the same small set of electronics-related industries. Negative weights, where they occur, should also be reported.
+
+---
+
+## What would make Perspective 1 valid?
+
+The identifying variation is cross-location differences in initial shares, so we need
+
+$$
+s_{lk,t-1} \perp \big(Y_l(1),\,Y_l(0)\big) \mid X_l
+$$
+
+and exclusion: initial industry composition affects later voting only through import exposure — not, for example, through union presence or the partisan identities of manufacturing communities.
+
+With $g_k$ fixed,
+
+$$
+\text{Cov}(Z_l,\varepsilon_l) = \sum_k g_k\,\text{Cov}(s_{lk},\varepsilon_l),
+$$
+
+so there is one condition per industry; in practice the high-weight industries matter most.
+
+Diagnostic: check whether high-weight shares predict outcome pre-trends. Do 1990 electronics shares predict changes in Republican vote share in the 1990s, before the China shock?
+
+---
+
+## Shares-exogenous, substantively
+
+1. **Predetermined timing** — shares are measured well before the shock; contemporaneous shares are vulnerable to reverse causality.
+2. **No persistent confounding** — the reasons industry $k$ located in $l$ are unrelated to $l$'s later unobserved trajectory.
+3. **Parallel pre-trends** — high- and low-exposure places followed similar trends before the shock.
+4. **No dominant industry** — if one industry carries most of the weight, the assumption effectively concerns that industry alone.
+
+---
+
+## Plausible: immigration and voting
+
+Question: does immigration increase far-right vote share? Immigrants choose where to live, so local inflows are endogenous.
+
+Instrument (Card 2001; applied to voting by Halla, Wagner & Zweimüller 2017 for the Austrian FPÖ): each community's historical share of immigrants from each origin country, times national inflows from that origin.
+
+Historical settlement reflects chain migration decades earlier, which is plausibly unrelated to recent changes in far-right support once community fixed effects are included. No single origin group dominates.
+
+Caveat: if inflows are persistent, historical shares also pick up the long-run effects of earlier immigration (Jaeger, Ruist & Stuhler 2018).
+
+---
+
+## Implausible: coal and Trump support
+
+Question: did the decline of coal increase support for Trump?
+
+Instrument: 2010 county coal employment share, times the national decline in coal employment.
+
+Coal specialization is tied to geography, education, religiosity, unionization history, and regional identity, all of which plausibly affect vote choice directly. Coal counties in Appalachia were also trending Republican well before 2016.
+
+So $\text{Cov}(s_{lk},\varepsilon_l)\neq 0$ is a serious concern, and pre-trends in Republican vote share would likely fail.
+
+---
+
+## Perspective 2: shocks as the experiment
+
+Borusyak, Hull & Jaravel (BHJ 2022) use the same instrument with a different identifying assumption.
+
+The shares are held fixed and the industry shocks $g_1,\dots,g_K$ are treated as as-good-as-randomly assigned. Each location's shares determine how exposed it is to those shocks.
+
+The assumption: conditional on controls, industries with larger shocks were not already on different trajectories for the outcome. Formally,
+
+$$
+E\big[g_k \mid \bar\varepsilon_k\big] = \mu, \qquad \bar\varepsilon_k = \frac{\sum_l s_{lk}\,\varepsilon_l}{\sum_l s_{lk}}
+$$
+
+Asymptotics are in the number of shocks $K$, not the number of locations, and inference is at the shock level.
+
+---
+
+## What would make Perspective 2 valid?
+
+Cross-industry variation in Chinese export growth to other high-income countries must be unrelated to other industry-level factors that affect how the industry's workers vote.
+
+A threat: the most affected industries may also be the most exposed to automation. If automation independently shifted votes toward Republicans (Frey, Berger & Chen 2018 find robot exposure predicts Trump support), the shocks pick up both channels.
+
+Diagnostics: check balance of $g_k$ on pre-period industry characteristics, and whether lagged shocks predict pre-period outcomes.
+
+---
+
+## Same estimator, different assumption
+
+| | GPSS | BHJ |
+|---|---|---|
+| Quasi-random object | Location shares | Industry shocks |
+| Held fixed | Shocks | Shares |
+| Variation | Across locations | Across industries |
+| Main concern | Locations with certain industries differ systematically | Industries with large shocks differ systematically |
+| Key diagnostic | Pre-trends in high-weight shares | Exogeneity of the shocks |
+| Interpretation | Many share instruments | Exposure to as-good-as-random shocks |
+
+The formula does not determine where identification comes from; the research design does.
+
+---
+
+## Construction is not identification
+
+GPSS (2020) note that a Bartik instrument combines two accounting identities, so it can always be constructed. That it can be constructed says nothing about whether it is valid.
+
+Predicted exposure is not exogenous by construction. Exogeneity of the shares, the shocks, or both has to be argued for and checked.
+
+---
+
+## Diagnostics: Perspective 1
+
+1. Compute $\hat\alpha_k$ for every industry and rank by $|\hat\alpha_k|$.
+2. Test the high-weight shares for outcome pre-trends.
+3. Report negative $\hat\alpha_k$; with negative weights the estimate is not a convex average of industry-level effects.
+4. Drop the highest-weight industry and re-estimate.
+
+These steps turn a claim about all shares into a claim about a few industries' shares, which is easier to evaluate.
+
+---
+
+## R: Rotemberg weights
+
+```{r}
+#| eval: false
+# 3 industries, 4 locations, toy shares and shocks
+share <- matrix(c(.7,.2,.1,  .1,.8,.1,  .3,.3,.4,  .0,.1,.9),
+                nrow = 4, byrow = TRUE)
+g <- c(0.05, -0.02, 0.10)              # national shocks
+Z <- share %*% g                        # the Bartik instrument
+
+# just-identified estimate per industry (schematic, single-instrument IV)
+theta_k <- c(2.1, 1.4, 0.3)             # placeholders from separate IV runs
+alpha_k <- c(0.55, 0.05, 0.40)          # Rotemberg weights, sum to 1
+
+theta_bartik <- sum(alpha_k * theta_k)
+theta_bartik
+#> [1] 1.385
+```
+
+Industry 1 receives more than half the weight, so the estimate depends mostly on its exogeneity. `toy_data_iv2.R`, section 3, computes the weights from simulated data.
+
+---
+
+## Diagnostics: Perspective 2
+
+- **Balance on shocks** — regress $g_k$ on pre-determined industry characteristics.
+- **Placebo shocks** — check whether lagged $g_k$ predict pre-period outcomes.
+- **Effective number of shocks** — many small, uncorrelated shocks give a strong design; one or two dominant shocks amount to one or two natural experiments.
+- **Shock-level standard errors** — location-clustered SEs understate uncertainty when identification comes from the shocks.
+- **Recentering** (Borusyak & Hull 2023) — for instruments with one random and one fixed component, subtract the instrument's expected value under simulated re-draws of the random component.
+
+---
+
+## Exercise: trade and Brexit
+
+Colantone & Stanig (2018): did import competition from China increase the Leave vote in the 2016 Brexit referendum?
+
+Instrument: each UK region's pre-period employment share in each industry, times growth in Chinese imports to the US in that industry.
+
+Outcome: Leave vote share by region.
+
+1. Under GPSS, what is the source of variation?
+2. What must be true for it to be exogenous?
+3. Under BHJ, what is the source of variation?
+4. What must be true under that interpretation?
+5. What evidence would raise doubts about either interpretation?
+
+---
+
+## Bartik is a formula instrument
+
+$$
+Z_l = \sum_k \underbrace{s_{lk}}_{\text{exposure weights}}\;\underbrace{g_k}_{\text{shocks}}
+$$
+
+The design question is which component provides the as-good-as-random variation: the shares (GPSS), the shocks (BHJ), or both.
+
+The two perspectives are complementary: the estimator is the same, but the identifying assumptions, diagnostics, and inference differ. A shift-share design needs an argument for why the shares, the shocks, or both are exogenous.
+
+---
+
+## In-class exercise
+
+Two constructed-instrument designs.
+
+**Design A (judges).** Effect of pretrial detention on later voter turnout. 40 judges, random docketing, caseloads of 25. Judges specialize by offense type.
+
+**Design B (JIVE).** Effect of campaign contact on turnout, using 200 randomly assigned canvasser dummies as instruments, $n=3{,}000$. The 2SLS estimate is close to OLS; the JIVE estimate differs substantially.
+
+For each design: which assumption is most at risk, and which diagnostic would you run first?
+
+---
+
+## What comes next
+
+Today: judge/leniency designs and judge monotonicity; many-instrument bias and JIVE; the two identifying assumptions for Bartik instruments and their diagnostics.
+
+**Next:** regression discontinuity.
+
+---
+
+## Skills after today
+
+- Set up a judge/leniency design and state judge monotonicity in potential outcomes.
+- Explain many-judge 2SLS bias and build a leave-one-out instrument.
+- State the many-instrument bias result and compute a JIVE estimate.
+- Write down a Bartik instrument and state the shares-exogenous assumption.
+- Explain the Goldsmith-Pinkham–Sorkin–Swift decomposition and compute Rotemberg weights.
+- State the Borusyak–Hull–Jaravel shocks-exogenous assumption.
+- Choose diagnostics that match the identifying assumption.
+
+---
+
+## This week's readings
+
+- **Frandsen, Lefgren & Mueller-Smith (2019)** — judge fixed effects, judge monotonicity, and its failures
+- **Angrist, Imbens & Krueger (1999)** — Jackknife Instrumental Variables Estimation
+- **Goldsmith-Pinkham, Sorkin & Swift (2020)** — Bartik instruments: what, when, why, and how
+- **Borusyak, Hull & Jaravel (2022)** — quasi-experimental shift-share research designs
+- **Autor, Dorn, Hanson & Majlesi (2020)** — trade exposure and voting, the running example in Part III
+
+Applications: **Autor, Dorn & Hanson (2013)**; **White (2019)**; **Halla, Wagner & Zweimüller (2017)**; **Colantone & Stanig (2018)**; **Frey, Berger & Chen (2018)**; **Jaeger, Ruist & Stuhler (2018)**.
+
+Background: **Goldsmith-Pinkham, Hull & Kolesár (2025)** on judge designs, average monotonicity, and UJIVE; **Kolesár (2013)**; **Bartik (1991)**; **Blanchard & Katz (1992)**; **Bekker (1994)** on many-instrument asymptotics; **Borusyak & Hull (2023)** on recentering formula instruments.
+
+---
+
+## Summary
+
+When an instrument is built from many pieces, the estimate is a weighted average over those pieces, with weights determined by the data.
+
+Identify which pieces carry most of the weight, and assess the identifying assumption for those pieces.
