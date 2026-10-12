@@ -1,0 +1,916 @@
+---
+title: "Lecture 9: Staggered Adoption and Modern Difference-in-Differences"
+author: "Advanced Observational Causal Inference"
+date: "October 21, 2026"
+format:
+  revealjs:
+    smaller: true
+    slide-number: true
+    chalkboard: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+    include-in-header:
+      text: |
+        <style>
+        .mt { border-collapse: collapse; margin: 0.6em auto; font-size: 0.9em; }
+        .reveal .mt th, .reveal .mt td { border: 1px solid #888; padding: 0.45em 1.1em; text-align: center; vertical-align: middle; min-width: 8.5em; }
+        .reveal .mt small { display: block; font-size: 0.8em; color: #444; margin-top: 0.15em; }
+        .mt th { background: #f2f2f2; font-weight: 600; }
+        .mt .obs { background: #d6e6f5; }
+        .mt .unk { background: repeating-linear-gradient(45deg, #fff4d9, #fff4d9 7px, #ffe5ae 7px, #ffe5ae 14px); }
+        .mt .bad { background: #f6d5d5; }
+        .reveal .cmp th, .reveal .cmp td { font-size: 0.78em; padding: 0.35em 0.6em; min-width: 0; text-align: left; }
+        .two { display: flex; gap: 2em; justify-content: center; }
+        .two > .col { flex: 1; }
+        </style>
+execute:
+  enabled: true
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| include: false
+library(fixest)
+library(did)
+library(bacondecomp)
+blue <- "#4a7fb5"; amber <- "#e0902b"; red <- "#b2182b"; green <- "#1b7837"; grey <- "grey40"
+```
+
+## Where we are going
+
+Last week: the two-group difference-in-differences design, parallel trends, and event studies.
+
+> When units adopt treatment at different times, does the regression we have always run still estimate a difference-in-differences?
+
+Today:
+
+- A refresher on what DiD identifies, and under which assumptions
+- Why two-way fixed effects (TWFE) became the default specification
+- How TWFE fails under staggered adoption: forbidden comparisons and negative weights
+- Heterogeneity-robust alternatives: Callaway–Sant'Anna, Sun–Abraham, imputation
+- Sensitivity analysis for parallel trends: pre-tests, equivalence tests, and Rambachan–Roth
+
+---
+
+## Learning objectives
+
+1. State the DiD estimand and the assumptions that identify it, in potential-outcomes notation.
+2. Explain why TWFE recovers the DiD in the 2×2 case and why that equivalence does not extend to staggered adoption.
+3. Use the Goodman-Bacon decomposition to identify which comparisons a TWFE estimate uses, and explain why the "later vs. earlier" comparison is forbidden.
+4. Compute the de Chaisemartin–D'Haultfœuille weights and say which treated cells receive negative weight.
+5. Describe the common logic of modern estimators (estimate $\text{ATT}(g,t)$ from clean comparisons, then aggregate) and the differences among them.
+6. Explain why passing a pre-trend test is weak evidence for parallel trends, and conduct a Rambachan–Roth sensitivity analysis.
+
+# Part I: DiD refresher
+
+## The canonical 2×2 design
+
+Two groups, two periods.
+
+- $D_i \in \{0, 1\}$: unit $i$ is in the treated group.
+- $t \in \{0, 1\}$: treatment occurs between period 0 and period 1.
+- Potential outcomes $Y_{it}(1), Y_{it}(0)$. We observe $Y_{it} = Y_{it}(0) + D_i \cdot \mathbb{1}[t=1] \cdot (Y_{it}(1) - Y_{it}(0))$.
+
+The target is the average effect of treatment on the treated in the post-period:
+
+$$
+\text{ATT} = E[Y_{i1}(1) - Y_{i1}(0) \mid D_i = 1].
+$$
+
+$E[Y_{i1}(1) \mid D_i=1]$ is observed. $E[Y_{i1}(0) \mid D_i = 1]$, what the treated group would have experienced without treatment, is not. DiD is a strategy for imputing it.
+
+---
+
+## Two identifying assumptions
+
+**Parallel trends.** Absent treatment, the two groups would have experienced the same average change:
+
+$$
+E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0].
+$$
+
+**No anticipation.** Treatment has no effect before it occurs: $Y_{i0}(1) = Y_{i0}(0)$ for treated units.
+
+Together they give
+
+$$
+\text{ATT} = \underbrace{\big(E[Y_{i1} \mid D_i=1] - E[Y_{i0} \mid D_i=1]\big)}_{\text{change among treated}} - \underbrace{\big(E[Y_{i1} \mid D_i=0] - E[Y_{i0} \mid D_i=0]\big)}_{\text{change among controls}}.
+$$
+
+The control group's change stands in for the treated group's counterfactual change. Nothing is assumed about levels.
+
+---
+
+## The 2×2 as a missing-data problem
+
+<table class="mt">
+<tr><th></th><th>Period 0</th><th>Period 1</th></tr>
+<tr><th>Treated ($D=1$)</th><td class="obs">$E[Y_0(0) \mid D=1]$<small>observed (no anticipation)</small></td><td class="obs">$E[Y_1(1) \mid D=1]$<small>observed</small></td></tr>
+<tr><th>Treated, counterfactual</th><td class="obs">$E[Y_0(0) \mid D=1]$<small>observed</small></td><td class="unk">$E[Y_1(0) \mid D=1]$<small>imputed: period 0 + control change</small></td></tr>
+<tr><th>Control ($D=0$)</th><td class="obs">$E[Y_0(0) \mid D=0]$<small>observed</small></td><td class="obs">$E[Y_1(0) \mid D=0]$<small>observed</small></td></tr>
+</table>
+
+- The single unobserved cell is filled by adding the control group's change to the treated group's baseline.
+- Every staggered-adoption estimator we discuss today does the same thing for many cells at once. The estimators differ in **which** observed changes they use to fill each cell.
+
+---
+
+## What parallel trends is, and is not
+
+- It is an assumption about **untreated potential outcomes** only. It says nothing about how treatment effects evolve.
+- It is not implied by, and does not imply, balance in levels. Groups may differ permanently in their average outcomes.
+- It is **scale dependent**. Parallel trends in $Y$ and in $\log Y$ cannot generally both hold (Roth and Sant'Anna 2023).
+- It may hold only **conditionally** on covariates $X$: $E[\Delta Y(0) \mid D=1, X] = E[\Delta Y(0) \mid D=0, X]$. Estimation then requires outcome regression, weighting, or both (Sant'Anna and Zhao 2020).
+- With more than two periods, it is partly checkable. Differential trends **before** treatment are evidence against it. Their absence is not evidence for it after treatment (Part V).
+
+---
+
+## Regression implementation in the 2×2
+
+The DiD estimate is the coefficient $\beta$ in either of two equivalent regressions:
+
+$$
+Y_{it} = \alpha + \gamma D_i + \lambda \mathbb{1}[t=1] + \beta \,(D_i \times \mathbb{1}[t=1]) + \varepsilon_{it}
+$$
+
+$$
+Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
+$$
+
+The second form, with unit and period fixed effects, is the **two-way fixed effects** specification. In the 2×2 case, $\hat\beta$ is numerically identical to the difference in mean changes.
+
+This equivalence is the origin of the practice we examine next.
+
+# Part II: TWFE as the default
+
+## The natural generalization
+
+With many units, many periods, and treatment that switches on at different times, applied work has typically estimated
+
+$$
+Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + X_{it}'\gamma + \varepsilon_{it}
+$$
+
+and interpreted $\hat\beta$ as "the" DiD effect. A dynamic version replaces $D_{it}$ with indicators for time relative to adoption:
+
+$$
+Y_{it} = \alpha_i + \lambda_t + \sum_{\ell \neq -1} \beta_\ell \, \mathbb{1}[t - G_i = \ell] + \varepsilon_{it}.
+$$
+
+Leads ($\ell < 0$) serve as placebo tests; lags ($\ell \geq 0$) trace the dynamic effect.
+
+---
+
+## Why TWFE seemed sufficient
+
+The specification was not adopted carelessly. Three arguments supported it.
+
+1. **It reduces to DiD in the canonical case.** Unit effects remove time-invariant confounding; period effects remove common shocks.
+2. **It is correct under a constant effect.** If $Y_{it}(1) - Y_{it}(0) = \beta$ for all $i, t$, the TWFE estimator is consistent under parallel trends.
+3. **It is convenient.** It accommodates unbalanced panels, covariates, continuous treatments, and clustered standard errors in a single regression.
+
+The problem lies in argument 2. Treatment effects are rarely constant across adoption cohorts or over time since adoption, and TWFE's behavior under heterogeneity was not well understood until roughly 2018–2021.
+
+---
+
+## Staggered adoption: notation
+
+- Periods $t = 1, \dots, T$. Treatment is **absorbing**: once on, it stays on.
+- $G_i$: the period in which unit $i$ is first treated. Units with the same $G_i$ form a **cohort**. $G_i = \infty$ for never-treated units.
+- $Y_{it}(g)$: potential outcome in period $t$ if first treated in period $g$. $Y_{it}(\infty)$ is the never-treated outcome.
+
+The building block is the **group-time average treatment effect** (Callaway and Sant'Anna 2021):
+
+$$
+\text{ATT}(g, t) = E[Y_{it}(g) - Y_{it}(\infty) \mid G_i = g].
+$$
+
+The effect of adopting in period $g$, evaluated in period $t$, for units that adopted in $g$. Any summary effect, whether overall, by cohort, or by event time $e = t - g$, is a weighted average of these.
+
+---
+
+## Assumptions under staggered adoption
+
+**Parallel trends** (never-treated version). For all $g$ and $t \geq 2$,
+
+$$
+E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = g] = E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = \infty].
+$$
+
+A not-yet-treated version replaces the never-treated with units for which $G_i > t$.
+
+**No anticipation.** $Y_{it}(g) = Y_{it}(\infty)$ for all $t < g$.
+
+Under these assumptions, every $\text{ATT}(g,t)$ is identified. The question for TWFE is whether $\hat\beta$ recovers a sensible average of them.
+
+---
+
+## A running simulation
+
+```{r}
+#| echo: true
+set.seed(814)
+N <- 300; TT <- 20
+panel <- expand.grid(unit = 1:N, year = 1:TT)
+panel <- panel[order(panel$unit, panel$year), ]
+G     <- rep(c(6, 12, 0), each = N / 3)               # cohorts; 0 = never treated
+slope <- c(`6` = 0.30, `12` = 0.15)                    # effect grows each year treated
+panel$G   <- G[panel$unit]
+panel$D   <- as.integer(panel$G > 0 & panel$year >= panel$G)
+panel$e   <- ifelse(panel$G > 0, panel$year - panel$G, NA)          # event time
+panel$tau <- ifelse(panel$D == 1, slope[as.character(panel$G)] * (panel$e + 1), 0)
+alpha <- rnorm(N); lambda <- cumsum(rnorm(TT, 0.1, 0.2))
+panel$Y <- alpha[panel$unit] + lambda[panel$year] + panel$tau + rnorm(nrow(panel), 0, 0.5)
+c(true_ATT = mean(panel$tau[panel$D == 1]))
+```
+
+Parallel trends and no anticipation hold by construction. The only complication is that effects **grow with exposure** and differ **across cohorts**.
+
+---
+
+## The simulated data
+
+```{r}
+#| fig-width: 12
+#| fig-height: 4.4
+par(mfrow = c(1, 2), mar = c(4, 4.5, 2, 1), cex = 1.05)
+cols <- c(`6` = blue, `12` = amber, `0` = grey)
+mY <- tapply(panel$Y, list(panel$year, panel$G), mean)
+matplot(1:TT, mY[, c("6", "12", "0")], type = "l", lty = 1, lwd = 3,
+        col = cols[c("6", "12", "0")], xlab = "Year", ylab = "Mean outcome",
+        main = "Observed cohort means")
+abline(v = c(6, 12) - 0.5, lty = 3, col = cols[c("6", "12")])
+legend("topleft", c("Adopt in 6", "Adopt in 12", "Never"), col = cols[c("6", "12", "0")],
+       lwd = 3, bty = "n")
+mT <- tapply(panel$tau, list(panel$year, panel$G), mean)
+matplot(1:TT, mT[, c("6", "12")], type = "l", lty = 1, lwd = 3,
+        col = cols[c("6", "12")], xlab = "Year", ylab = "True effect",
+        main = "True treatment effects")
+abline(h = 0, lty = 3, col = "grey60")
+```
+
+# Part III: How TWFE fails
+
+## TWFE in the simulation
+
+```{r}
+#| echo: true
+twfe <- feols(Y ~ D | unit + year, data = panel, cluster = ~unit)
+c(TWFE = unname(coef(twfe)), true_ATT = mean(panel$tau[panel$D == 1]))
+```
+
+TWFE recovers less than half the true average effect. Every unit-period effect in the data is nonnegative, parallel trends holds exactly, and there is no confounding. The bias comes entirely from how the regression combines comparisons.
+
+---
+
+## The Goodman-Bacon decomposition
+
+Goodman-Bacon (2021) shows that, in a balanced panel with staggered adoption, the TWFE estimate is a weighted average of **every possible 2×2 DiD** between timing groups:
+
+$$
+\hat\beta^{\text{TWFE}} = \sum_{k} s_{kU}\,\hat\beta^{2\times2}_{kU} \;+\; \sum_{k \neq \ell} s_{k\ell}\,\hat\beta^{2\times2}_{k\ell}.
+$$
+
+Three types of comparison appear:
+
+- **Treated vs. never treated** ($kU$): a clean comparison.
+- **Earlier vs. later treated**: cohort $k$ switches on while cohort $\ell$ is not yet treated. A clean comparison.
+- **Later vs. earlier treated**: cohort $\ell$ switches on while the **already-treated** cohort $k$ serves as the control. This is the **forbidden comparison**.
+
+Weights $s \geq 0$ sum to one and are proportional to subsample size × within-pair treatment variance $\bar D(1 - \bar D)$, so cohorts treated mid-panel get the most weight.
+
+---
+
+## Why the forbidden comparison is forbidden
+
+Let cohort $k$ adopt before cohort $\ell$. Take the window after $k$ adopts. "Mid" is the span when only $k$ is treated; "post" is the span after $\ell$ also adopts. The 2×2 is
+
+$$
+\hat\beta^{2\times2}_{\ell k} = \big(\bar Y_\ell^{\text{post}} - \bar Y_\ell^{\text{mid}}\big) - \big(\bar Y_k^{\text{post}} - \bar Y_k^{\text{mid}}\big).
+$$
+
+Under parallel trends its expectation is
+
+$$
+\underbrace{\text{ATT}_\ell(\text{post})}_{\text{what we want}} \;-\; \underbrace{\big[\text{ATT}_k(\text{post}) - \text{ATT}_k(\text{mid})\big]}_{\text{change in } k\text{'s effect}}.
+$$
+
+The control group is itself treated, so its **change in treatment effect** is subtracted out. If effects grow over time, this comparison is biased downward, and it can be negative even when every effect is positive.
+
+---
+
+## The probability limit
+
+Goodman-Bacon (2021) writes the limit of TWFE as three terms:
+
+$$
+\beta^{\text{TWFE}} = \text{VWATT} + \text{VWCT} - \Delta\text{ATT}.
+$$
+
+- **VWATT**: a variance-weighted average of cohort ATTs. Weights are positive, but they are not proportional to sample shares, so this is not the ATT.
+- **VWCT**: a variance-weighted sum of differences in counterfactual trends. It is zero under parallel trends.
+- **$\Delta$ATT**: a weighted sum of changes in treatment effects within already-treated cohorts. It is zero only if effects are constant over time.
+
+Even with parallel trends, then, TWFE estimates a non-standard weighted average of effects, minus a bias term that grows with treatment-effect dynamics.
+
+---
+
+## The decomposition in the simulation
+
+```{r}
+#| echo: true
+bd <- bacon(Y ~ D, data = panel, id_var = "unit", time_var = "year", quietly = TRUE)
+agg <- sapply(split(bd, bd$type), function(d)
+  c(weight = sum(d$weight), estimate = weighted.mean(d$estimate, d$weight)))
+round(t(agg), 3)
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 3.2
+par(mar = c(4, 4.5, 0.5, 1), cex = 1.05)
+tcol <- c(`Earlier vs Later Treated` = blue, `Later vs Earlier Treated` = red,
+          `Treated vs Untreated` = grey)
+plot(bd$weight, bd$estimate, pch = 19, cex = 2, col = tcol[bd$type],
+     xlab = "Weight", ylab = "2×2 estimate", xlim = c(0, max(bd$weight) * 1.1),
+     ylim = range(c(bd$estimate, 0, 2.5)))
+abline(h = mean(panel$tau[panel$D == 1]), col = green, lwd = 2)
+abline(h = coef(twfe), col = "black", lwd = 2, lty = 2)
+abline(h = 0, lty = 3, col = "grey60")
+legend("bottomleft", c(names(tcol), "True ATT", "TWFE"), col = c(tcol, green, "black"),
+       pch = c(19, 19, 19, NA, NA), lty = c(NA, NA, NA, 1, 2), lwd = 2, bty = "n", cex = 0.85)
+```
+
+---
+
+## A sign reversal
+
+Two cohorts, no never-treated units, effects that grow by one unit per year of exposure.
+
+```{r}
+#| echo: true
+set.seed(2)
+N2 <- 200; T2 <- 10
+s2 <- expand.grid(unit = 1:N2, year = 1:T2)
+s2$G   <- rep(c(2, 7), each = N2 / 2)[s2$unit]
+s2$D   <- as.integer(s2$year >= s2$G)
+s2$tau <- ifelse(s2$D == 1, s2$year - s2$G + 1, 0)            # all effects >= 1
+s2$Y   <- rnorm(N2)[s2$unit] + 0.2 * s2$year + s2$tau + rnorm(nrow(s2), 0, 0.3)
+c(true_ATT = mean(s2$tau[s2$D == 1]), TWFE = unname(coef(feols(Y ~ D | unit + year, s2))))
+bacon(Y ~ D, data = s2, id_var = "unit", time_var = "year", quietly = TRUE)[, c("type", "estimate", "weight")]
+```
+
+The forbidden comparison carries 80% of the weight and is negative, so TWFE reports a negative effect of a treatment that helps every unit in every period.
+
+---
+
+## A second lens: negative weights
+
+de Chaisemartin and D'Haultfœuille (2020) express TWFE directly as a weighted average of unit-period effects. Under parallel trends,
+
+$$
+E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qquad w_{it} = \frac{\hat\varepsilon_{it}}{\sum_{(j,s):\, D_{js}=1} \hat\varepsilon_{js}},
+$$
+
+where $\hat\varepsilon_{it}$ is the residual from regressing $D_{it}$ on unit and period fixed effects.
+
+- The weights sum to one, but nothing forces them to be positive.
+- $\hat\varepsilon_{it} < 0$ when a treated cell's fitted value from the fixed effects exceeds one. This happens for units treated **for many periods**, in periods when **most units are treated**.
+- With negative weights, $\hat\beta$ can lie outside the range of the $\tau_{it}$. It need not satisfy **sign preservation**: every $\tau_{it} > 0$ does not guarantee $\beta > 0$.
+
+---
+
+## Computing the weights
+
+```{r}
+#| echo: true
+r <- resid(feols(D ~ 1 | unit + year, data = panel))
+panel$w <- ifelse(panel$D == 1, r / sum(r[panel$D == 1]), 0)
+c(n_treated_cells = sum(panel$D), n_negative = sum(panel$w < 0),
+  sum_negative = round(sum(panel$w[panel$w < 0]), 3),
+  weighted_tau = round(sum(panel$w * panel$tau), 3), TWFE = round(unname(coef(twfe)), 3))
+```
+
+Weighting the true effects by $w_{it}$ reproduces the TWFE estimate up to sampling noise. The largest effects, those of the early cohort late in the panel, are exactly the cells that receive negative weight.
+
+---
+
+## Where the negative weights fall
+
+```{r}
+#| fig-width: 12
+#| fig-height: 3.6
+wc <- tapply(panel$w, list(panel$G, panel$year), sum)[c("6", "12"), ]
+tc <- tapply(panel$tau, list(panel$G, panel$year), mean)[c("6", "12"), ]
+par(mar = c(5.5, 7, 1, 7), cex = 1.05)
+plot(NA, xlim = c(0.5, TT + 0.5), ylim = c(0.5, 2.5), yaxt = "n", xlab = "Year", ylab = "")
+mp <- max(wc); mn <- abs(min(wc))
+for (k in 1:2) for (yy in 1:TT) {
+  v <- wc[k, yy]
+  if (v == 0) next
+  col <- if (v > 0) adjustcolor(blue, alpha.f = 0.2 + 0.8 * v / mp) else
+                    adjustcolor(red,  alpha.f = 0.2 + 0.8 * abs(v) / mn)
+  rect(yy - 0.5, 3 - k - 0.45, yy + 0.5, 3 - k + 0.45, col = col, border = "white")
+  text(yy, 3 - k, sprintf("%.2f", tc[k, yy]), cex = 0.75)
+}
+axis(2, at = 2:1, labels = c("Adopt in 6", "Adopt in 12"), las = 1, tick = FALSE)
+mtext("Cell color: TWFE weight (blue +, red −). Number: true effect.", side = 1, line = 4.4, cex = 0.9)
+```
+
+The red cells hold the largest true effects. TWFE subtracts them.
+
+---
+
+## Dynamic specifications are not immune
+
+One response is to estimate the event-study version with leads and lags. Sun and Abraham (2021) show that this does not solve the problem.
+
+Under heterogeneity across cohorts, the TWFE coefficient on relative period $\ell$ is
+
+$$
+\beta_\ell = \underbrace{\sum_g \omega^{\ell}_{g,\ell}\, \text{CATT}_{g,\ell}}_{\text{own period}} \;+\; \underbrace{\sum_{\ell' \neq \ell} \sum_g \omega^{\ell}_{g,\ell'}\, \text{CATT}_{g,\ell'}}_{\text{contamination from other periods}}
+$$
+
+where $\text{CATT}_{g,\ell}$ is the effect for cohort $g$ at $\ell$ periods since adoption.
+
+- The contamination weights sum to zero across $g$, so they vanish only if effect paths are identical across cohorts.
+- Binning distant periods or dropping some relative periods adds a further contamination term from the excluded periods.
+- Pre-period coefficients can be nonzero **even when parallel trends holds**, because post-treatment heterogeneity contaminates them.
+
+---
+
+## Dynamic TWFE in the simulation
+
+```{r}
+#| echo: true
+panel$rel <- ifelse(panel$G == 0, -1, pmin(pmax(panel$e, -5), 8))   # bin endpoints
+es_twfe <- feols(Y ~ i(rel, ref = -1) | unit + year, data = panel)
+truth   <- c(setNames(rep(0, 4), -5:-2),
+             tapply(panel$tau[panel$D == 1], panel$e[panel$D == 1], mean)[as.character(0:8)])
+```
+
+```{r}
+#| fig-width: 10
+#| fig-height: 3.3
+par(mar = c(4, 4.5, 0.5, 1), cex = 1.05)
+b_tw <- coef(es_twfe); x_tw <- as.numeric(sub("rel::", "", names(b_tw)))
+ev <- c(-5:-2, 0:8)
+plot(ev, truth[as.character(ev)], type = "b", pch = 19, col = green, lwd = 2,
+     ylim = range(c(b_tw, truth)), xlab = "Years since adoption", ylab = "Effect")
+points(x_tw, b_tw, pch = 17, col = red, cex = 1.4)
+abline(h = 0, lty = 3, col = "grey60"); abline(v = -0.5, lty = 3)
+legend("topleft", c("Truth", "Binned TWFE event study"), col = c(green, red),
+       pch = c(19, 17), lty = c(1, NA), bty = "n")
+```
+
+The binned endpoints absorb the long-run effects of the early cohort, which produces a spurious lead at $-5$ and an inflated lag at $8$. Intermediate coefficients are also contaminated, though less visibly here.
+
+---
+
+## When TWFE is fine, and how to check
+
+TWFE is reliable when either condition holds:
+
+- **No staggering.** All treated units adopt at once (the 2×2 or a single event), or
+- **Homogeneous effects.** Effects are constant across cohorts and over exposure time, or at least uncorrelated with the weights.
+
+The second is a substantive claim, rarely credible for policies whose effects accumulate.
+
+Diagnostics that apply to any TWFE estimate:
+
+- `bacondecomp::bacon()`: the share of weight on forbidden comparisons, and how their estimates differ from the clean ones.
+- `TwoWayFEWeights::twowayfeweights()`: the number and total mass of negative weights, and the degree of heterogeneity needed to reverse the sign.
+
+Chiu, Lan, Liu, and Xu (2023) apply these diagnostics to a large set of published political science panel studies and find that reported TWFE estimates often change once heterogeneity-robust estimators are used.
+
+# Part IV: Modern estimators
+
+## The common principle
+
+Every modern estimator follows the same two steps.
+
+1. **Identification.** Estimate each $\text{ATT}(g,t)$, or the corresponding unit-period effect, using only **clean comparisons**: comparison units that are untreated in both periods being differenced. Already-treated units never serve as controls.
+2. **Aggregation.** Combine the cell-level estimates into the summary the researcher wants, using **explicit, nonnegative weights**.
+
+$$
+\theta = \sum_{g,t} \omega(g,t)\, \text{ATT}(g,t), \qquad \omega(g,t) \geq 0 .
+$$
+
+The estimators differ in which comparison units they use, how many pre-periods they rely on, and how they handle covariates. These are choices about **identifying assumptions** as much as about efficiency.
+
+---
+
+## Callaway and Sant'Anna (2021)
+
+Each $\text{ATT}(g,t)$ is a 2×2 DiD between cohort $g$ and a clean comparison group, using period $g-1$ as the base:
+
+$$
+\text{ATT}(g,t) = E[Y_t - Y_{g-1} \mid G = g] - E[Y_t - Y_{g-1} \mid C],
+$$
+
+where $C$ is either the **never-treated** ($G = \infty$) or the **not-yet-treated** ($G > t$).
+
+- **Covariates.** Conditional parallel trends is handled by outcome regression, inverse probability weighting, or the doubly robust combination (Sant'Anna and Zhao 2020). This connects directly to Lectures 3–4.
+- **Aggregation.** It reports overall (`simple`), by cohort (`group`), by calendar time (`calendar`), or by event time (`dynamic`).
+- **Assumptions used.** Parallel trends is needed only between $g-1$ and $t$. Other pre-periods are not used to identify post-treatment effects.
+- **Inference.** It uses a multiplier bootstrap with simultaneous confidence bands across $(g,t)$.
+
+---
+
+## Callaway–Sant'Anna in R
+
+```{r}
+#| echo: true
+cs <- att_gt(yname = "Y", tname = "year", idname = "unit", gname = "G",
+             data = panel, control_group = "nevertreated",
+             base_period = "universal", bstrap = FALSE, cband = FALSE)
+cs_simple <- aggte(cs, type = "simple")
+cs_dyn    <- aggte(cs, type = "dynamic", min_e = -5, max_e = 8)
+c(CS_ATT = cs_simple$overall.att, SE = cs_simple$overall.se)
+```
+
+Two practical notes:
+
+- The `did` package codes never-treated units as `G = 0`.
+- `base_period = "universal"` compares every period to $g - 1$, which makes pre-period estimates comparable to TWFE event-study leads. The default (`"varying"`) uses $t-1$ for pre-periods, so pre-period and post-period estimates are short and long differences, respectively (Roth 2024).
+
+---
+
+## Sun and Abraham (2021)
+
+Sun and Abraham propose an **interaction-weighted** estimator: a TWFE regression saturated in cohort × relative-time indicators, with a clean comparison group.
+
+$$
+Y_{it} = \alpha_i + \lambda_t + \sum_{g \notin C} \sum_{\ell \neq -1} \delta_{g\ell}\, \mathbb{1}[G_i = g]\, \mathbb{1}[t - g = \ell] + \varepsilon_{it}
+$$
+
+- Each $\hat\delta_{g\ell}$ estimates $\text{CATT}_{g,\ell}$ without contamination, because the regression no longer forces cohorts to share coefficients.
+- Event-time effects are averages of $\hat\delta_{g\ell}$ weighted by each cohort's share among units observed at $\ell$.
+- The comparison group is the never-treated or, if none exist, the **last-treated** cohort, whose post-adoption periods are dropped.
+- With a never-treated control and a universal base period, the estimates coincide with Callaway–Sant'Anna without covariates.
+
+---
+
+## Sun–Abraham in R
+
+```{r}
+#| echo: true
+panel$G_sa <- ifelse(panel$G == 0, 10000, panel$G)       # never treated: far-future cohort
+sa <- feols(Y ~ sunab(G_sa, year, ref.p = -1) | unit + year, data = panel, cluster = ~unit)
+summary(sa, agg = "ATT")$coeftable
+```
+
+`fixest::sunab()` runs the saturated regression and returns event-time aggregates by default. `agg = "ATT"` averages all post-treatment cells, weighted by the number of observations in each.
+
+---
+
+## Imputation: Borusyak, Jaravel, and Spiess (2024)
+
+The imputation estimator takes the missing-data framing of Part I literally.
+
+1. Fit $Y_{it} = \alpha_i + \lambda_t + \varepsilon_{it}$ using **only untreated observations** ($D_{it} = 0$).
+2. Impute $\hat Y_{it}(0) = \hat\alpha_i + \hat\lambda_t$ for every treated observation.
+3. Estimate $\hat\tau_{it} = Y_{it} - \hat Y_{it}(0)$ and average with any chosen weights.
+
+- Gardner (2021, "two-stage DiD") and Liu, Wang, and Xu (2024, "FEct") propose closely related estimators. Wooldridge (2021) reaches the same estimator through a fully saturated TWFE regression.
+- Under homoskedastic, serially uncorrelated errors, imputation is the efficient estimator.
+- The cost is a stronger assumption. Imputation uses **all** pre-periods to estimate $\alpha_i$, so it requires parallel trends over the entire panel, not only from $g-1$ onward.
+- Liu, Wang, and Xu extend it to interactive fixed effects and matrix completion (relaxing parallel trends to a factor structure) and allow treatment to switch off.
+
+---
+
+## Imputation by hand
+
+```{r}
+#| echo: true
+fit0 <- feols(Y ~ 1 | unit + year, data = panel[panel$D == 0, ])   # untreated cells only
+panel$Y0_hat  <- predict(fit0, newdata = panel)
+panel$tau_hat <- panel$Y - panel$Y0_hat
+c(imputation_ATT = mean(panel$tau_hat[panel$D == 1]))
+bjs_dyn <- tapply(panel$tau_hat[panel$D == 1], panel$e[panel$D == 1], mean)[as.character(0:8)]
+round(bjs_dyn, 2)
+```
+
+The point estimate requires only two lines of code. Valid standard errors do not: the imputed $\hat Y(0)$ carries estimation error, and `didimputation` (BJS) and `did2s` (Gardner) implement the appropriate variance estimators.
+
+---
+
+## Other estimators you will encounter
+
+- **Stacked regressions** (Cengiz, Dube, Lindner, and Zipperer 2019). Build a separate dataset for each adoption event, containing the treated cohort and clean controls within a fixed window, then stack and estimate with event-specific fixed effects. This approach is transparent, but the implicit weights across events require care.
+- **de Chaisemartin and D'Haultfœuille** ($\text{DID}_M$, `DIDmultiplegtDYN`). It compares switchers to stayers in adjacent periods. It accommodates treatments that switch on **and off**, as well as non-binary treatments.
+- **Local projections DiD** (Dube, Girardi, Jordà, and Taylor 2023). Each horizon is a separate regression of $Y_{i,t+h} - Y_{i,t-1}$ on adoption, with the sample restricted to clean controls.
+- **Continuous or multivalued treatments** (Callaway, Goodman-Bacon, and Sant'Anna 2024). The negative-weighting problems reappear in dose comparisons, and dose-response interpretations require stronger parallel-trends conditions.
+- **Factorial DiD** (Xu, Zhao, and Ding 2024). This applies when a second factor, rather than treatment itself, varies across units.
+
+---
+
+## Comparison
+
+<table class="mt cmp">
+<tr><th>Estimator</th><th>Comparison units</th><th>Parallel trends required</th><th>Treatment reversal</th><th>R</th></tr>
+<tr><td class="bad">TWFE</td><td>All, including already treated</td><td>All periods, plus homogeneous effects</td><td>Yes (but biased)</td><td><code>fixest::feols</code></td></tr>
+<tr><td>Callaway–Sant'Anna</td><td>Never- or not-yet-treated</td><td>From $g-1$ to $t$</td><td>No</td><td><code>did</code></td></tr>
+<tr><td>Sun–Abraham</td><td>Never- or last-treated</td><td>All periods</td><td>No</td><td><code>fixest::sunab</code></td></tr>
+<tr><td>Imputation (BJS, Gardner, FEct)</td><td>All untreated observations</td><td>All periods, including all pre-periods</td><td>FEct: yes</td><td><code>didimputation</code>, <code>did2s</code>, <code>fect</code></td></tr>
+<tr><td>Stacked</td><td>Clean controls in window</td><td>Within event window</td><td>No</td><td>by hand</td></tr>
+<tr><td>de Chaisemartin–D'Haultfœuille</td><td>Stayers in adjacent periods</td><td>Adjacent periods</td><td>Yes</td><td><code>DIDmultiplegtDYN</code></td></tr>
+</table>
+
+In practice, these estimators usually agree closely with one another and disagree with TWFE. Disagreement among them is itself informative: it typically signals that parallel trends holds over some windows but not others.
+
+---
+
+## All estimators in the simulation: overall ATT
+
+```{r}
+#| echo: true
+data.frame(
+  estimator = c("Truth", "TWFE", "Callaway-Sant'Anna", "Sun-Abraham", "Imputation"),
+  ATT = round(c(mean(panel$tau[panel$D == 1]), coef(twfe), cs_simple$overall.att,
+                summary(sa, agg = "ATT")$coeftable[1, 1],
+                mean(panel$tau_hat[panel$D == 1])), 3))
+```
+
+---
+
+## All estimators in the simulation: event study
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.5
+b_sa <- coef(sa); x_sa <- as.numeric(sub("year::", "", names(b_sa)))
+keep <- x_sa >= -5 & x_sa <= 8; b_sa <- b_sa[keep]; x_sa <- x_sa[keep]
+par(mar = c(4, 4.5, 0.5, 1), cex = 1.05)
+plot(ev, truth[as.character(ev)], type = "l", col = green, lwd = 3,
+     ylim = range(c(b_tw, truth, b_sa, cs_dyn$att.egt)),
+     xlab = "Years since adoption", ylab = "Effect")
+points(x_tw - 0.2, b_tw, pch = 17, col = red, cex = 1.3)
+points(cs_dyn$egt - 0.07, cs_dyn$att.egt, pch = 19, col = blue, cex = 1.3)
+points(x_sa + 0.07, b_sa, pch = 15, col = amber, cex = 1.3)
+points(0:8 + 0.2, bjs_dyn, pch = 18, col = "purple", cex = 1.6)
+abline(h = 0, lty = 3, col = "grey60"); abline(v = -0.5, lty = 3)
+legend("topleft", c("Truth", "Binned TWFE", "Callaway-Sant'Anna", "Sun-Abraham", "Imputation"),
+       col = c(green, red, blue, amber, "purple"), lty = c(1, NA, NA, NA, NA),
+       pch = c(NA, 17, 19, 15, 18), lwd = 3, bty = "n")
+```
+
+The three robust estimators track the truth and one another. Standard errors are omitted for legibility.
+
+---
+
+## Choices the robust estimators still require
+
+The modern estimators remove the mechanical bias. They do not remove the need for judgment.
+
+- **Comparison group.** Never-treated units may differ systematically from adopters (why did they never adopt?). Not-yet-treated units are more similar but may anticipate treatment. The choice changes the parallel-trends assumption, not merely the precision.
+- **Aggregation.** The overall ATT weights cohorts by size and periods by availability. Event-time effects at long horizons are identified only from early cohorts, so a rising event-study path may reflect **composition** rather than dynamics. A **balanced** event window (`balance_e` in `aggte`) removes the composition change.
+- **Pre-periods.** Imputation uses every pre-period, and Callaway–Sant'Anna uses one. When the two disagree, the difference is evidence about where parallel trends holds.
+- **Event-study plots are not interchangeable** (Roth 2024). Pre-period estimates from Callaway–Sant'Anna (default), Sun–Abraham, and imputation answer different questions. Compare plots only with a common base period.
+
+# Part V: Sensitivity analysis
+
+## The conventional check, and its limits
+
+Standard practice: estimate leads, find them individually or jointly insignificant, and conclude that parallel trends holds.
+
+Roth (2022) identifies two problems with this practice.
+
+1. **Low power.** Pre-tests often fail to detect violations large enough to produce bias comparable in size to the estimated effect.
+2. **Pre-test bias.** Conditioning on passing selects samples in which the pre-period noise happened to offset the trend. Because event-study coefficients share a reference period, that selection **amplifies** the bias in post-period estimates.
+
+Parallel trends after treatment is fundamentally untestable. Pre-period data constrain it only through an assumption about how pre- and post-period violations relate.
+
+---
+
+## Pre-test bias in a simulation
+
+```{r}
+#| echo: true
+set.seed(3)
+sims <- 20000; sig <- 0.05; trend <- 0.03          # true differential trend; true effect = 0
+per <- -4:3
+d <- matrix(trend * per, sims, length(per), byrow = TRUE) + matrix(rnorm(sims * 8, 0, sig), sims)
+colnames(d) <- per
+beta <- d - d[, "-1"]                                # event-study coefficients, ref = -1
+pass <- apply(abs(beta[, c("-4", "-3", "-2")]) / (sig * sqrt(2)) < 1.96, 1, all)
+c(pass_rate = mean(pass), bias_all = mean(beta[, "0"]), bias_if_passed = mean(beta[, "0"][pass]))
+```
+
+A violation that produces bias of `r trend` in the first post-period passes the pre-test in about `r round(100 * mean(pass))`% of samples. Among those samples, the bias is larger than in the full set of samples.
+
+---
+
+## Flipping the null: equivalence tests
+
+The pre-test above treats "no difference" as the null, so a noisy design passes easily. Hartman and Hidalgo (2018) propose reversing the burden of proof.
+
+- **Null:** the pre-period differences are large, $|\delta_{\text{pre}}| \geq \epsilon$.
+- **Alternative:** they are small, $|\delta_{\text{pre}}| < \epsilon$.
+- Two one-sided tests (TOST) reject only when the confidence interval lies inside $(-\epsilon, \epsilon)$.
+
+An imprecise design now **fails** to establish parallel pre-trends instead of passing by default. The researcher must state $\epsilon$, the largest violation considered substantively negligible, which makes the assumption explicit. Liu, Wang, and Xu (2024) implement equivalence tests for pre-treatment fit in `fect`.
+
+The limit is the same as before: even a successful equivalence test speaks to the pre-period, not to the post-period.
+
+---
+
+## Rambachan and Roth (2023): the idea
+
+Write each event-study coefficient as effect plus bias:
+
+$$
+\beta_\ell = \tau_\ell + \delta_\ell, \qquad \delta_\ell = \text{differential trend in } Y(0) \text{ at } \ell .
+$$
+
+For $\ell < 0$, $\tau_\ell = 0$, so $\beta_{\text{pre}}$ estimates $\delta_{\text{pre}}$. For $\ell \geq 0$, $\delta_{\text{post}}$ is unobserved.
+
+Rather than assume $\delta_{\text{post}} = 0$, assume $\delta \in \Delta$, a set of restrictions that **link post-period violations to pre-period violations**. The result is an identified set for $\tau_{\text{post}}$, in the sense of Lecture 7, together with a confidence set that is valid uniformly over $\Delta$.
+
+Reporting proceeds by varying the size of $\Delta$ and finding the **breakdown value**: the smallest violation at which the conclusion no longer holds.
+
+---
+
+## Two families of restrictions
+
+**Relative magnitudes**, $\Delta^{RM}(\bar M)$. Post-treatment violations between consecutive periods are no larger than $\bar M$ times the largest pre-treatment violation:
+
+$$
+|\delta_{\ell+1} - \delta_\ell| \leq \bar M \cdot \max_{s < 0} |\delta_{s+1} - \delta_s| \quad \text{for } \ell \geq 0.
+$$
+
+$\bar M = 1$: post-treatment shocks are no worse than the worst pre-treatment shock. This restriction suits confounding by **shocks**.
+
+**Smoothness**, $\Delta^{SD}(M)$. The slope of the differential trend changes by at most $M$ per period:
+
+$$
+|(\delta_{\ell+1} - \delta_\ell) - (\delta_\ell - \delta_{\ell-1})| \leq M .
+$$
+
+$M = 0$: the pre-trend continues linearly. This restriction suits confounding by **secular trends**, such as differential growth.
+
+The choice is substantive: it should follow from what could plausibly violate parallel trends.
+
+---
+
+## An example with a pre-trend
+
+```{r}
+#| echo: true
+set.seed(21)
+N3 <- 600; T3 <- 15; g3 <- 11
+s3 <- expand.grid(unit = 1:N3, year = 1:T3)
+s3$tr  <- as.integer(s3$unit <= N3 / 2)
+s3$rel <- ifelse(s3$tr == 1, s3$year - g3, -1)
+s3$Y   <- rnorm(N3)[s3$unit] + 0.1 * s3$year +
+          0.03 * s3$tr * s3$year +                       # violation: differential trend
+          0.25 * s3$tr * (s3$year >= g3) + rnorm(nrow(s3), 0, 0.5)   # true effect 0.25
+es3 <- feols(Y ~ i(rel, ref = -1) | unit + year, data = s3, cluster = ~unit)
+b3  <- coef(es3); names(b3) <- sub("rel::", "", names(b3))
+round(b3, 3)
+```
+
+The leads drift upward, and the first post-period coefficient combines the true effect, $0.25$, with a bias of $0.03$.
+
+---
+
+## Sensitivity sets in the example
+
+```{r}
+#| echo: true
+pre  <- c(b3[as.character(-10:-2)], `-1` = 0)
+m    <- max(abs(diff(pre)))                     # largest pre-period jump
+s    <- coef(lm(pre ~ as.numeric(names(pre))))[2]   # linear pre-trend slope
+b0   <- b3["0"]; se0 <- se(es3)["rel::0"]
+Mbar <- seq(0, 2, by = 0.25)
+rm_set <- cbind(lo = b0 - Mbar * m - 1.96 * se0, hi = b0 + Mbar * m + 1.96 * se0)
+M <- c(0, 0.01, 0.02, 0.04)
+sd_set <- cbind(lo = b0 - s - M - 1.96 * se0, hi = b0 - s + M + 1.96 * se0)
+```
+
+These are schematic versions that treat the pre-period coefficients as known. They are intended for intuition. `HonestDiD` accounts for estimation error in $\hat\delta_{\text{pre}}$ and gives confidence sets with correct coverage.
+
+---
+
+## Sensitivity plots
+
+```{r}
+#| fig-width: 12
+#| fig-height: 3.8
+par(mfrow = c(1, 2), mar = c(4.2, 4.5, 2, 1), cex = 1.05)
+yl <- range(c(rm_set, sd_set, 0))
+plot(NA, xlim = range(Mbar), ylim = yl, xlab = expression(bar(M)), ylab = "Effect at event time 0",
+     main = "Relative magnitudes")
+segments(Mbar, rm_set[, 1], Mbar, rm_set[, 2], lwd = 4, col = blue)
+abline(h = 0, lty = 3); abline(h = 0.25, col = green, lwd = 2)
+plot(NA, xlim = c(-0.005, 0.045), ylim = yl, xlab = "M", ylab = "", main = "Smoothness")
+segments(M, sd_set[, 1], M, sd_set[, 2], lwd = 4, col = amber)
+abline(h = 0, lty = 3); abline(h = 0.25, col = green, lwd = 2)
+legend("topright", "True effect", col = green, lwd = 2, bty = "n")
+```
+
+Relative magnitudes treat the pre-trend as noise of bounded size. The set includes zero once $\bar M \gtrsim$ `r round((abs(b0) - 1.96 * se0) / m, 2)`. Smoothness extrapolates the trend, so at $M = 0$ it removes the bias and centers on the truth. The same data support different conclusions under different restrictions, which is why the restriction must be justified substantively.
+
+---
+
+## HonestDiD in practice
+
+```{r}
+#| echo: true
+#| eval: false
+library(HonestDiD)
+betahat <- coef(es3); sigma <- vcov(es3)            # event-study coefs and vcov
+res_rm <- createSensitivityResults_relativeMagnitudes(
+  betahat = betahat, sigma = sigma,
+  numPrePeriods = 9, numPostPeriods = 5,
+  Mbarvec = seq(0, 2, by = 0.25))
+res_sd <- createSensitivityResults(
+  betahat = betahat, sigma = sigma,
+  numPrePeriods = 9, numPostPeriods = 5,
+  Mvec = seq(0, 0.04, by = 0.01))
+orig <- constructOriginalCS(betahat, sigma, numPrePeriods = 9, numPostPeriods = 5)
+createSensitivityPlot_relativeMagnitudes(res_rm, orig)
+```
+
+- Coefficients must be ordered pre then post, with the reference period omitted.
+- Use `l_vec` to target an average of post-period effects instead of the first one.
+- The procedure works with any event-study estimator that supplies a coefficient vector and covariance matrix, including Callaway–Sant'Anna and Sun–Abraham.
+
+---
+
+## Other robustness checks
+
+- **Placebo-in-time tests.** Assign a fake adoption date before the true one and re-estimate. `fect` automates this for imputation estimators.
+- **Leave-one-cohort-out.** Check whether a single adoption cohort drives the aggregate.
+- **Alternative comparison groups.** Report never-treated and not-yet-treated estimates. Divergence points to anticipation or to selection into never adopting.
+- **Functional form.** Parallel trends in levels and in logs are different assumptions (Roth and Sant'Anna 2023). Report both when the outcome is skewed.
+- **Inference with few treated clusters.** Clustered standard errors over-reject when few clusters are treated. Wild cluster bootstrap and randomization inference perform better (MacKinnon and Webb 2016; Ferman and Pinto 2019).
+- **Conditional parallel trends.** If adoption is predicted by pre-treatment covariates, condition on them using Callaway–Sant'Anna's doubly robust estimator, and show how much the estimate moves.
+
+# Part VI: Remarks
+
+## A workflow for staggered DiD
+
+1. **State the estimand.** Specify which ATT and which aggregation: overall, by cohort, or by event time over a balanced window.
+2. **Describe treatment timing.** Are there never-treated units? Does treatment switch off?
+3. **Diagnose TWFE** if it is the published estimate: Bacon decomposition and negative weights.
+4. **Re-estimate** with at least two heterogeneity-robust estimators that use different comparison groups or pre-periods.
+5. **Plot event studies** with a common base period. Read the leads as diagnostics, not as tests that certify the design.
+6. **Conduct sensitivity analysis** with `HonestDiD`, choosing the restriction that matches the threat, and report the breakdown value.
+7. **Use appropriate inference.** Cluster at the level of treatment assignment, and use the bootstrap when few clusters are treated.
+
+Problem Set 3 asks you to carry out steps 1–6 on a published TWFE study.
+
+---
+
+## Summary
+
+- DiD identifies the ATT by imputing the treated group's untreated trend from a comparison group. Parallel trends and no anticipation do the identifying work.
+- TWFE equals DiD in the 2×2 case. Under staggered adoption with heterogeneous effects, it averages comparisons that include already-treated controls, and its implicit weights on unit-period effects can be negative.
+- The failure is not a matter of confounding. It occurs even when parallel trends holds exactly, and it can reverse the sign of the estimate.
+- Modern estimators separate identification from aggregation. They estimate $\text{ATT}(g,t)$ from clean comparisons and aggregate with explicit, nonnegative weights. They differ in their comparison groups and in how much of the pre-period they rely on.
+- Passing a pre-trend test is weak evidence. Equivalence tests and Rambachan–Roth sensitivity analysis replace a binary verdict with a statement of how large a violation the conclusion can withstand.
+
+---
+
+## References
+
+::: {style="font-size: 0.8em"}
+- Borusyak, Jaravel, and Spiess (2024). Revisiting event-study designs: Robust and efficient estimation. *Review of Economic Studies*.
+- Callaway, Goodman-Bacon, and Sant'Anna (2024). Difference-in-differences with a continuous treatment.
+- Callaway and Sant'Anna (2021). Difference-in-differences with multiple time periods. *Journal of Econometrics*.
+- Cengiz, Dube, Lindner, and Zipperer (2019). The effect of minimum wages on low-wage jobs. *Quarterly Journal of Economics*.
+- Chiu, Lan, Liu, and Xu (2023). What to do (and not to do) with causal panel analysis under parallel trends.
+- de Chaisemartin and D'Haultfœuille (2020). Two-way fixed effects estimators with heterogeneous treatment effects. *American Economic Review*.
+- Dube, Girardi, Jordà, and Taylor (2023). A local projections approach to difference-in-differences.
+- Ferman and Pinto (2019). Inference in differences-in-differences with few treated groups and heteroskedasticity. *Review of Economics and Statistics*.
+- Gardner (2021). Two-stage differences in differences.
+- Goodman-Bacon (2021). Difference-in-differences with variation in treatment timing. *Journal of Econometrics*.
+- Hartman and Hidalgo (2018). An equivalence approach to balance and placebo tests. *American Journal of Political Science*.
+- Liu, Wang, and Xu (2024). A practical guide to counterfactual estimators for causal inference with time-series cross-sectional data. *American Journal of Political Science*.
+:::
+
+---
+
+## References (cont.)
+
+::: {style="font-size: 0.8em"}
+- MacKinnon and Webb (2016). Difference-in-differences inference with few treated clusters.
+- Rambachan and Roth (2023). A more credible approach to parallel trends. *Review of Economic Studies*.
+- Roth (2022). Pretest with caution: Event-study estimates after testing for parallel trends. *AER: Insights*.
+- Roth (2024). Interpreting event-studies from recent difference-in-differences methods.
+- Roth and Sant'Anna (2023). When is parallel trends sensitive to functional form? *Econometrica*.
+- Roth, Sant'Anna, Bilinski, and Poe (2023). What's trending in difference-in-differences? *Journal of Econometrics*.
+- Sant'Anna and Zhao (2020). Doubly robust difference-in-differences estimators. *Journal of Econometrics*.
+- Sun and Abraham (2021). Estimating dynamic treatment effects in event studies with heterogeneous treatment effects. *Journal of Econometrics*.
+- Wooldridge (2021). Two-way fixed effects, the two-way Mundlak regression, and difference-in-differences estimators.
+- Xu, Zhao, and Ding (2024). Factorial difference-in-differences.
+:::
