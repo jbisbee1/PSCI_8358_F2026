@@ -145,9 +145,61 @@ $$
 Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
 $$
 
-The second form, with unit and period fixed effects, is the **two-way fixed effects** specification. In the 2×2 case, $\hat\beta$ is numerically identical to the difference in mean changes.
+The second form, with unit and period fixed effects, is the **two-way fixed effects** specification. In the 2×2 case, $\hat\beta$ is numerically identical to the difference in mean changes. The next four slides show why.
 
-This equivalence is the origin of the practice we examine next.
+---
+
+## The first regression is saturated
+
+Let $\bar Y_{dt}$ be the sample mean of $Y_{it}$ among units with $D_i = d$ in period $t$. There are four cells and four parameters, and the model gives each cell its own fitted value:
+
+$$
+\begin{aligned}
+\hat Y_{00} &= \alpha & \hat Y_{10} &= \alpha + \gamma \\
+\hat Y_{01} &= \alpha + \lambda & \hat Y_{11} &= \alpha + \gamma + \lambda + \beta
+\end{aligned}
+$$
+
+Because the model is **saturated**, OLS sets each fitted value equal to the corresponding cell mean, $\hat Y_{dt} = \bar Y_{dt}$, and the residuals average to zero within every cell.
+
+---
+
+## Reading off the coefficients
+
+Solve the four equations in order:
+
+$$
+\begin{aligned}
+\hat\alpha &= \bar Y_{00} \\
+\hat\gamma &= \bar Y_{10} - \bar Y_{00} \\
+\hat\lambda &= \bar Y_{01} - \bar Y_{00} \\
+\hat\beta &= \bar Y_{11} - \hat\alpha - \hat\gamma - \hat\lambda = \big(\bar Y_{11} - \bar Y_{10}\big) - \big(\bar Y_{01} - \bar Y_{00}\big).
+\end{aligned}
+$$
+
+The last line is the difference in mean changes: $\hat\beta$ is the DiD estimator, with no approximation.
+
+---
+
+## What each coefficient absorbs
+
+- $\hat\gamma$: the **baseline gap** between groups in period 0. DiD does not require it to be zero.
+- $\hat\lambda$: the **control group's change over time**. Under parallel trends this is also the treated group's counterfactual change.
+- $\hat\beta$: what remains. It is the treated group's change in excess of $\hat\lambda$, which is why it estimates the ATT under parallel trends and no anticipation.
+
+The level difference and the common trend each have their own parameter, so neither can contaminate $\hat\beta$. This separation is what we lose when treatment timing varies.
+
+---
+
+## The two-way fixed effects form
+
+The unit-effects regression has $N + 2$ free parameters (one per unit, one period effect, and $\beta$), so it is not saturated in the sense above. The equivalence still holds in a balanced two-period panel. Differencing the equation across periods removes $\alpha_i$:
+
+$$
+\Delta Y_i = \lambda_1 - \lambda_0 + \beta D_i + \Delta\varepsilon_i, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
+$$
+
+This is a cross-sectional regression of the change in outcomes on a treatment dummy, so $\hat\beta$ is the difference in mean changes between treated and control units. The TWFE estimator and the DiD estimator coincide in the 2×2 case by construction, which is the origin of the practice we examine next.
 
 # Part II: TWFE as the default
 
