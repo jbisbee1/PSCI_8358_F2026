@@ -48,7 +48,7 @@ Today:
 - Point versus set identification
 - Manski worst-case bounds, and how assumptions tighten them
 - Bounds with an instrument
-- Lee bounds for outcomes that are missing or zero for some units
+- Lee bounds when treatment changes who we observe (differential attrition)
 - Inference for sets, and how bounds relate to sensitivity analysis
 
 ---
@@ -59,7 +59,7 @@ Today:
 2. Derive the Manski no-assumption bounds on the ATE for a bounded outcome.
 3. State monotone treatment response (MTR) and monotone treatment selection (MTS). Say how each changes the bounds.
 4. Explain what an instrument adds to the bounds, and state the one-sided noncompliance bound.
-5. Define the extensive and intensive margins. Construct Lee trimming bounds.
+5. Explain how differential attrition breaks randomization. Derive and construct Lee trimming bounds.
 6. Say what a confidence interval for a bounded parameter must cover.
 
 # Part I: Motivation
@@ -719,95 +719,40 @@ MTR and MTS each narrow the Manski set from one side, and together give the tigh
 
 # Part VII: Lee bounds
 
-## Extensive and intensive margins
+## Differential attrition
 
-Many outcomes are nonnegative with a mass at zero (Staub 2014): hours worked, expenditures, tax payments.
+$D$ is randomized, but we only see $Y$ for units who respond to the survey. Let $S_i(d) \in \{0, 1\}$ indicate whether unit $i$ responds under treatment $d$, and $S_i = S_i(D_i)$.
 
-Treatment can act through two channels:
+- If treatment changes who responds, $S_i(1) \neq S_i(0)$ for some units. This is **differential attrition**.
+- We can only compare respondents: $E[Y \mid D=1, S=1] - E[Y \mid D=0, S=1]$.
+- $S$ is a post-treatment variable. Conditioning on $S=1$ undoes the comparability that randomization bought us.
 
-- **Extensive margin**: whether $Y > 0$ at all (participation).
-- **Intensive margin**: the level of $Y$ given $Y > 0$ (amount).
-
-These are distinct causal effects, and we often want the intensive margin. The same structure arises with sample selection and attrition: wages are observed only for the employed, and outcomes only for survey respondents.
-
----
-
-## Potential outcomes decomposition
-
-With $Y_i \geq 0$, joint potential outcomes $(Y_{0i}, Y_{1i})$ define four groups (Staub 2014):
-
-| Group | Name | $(Y_{0i}, Y_{1i})$ |
-|:--|:--|:--|
-| NP | Non-participants | $(0,\ 0)$ |
-| $S_1$ | Switchers (into) | $(0,\ Y_{1i} > 0)$ |
-| $S_2$ | Switchers (out of) | $(Y_{0i} > 0,\ 0)$ |
-| P | Participants | $(Y_{0i} > 0,\ Y_{1i} > 0)$ |
-
-- The **intensive margin effect** is the ATE among group P.
-- The **extensive margin effect** is the contribution of $S_1$ and $S_2$.
+The same structure appears whenever $Y$ is only defined for some units: wages exist only for the employed (the extensive margin is $S$, the intensive margin is $Y$).
 
 ---
 
-## The identification problem
+## Monotonicity and principal strata
 
-Under randomization, the ATE is point-identified as $E[Y|D=1] - E[Y|D=0]$, but it mixes the two margins.
+Lee (2009) assumes treatment can only induce response: $S_i(1) \geq S_i(0)$ for all $i$.
 
-Group membership depends on the joint potential outcomes, which are not observed. The data show only $\Pr[Y>0 \mid D=d]$ and $E[Y \mid Y>0, D=d]$.
+| Stratum | $S_i(0)$ | $S_i(1)$ | Verdict |
+|:--|:-:|:-:|:--|
+| Always responders (AR) | 1 | 1 | We love these people. |
+| Never responders (NR) | 0 | 0 | Never observed, but not because of treatment. Harmless. |
+| Induced responders (IR) | 0 | 1 | Look like IV compliers, but they break the comparison. |
+| Defiers | 1 | 0 | Ruled out by monotonicity. |
 
-- Among treated units with $Y > 0$: groups $S_1$ and P.
-- Among control units with $Y > 0$: groups $S_2$ and P.
-- Comparing $E[Y \mid Y>0, D=1]$ with $E[Y \mid Y>0, D=0]$ confounds the intensive margin effect with compositional differences.
-- $Y>0$ is affected by treatment, so conditioning on it is conditioning on a post-treatment variable. Randomization no longer guarantees comparable groups.
-
----
-
-## Monotonicity
-
-Assume (Lee 2009)
-
-$$
-\mathbf 1\{Y_i(1) > 0\} \geq \mathbf 1\{Y_i(0) > 0\} \quad \text{for all } i.
-$$
-
-Treatment never moves a unit out of participation. This holds for every unit, which is stronger than $p_1 \geq p_0$.
-
-- This eliminates group $S_2$.
-- Among control units with $Y > 0$: only group P.
-- Among treated units with $Y > 0$: groups P and $S_1$.
-
-The target is the intensive margin effect among always-participants,
-
-$$
-\Delta_P := E[Y_{1i} - Y_{0i} \mid Y_{0i} > 0, Y_{1i} > 0].
-$$
-
-It is not point-identified, but it can be bounded.
+The target is the effect among always responders: $\Delta_{AR} := E[Y_i(1) - Y_i(0) \mid \text{AR}]$.
 
 ---
 
-## Trimming logic
-
-Let $p_1 = \Pr[Y>0 \mid D=1]$ and $p_0 = \Pr[Y>0 \mid D=0]$. Under monotonicity $p_1 \geq p_0$.
-
-Among treated units with $Y>0$, the share who are switchers is
-
-$$
-q = \frac{p_1 - p_0}{p_1}.
-$$
-
-- The control group with $Y>0$ is pure P, so $E[Y \mid D=0, Y>0] = E[Y_{0i} \mid P]$.
-- The treated group with $Y>0$ mixes P and $S_1$. Removing the $S_1$ units would leave pure P.
-- We do not know which treated units are switchers, but we know the fraction $q$.
-
----
-
-## Who participates in each arm?
+## Who do we observe?
 
 ```{r}
 #| fig-width: 11
 #| fig-height: 3.4
 p1 <- 0.80; p0 <- 0.60
-shares <- c(P = p0, S1 = p1 - p0, NP = 1 - p1)
+shares <- c(AR = p0, IR = p1 - p0, NR = 1 - p1)
 fills  <- c(adjustcolor(blue, 0.6), adjustcolor(amber, 0.6), "grey85")
 par(mar = c(3.5, 7.5, 1, 1), cex = 1.1)
 plot(NA, xlim = c(0, 100), ylim = c(0.3, 2.9), yaxt = "n", xaxt = "n", xlab = "", ylab = "", bty = "n")
@@ -821,47 +766,133 @@ for (r in 1:2) {
   for (g in 1:3) {
     rect(edges[g], y - 0.3, edges[g + 1], y + 0.3, col = fills[g], border = "white", lwd = 2)
     if (!obs[[r]][g]) rect(edges[g], y - 0.3, edges[g + 1], y + 0.3, density = 10, col = "grey55", border = NA)
-    text(mean(edges[g:(g + 1)]), y, c("P: always\nparticipate", "S1: participate\nonly if treated", "NP: never\nparticipate")[g],
+    text(mean(edges[g:(g + 1)]), y, c("AR: always\nrespond", "IR: respond\nonly if treated", "NR: never\nrespond")[g],
          cex = 0.85, font = if (obs[[r]][g]) 2 else 1)
   }
   rr <- range(edges[c(1, which(obs[[r]]) + 1)])
   segments(rr[1], y + 0.36, rr[2], y + 0.36, lwd = 3)
-  text(rr[1], y + 0.36, sprintf("observed with Y > 0: %d", round(diff(rr))), adj = c(0, -0.4), cex = 0.9, xpd = TRUE)
+  text(rr[1], y + 0.36, sprintf("respondents: %d", round(diff(rr))), adj = c(0, -0.4), cex = 0.9, xpd = TRUE)
 }
 ```
 
-Of the 80 treated units with $Y>0$, 20 are switchers, so $q = 20/80 = 0.25$.
+Control respondents are all AR. Treated respondents are AR plus IR, and we cannot tell which is which.
 
 ---
 
-## Constructing the bounds
+## What the data identify
 
-Trim a fraction $q$ from the treated $Y \mid D=1, Y>0$ distribution.
-
-- Upper bound: trim the bottom $q$. If switchers have the lowest outcomes, removing them isolates P.
-- Lower bound: trim the top $q$. If switchers have the highest outcomes, removing them isolates P.
+Randomization makes the strata shares $\pi_{AR}, \pi_{IR}, \pi_{NR}$ the same in both arms. Monotonicity then gives
 
 $$
-\Delta_{P,L} = E[Y \mid D=1, Y>0, Y \leq y_{1-q}] - E[Y \mid D=0, Y>0]
+p_0 := \Pr(S=1 \mid D=0) = \pi_{AR}, \qquad p_1 := \Pr(S=1 \mid D=1) = \pi_{AR} + \pi_{IR}.
 $$
 
+1. **Controls.** $\{D=0, S=1\}$ is exactly the AR stratum, so $E[Y \mid D=0, S=1] = E[Y(0) \mid \text{AR}]$. No trimming is needed.
+2. **Share of IR among treated respondents.**
 $$
-\Delta_{P,U} = E[Y \mid D=1, Y>0, Y \geq y_{q}] - E[Y \mid D=0, Y>0]
+q := \frac{\pi_{IR}}{\pi_{AR} + \pi_{IR}} = \frac{p_1 - p_0}{p_1}.
+$$
+3. **Treated respondents are a mixture.** With $f$ the density of $Y \mid D=1, S=1$, and $g$, $h$ the densities of $Y(1)$ among AR and IR,
+$$
+f(y) = (1-q)\, g(y) + q\, h(y).
+$$
+We observe $f$ and $q$, but not $g$ or $h$. The missing piece is $E[Y(1) \mid \text{AR}] = \int y\, g(y)\, dy$.
+
+---
+
+## The bounds and their proof
+
+Since $h \geq 0$, the mixture implies $0 \leq (1-q)\, g(y) \leq f(y)$. Let $y_u$ be the $u$-quantile of $f$.
+
+**Claim.** Among all densities $g$ with $0 \leq (1-q)\, g \leq f$, the mean is smallest for $g^* = f \cdot \mathbf 1\{y \leq y_{1-q}\} / (1-q)$: the bottom $1-q$ of the treated respondents.
+
+**Proof.** Both $g$ and $g^*$ integrate to 1, so
+$$
+\int y\, (g - g^*)\, dy = \int (y - y_{1-q})\, (g - g^*)\, dy \geq 0.
+$$
+Below $y_{1-q}$, $g^*$ is at its cap $f/(1-q)$, so $g - g^* \leq 0$ and $y - y_{1-q} \leq 0$. Above it, $g^* = 0$, so both factors are $\geq 0$. $\square$
+
+The same argument with the top $1-q$ gives the maximum. Subtracting the control mean:
+
+$$
+\Delta_{AR,L} = E[Y \mid D=1, S=1, Y \leq y_{1-q}] - E[Y \mid D=0, S=1]
+$$
+$$
+\Delta_{AR,U} = E[Y \mid D=1, S=1, Y \geq y_{q}] - E[Y \mid D=0, S=1]
 $$
 
-where $y_q$ and $y_{1-q}$ are quantiles of $Y \mid D=1, Y>0$. We do not know where in the distribution the switchers fall, so we compute both.
+The bounds are sharp: each is attained if the IR all sit at the top (or bottom) of the treated distribution.
+
+---
+
+## The recipe
+
+1. Compute $p_1$ and $p_0$, the response rates in each arm, and $q = (p_1 - p_0)/p_1$.
+2. Rank the **treated respondents** by $Y$.
+3. **Lower bound:** drop the top $q$ of them, as if the IR had the highest outcomes. Compare the remaining mean with the control respondents' mean.
+4. **Upper bound:** drop the bottom $q$, as if the IR had the lowest outcomes. Compare again.
+5. Control respondents are never trimmed: under monotonicity they are all AR.
+
+If $p_1 = p_0$, then $q = 0$, nothing is trimmed, and $\Delta_{AR}$ is point-identified.
+
+---
+
+## Trimming, unit by unit
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.6
+set.seed(8358)
+n_ar <- 180; n_ir <- 60                      # per 300 assigned: p0 = 0.6, p1 = 0.8
+yc <- sort(rnorm(n_ar, 20, 4))               # control respondents: all AR
+yt <- sort(c(rnorm(n_ar, 22, 4), rnorm(n_ir, 16, 4)))  # treated respondents: AR + IR, types unknown
+k  <- length(yt) - length(yc)               # q * n_treated: extra treated respondents = 60
+lo_keep <- seq_len(length(yt) - k)           # drop the top q
+hi_keep <- (k + 1):length(yt)                # drop the bottom q
+xs <- function(n, d) d + (seq_len(n) / n - 0.5) * 0.7
+ylim <- range(c(yc, yt)) + c(-1, 1)
+frame <- function(title) {
+  plot(NA, xlim = c(-0.5, 1.5), ylim = ylim, xaxt = "n", las = 1, bty = "l",
+       xlab = "D", ylab = "Y among respondents", main = title, cex.main = 1.05)
+  axis(1, at = 0:1)
+}
+mean_bar <- function(d, m, col = "black") segments(d - 0.38, m, d + 0.38, m, lwd = 6, col = col, lend = 1)
+sorted <- function(drop = integer(0), col_keep = "black") {
+  points(xs(length(yc), 0), yc, pch = 16, cex = 0.45)
+  keep <- setdiff(seq_along(yt), drop)
+  points(xs(length(yt), 1)[drop], yt[drop], pch = 5, cex = 0.5, col = "grey65")
+  points(xs(length(yt), 1)[keep], yt[keep], pch = 16, cex = 0.45, col = col_keep)
+  mean_bar(0, mean(yc))
+  mean_bar(1, mean(yt[keep]), col_keep)
+}
+par(mfrow = c(1, 4), mar = c(4.2, 4.2, 3, 0.5), cex = 0.95)
+frame("1. Respondents")
+boxplot(list(yc, yt), at = 0:1, add = TRUE, axes = FALSE, boxwex = 0.5, col = "grey90")
+mtext(sprintf("%d control, %d treated", length(yc), length(yt)), side = 3, line = 0.2, cex = 0.7, col = "grey30")
+frame("2. Sorted by Y")
+sorted()
+mtext(sprintf("q = %d/%d = %.2f of treated are IR", k, length(yt), k / length(yt)), side = 3, line = 0.2, cex = 0.7, col = "grey30")
+frame("3. Lower bound")
+sorted(setdiff(seq_along(yt), lo_keep), colL)
+mtext(sprintf("drop top %d:  %.2f - %.2f = %.2f", k, mean(yt[lo_keep]), mean(yc), mean(yt[lo_keep]) - mean(yc)),
+      side = 3, line = 0.2, cex = 0.7, col = colL)
+frame("4. Upper bound")
+sorted(setdiff(seq_along(yt), hi_keep), colU)
+mtext(sprintf("drop bottom %d:  %.2f - %.2f = %.2f", k, mean(yt[hi_keep]), mean(yc), mean(yt[hi_keep]) - mean(yc)),
+      side = 3, line = 0.2, cex = 0.7, col = colU)
+```
 
 ---
 
 ## Lee bounds: a numerical example
 
-Suppose $p_1 = 0.80$ and $p_0 = 0.60$, so $q = 0.25$. In this simulation the true $\Delta_P$ is 2.
+Suppose $p_1 = 0.80$ and $p_0 = 0.60$, so $q = 0.25$. In this simulation the true $\Delta_{AR}$ is 2.
 
 ```{r}
 #| fig-width: 11
 #| fig-height: 4.6
-mu_P <- 22; mu_S <- 16; mu_C <- 20; s <- 4     # treated P, treated S1, control P
-w  <- p0 / p1                                   # share of observed treated who are P
+mu_P <- 22; mu_S <- 16; mu_C <- 20; s <- 4     # treated AR, treated IR, control AR
+w  <- p0 / p1                                   # share of treated respondents who are AR
 f1 <- function(y) w * dnorm(y, mu_P, s) + (1 - w) * dnorm(y, mu_S, s)
 F1 <- function(y) w * pnorm(y, mu_P, s) + (1 - w) * pnorm(y, mu_S, s)
 q  <- (p1 - p0) / p1
@@ -873,7 +904,7 @@ dL <- mL - mu_C; dU <- mU - mu_C
 yy <- seq(2, 38, length.out = 500)
 panel <- function(cut, keep_low, m, d, colB, title) {
   plot(yy, f1(yy), type = "n", ylim = c(0, max(f1(yy)) * 1.25), yaxt = "n", bty = "n",
-       xlab = "Y among treated units with Y > 0", ylab = "", main = title, cex.main = 1.15)
+       xlab = "Y among treated respondents", ylab = "", main = title, cex.main = 1.15)
   tr <- if (keep_low) yy >= cut else yy <= cut
   kp <- !tr
   polygon(c(yy[kp], rev(yy[kp])), c(f1(yy[kp]), rep(0, sum(kp))), col = adjustcolor(blue, 0.45), border = NA)
@@ -890,17 +921,17 @@ panel <- function(cut, keep_low, m, d, colB, title) {
   mtext(bquote(.(d) == .(sprintf("%.2f - %d = %.2f", m, mu_C, m - mu_C))), side = 3, line = -0.2, cex = 1, col = colB)
 }
 par(mfrow = c(1, 2), mar = c(4.5, 1, 3, 1), cex = 1.05)
-panel(y_hi, TRUE,  mL, quote(Delta[P*","*L]), colL, "Lower bound: trim the top 25%")
-panel(y_lo, FALSE, mU, quote(Delta[P*","*U]), colU, "Upper bound: trim the bottom 25%")
+panel(y_hi, TRUE,  mL, quote(Delta[AR*","*L]), colL, "Lower bound: trim the top 25%")
+panel(y_lo, FALSE, mU, quote(Delta[AR*","*U]), colU, "Upper bound: trim the bottom 25%")
 ```
 
 ---
 
 ## Estimation and inference for Lee bounds
 
-- Estimate $\hat p_1, \hat p_0$ from participation rates by treatment status.
+- Estimate $\hat p_1, \hat p_0$ from response rates by treatment status.
 - Compute $\hat q = (\hat p_1 - \hat p_0)/\hat p_1$.
-- Trim the empirical distribution of $Y \mid D=1, Y>0$ and compute trimmed means.
+- Trim the empirical distribution of $Y \mid D=1, S=1$ and compute trimmed means.
 
 Inference:
 
@@ -912,61 +943,78 @@ With covariates $X$, one can weaken the monotonicity assumption and obtain tight
 
 ---
 
-## Trimming within covariate groups
+## A toy example: young and old
+
+Two equal-sized age groups, with $S_i(1) \geq S_i(0)$ in each. Let $\pi_x = \Pr(X=x)$ and $p_d(x) = \Pr(S=1 \mid D=d, X=x)$.
+
+| | $p_0(x)$ | $p_1(x)$ | $q(x) = \frac{p_1(x) - p_0(x)}{p_1(x)}$ |
+|:--|:-:|:-:|:-:|
+| Young | 0.4 | 0.8 | 0.50 |
+| Old | 0.8 | 0.8 | 0 |
+| Pooled | 0.6 | 0.8 | 0.25 |
+
+- **Pooled Lee** trims 25% of treated respondents from anywhere, including old respondents, who are all always responders.
+- **Within age**, trim 50% of young treated respondents and none of the old. Then average the age-specific bounds using the always responders' age mix, $\Pr(X=x \mid \text{AR}) = \pi_x\, p_0(x)/p_0$: young $1/3$, old $2/3$.
+- **The total trimmed is the same.** $\sum_x \Pr(X=x \mid D=1, S=1)\, q(x) = \sum_x \frac{\pi_x\, p_1(x)}{p_1} \cdot \frac{p_1(x) - p_0(x)}{p_1(x)} = \frac{p_1 - p_0}{p_1} = q$. Conditioning changes *which* units can be trimmed, not how many, so the bounds can only get tighter.
+
+---
+
+## Where the trimming happens
 
 ```{r}
 #| fig-width: 11
-#| fig-height: 4.4
-s  <- 3
-gx <- data.frame(g = c("A", "B", "C"), p0 = c(0.9, 0.6, 0.3), p1 = c(0.9, 0.8, 0.7), mu = c(26, 20, 14))
-# within each group: control P ~ N(mu, s); treated P ~ N(mu + 2, s); treated S1 ~ N(mu - 3, s); true effect 2
-mix_d <- function(y, a, m) colSums(a * outer(m, y, function(mm, yv) dnorm(yv, mm, s)))
-mix_p <- function(y, a, m) sum(a * pnorm(y, m, s))
-lee <- function(a, m, q, ctrl) {             # a, m: treated observed mixture; q: share trimmed
-  if (q < 1e-9) { mu1 <- sum(a * m); return(c(mu1, mu1) - ctrl) }
-  Q  <- function(u) uniroot(function(y) mix_p(y, a, m) - u, c(-50, 100))$root
-  tm <- function(lo, hi) integrate(function(y) y * mix_d(y, a, m), lo, hi)$value / (1 - q)
-  c(tm(-Inf, Q(1 - q)), tm(Q(q), Inf)) - ctrl
-}
-gx$q <- (gx$p1 - gx$p0) / gx$p1
-b_g  <- t(sapply(1:3, function(i) {
-  w <- gx$p0[i] / gx$p1[i]
-  lee(c(w, 1 - w), gx$mu[i] + c(2, -3), gx$q[i], gx$mu[i])
-}))
-wt     <- gx$p0 / sum(gx$p0)                 # X distribution among always-participants
-b_cond <- colSums(wt * b_g)
-# pooled: ignore X
-a_pool <- unlist(lapply(1:3, function(i) gx$p1[i] * c(gx$p0[i] / gx$p1[i], 1 - gx$p0[i] / gx$p1[i])))
-a_pool <- a_pool / sum(a_pool)
-m_pool <- unlist(lapply(1:3, function(i) gx$mu[i] + c(2, -3)))
-q_pool <- (mean(gx$p1) - mean(gx$p0)) / mean(gx$p1)
-b_pool <- lee(a_pool, m_pool, q_pool, sum(wt * gx$mu))
+#| fig-height: 4.6
+set.seed(2026)
+cY <- "#d95f02"; cO <- "#2c7bb6"                # young (orange), old (blue)
+# 300 assigned per age group per arm. Old: 80% always respond. Young: 40% always, 40% induced.
+y0_old <- rnorm(240, 26, 3); y1_old <- rnorm(240, 28, 3)
+y0_yng <- rnorm(120, 16, 3); y1_yng <- c(rnorm(120, 18, 3), rnorm(120, 14, 3))   # AR, then IR
+ctrl <- data.frame(y = c(y0_old, y0_yng), old = rep(c(TRUE, FALSE), c(240, 120)))
+trt  <- data.frame(y = c(y1_old, y1_yng), old = rep(c(TRUE, FALSE), c(240, 240)))
+trim_mean <- function(y, k, top = TRUE) { y <- sort(y); if (k == 0) mean(y) else if (top) mean(head(y, -k)) else mean(tail(y, -k)) }
+# pooled Lee: q = 0.25 of all 480 treated respondents
+k_pool <- nrow(trt) - nrow(ctrl)
+pool <- c(trim_mean(trt$y, k_pool, TRUE), trim_mean(trt$y, k_pool, FALSE)) - mean(ctrl$y)
+# within age: young q = 0.5 (trim 120 of 240), old q = 0; weight by always-responder shares 1/3, 2/3
+k_yng <- 240 - 120
+b_yng <- c(trim_mean(y1_yng, k_yng, TRUE), trim_mean(y1_yng, k_yng, FALSE)) - mean(y0_yng)
+b_old <- rep(mean(y1_old) - mean(y0_old), 2)
+w_yng <- 120 / 360
+cond  <- w_yng * b_yng + (1 - w_yng) * b_old
 
-layout(matrix(1:4, 1), widths = c(1, 1, 1, 1.35))
-par(mar = c(4.2, 0.8, 3.2, 0.8), cex = 1)
-for (i in 1:3) {
-  w  <- gx$p0[i] / gx$p1[i]; a <- c(w, 1 - w); m <- gx$mu[i] + c(2, -3)
-  yy <- seq(gx$mu[i] - 13, gx$mu[i] + 13, length.out = 400)
-  dd <- mix_d(yy, a, m)
-  plot(yy, dd, type = "n", ylim = c(0, 0.16), yaxt = "n", bty = "n", xlab = "Y among treated, Y > 0",
-       main = sprintf("X = %s: trim %.0f%%", gx$g[i], 100 * gx$q[i]), cex.main = 1.1)
-  mtext(sprintf("response %.1f vs %.1f", gx$p1[i], gx$p0[i]), side = 3, line = 0.2, cex = 0.75, col = "grey30")
-  cut <- if (gx$q[i] > 0) uniroot(function(y) mix_p(y, a, m) - (1 - gx$q[i]), c(-50, 100))$root else Inf
-  kp <- yy <= cut; tr <- !kp
-  polygon(c(yy[kp], rev(yy[kp])), c(dd[kp], rep(0, sum(kp))), col = adjustcolor(blue, 0.45), border = NA)
-  if (any(tr)) {
-    polygon(c(yy[tr], rev(yy[tr])), c(dd[tr], rep(0, sum(tr))), col = "grey85", border = NA)
-    polygon(c(yy[tr], rev(yy[tr])), c(dd[tr], rep(0, sum(tr))), density = 12, col = "grey55", border = NA)
-    segments(cut, 0, cut, mix_d(cut, a, m), lty = 2, lwd = 2)
-  }
-  lines(yy, dd, lwd = 2)
+xs <- function(n, x0) x0 + (seq_len(n) / n - 0.5) * 0.7
+show <- function(y, old, x0, drop = rep(FALSE, length(y))) {
+  o <- order(y); y <- y[o]; old <- old[o]; drop <- drop[o]; x <- xs(length(y), x0)
+  points(x[drop], y[drop], pch = 5, cex = 0.5, col = "grey55")
+  points(x[!drop], y[!drop], pch = 16, cex = 0.45, col = ifelse(old[!drop], cO, cY))
 }
-par(mar = c(4.2, 6.5, 3.2, 0.8))
-plot(NA, xlim = c(-6, 7), ylim = c(0.4, 2.6), yaxt = "n", bty = "n", xlab = expression(Delta[P]), ylab = "",
-     main = "Bounds on the effect", cex.main = 1.1)
-axis(2, at = c(2, 1), labels = c("Pooled\ntrim 25%", "Trim within X"), las = 1, tick = FALSE, cex.axis = 0.9)
+frame <- function(title, sub, xl, labs) {
+  plot(NA, xlim = range(xl) + c(-0.5, 0.5), ylim = c(5, 38), xaxt = "n", las = 1, bty = "l",
+       xlab = "", ylab = "Y among respondents", main = title, cex.main = 1.05)
+  axis(1, at = xl, labels = labs, tick = FALSE)
+  mtext(sub, side = 3, line = 0.2, cex = 0.7, col = colL)
+}
+layout(matrix(1:3, 1), widths = c(1, 1.5, 1.05))
+par(mar = c(3.5, 4.2, 3, 0.5), cex = 0.95)
+# 1. pooled lower bound
+drop_p <- rank(trt$y) > nrow(trt) - k_pool
+frame("Pooled: drop top 25%", sprintf("lower bound %.2f", pool[1]), 0:1, c("D = 0", "D = 1"))
+show(ctrl$y, ctrl$old, 0); show(trt$y, trt$old, 1, drop_p)
+legend("bottomright", bty = "n", pch = c(16, 16, 5), col = c(cY, cO, "grey55"), legend = c("young", "old", "trimmed"), cex = 0.85)
+text(0.5, 37, sprintf("%d of %d dropped are old", sum(drop_p & trt$old), k_pool), cex = 0.8, col = "grey30")
+# 2. within-age lower bound
+drop_y <- c(rep(FALSE, 240), rank(y1_yng) > 240 - k_yng)
+frame("Within age: drop top 50% of young only", sprintf("lower bound %.2f", cond[1]), c(0, 1, 2.2, 3.2),
+      c("young\nD = 0", "young\nD = 1", "old\nD = 0", "old\nD = 1"))
+show(y0_yng, rep(FALSE, 120), 0); show(y1_yng, rep(FALSE, 240), 1, drop_y[241:480])
+show(y0_old, rep(TRUE, 240), 2.2); show(y1_old, rep(TRUE, 240), 3.2)
+# 3. compare
+par(mar = c(3.5, 6.5, 3, 0.8))
+plot(NA, xlim = c(-6, 7), ylim = c(0.4, 2.6), yaxt = "n", bty = "n", xlab = "", ylab = "",
+     main = expression("Bounds on " * Delta[AR]), cex.main = 1.05)
+axis(2, at = c(2, 1), labels = c("Pooled", "Within age"), las = 1, tick = FALSE, cex.axis = 0.95)
 for (r in 1:2) {
-  b <- list(b_pool, b_cond)[[r]]; y <- c(2, 1)[r]
+  b <- list(pool, cond)[[r]]; y <- c(2, 1)[r]
   segments(b[1], y, b[2], y, lwd = 8, col = adjustcolor(amber, 0.7), lend = 1)
   points(b, c(y, y), pch = 19, col = c(colL, colU), cex = 1.3)
   text(b, y, sprintf("%.2f", b), pos = c(1, 3), col = c(colL, colU), cex = 0.85, offset = 0.6)
@@ -975,7 +1023,160 @@ abline(v = 2, lty = 3, col = "grey30")
 text(2, 2.55, "true 2", cex = 0.85, col = "grey30")
 ```
 
-Same pooled response rates as before (0.80 vs 0.60), split across three equal-sized groups (Samii, Wang, and Zhou).
+
+---
+
+## One tree, one unit
+
+```{r}
+#| fig-width: 9.2
+#| fig-height: 3.75
+path <- "#d95f02"
+layout(matrix(1:3, 1), widths = c(1.35, 0.9, 1))
+# 1. one tree: unit i falls into Leaf A
+par(mar = c(0.5, 0.5, 2.5, 0.5), cex = 0.8)
+plot(NA, xlim = c(0, 10), ylim = c(0, 10.4), axes = FALSE, xlab = "", ylab = "", main = "1. Drop unit i down one tree", cex.main = 1.15)
+node <- function(x, y, lab, on = FALSE, w = 1.9, h = 0.55) {
+  rect(x - w, y - h, x + w, y + h, col = if (on) adjustcolor(path, 0.15) else "white", border = if (on) path else "grey40", lwd = if (on) 2.5 else 1)
+  text(x, y, lab, cex = 0.95, font = if (on) 2 else 1)
+}
+edge <- function(x0, y0, x1, y1, lab, on = FALSE) {
+  segments(x0, y0, x1, y1, col = if (on) path else "grey60", lwd = if (on) 3 else 1.2)
+  text((x0 + x1) / 2 + if (x1 < x0) -0.35 else 0.35, (y0 + y1) / 2, lab, cex = 0.8, col = if (on) path else "grey40")
+}
+edge(5, 8.2, 2.6, 5.9, "yes", TRUE); edge(5, 8.2, 7.4, 5.9, "no")
+edge(2.6, 4.7, 1.3, 2.55, "yes", TRUE); edge(2.6, 4.7, 3.75, 2.55, "no")
+edge(7.4, 4.7, 6.25, 2.55, "yes"); edge(7.4, 4.7, 8.8, 2.55, "no")
+node(5, 8.75, "Age < 35?", TRUE)
+node(2.6, 5.3, "Income < $40k?", TRUE); node(7.4, 5.3, "Female?")
+node(1.3, 1.8, "Leaf A\ni + 39 others", TRUE, w = 1.3, h = 0.75); node(3.75, 1.8, "Leaf B", w = 0.95, h = 0.75)
+node(6.25, 1.8, "Leaf C", w = 0.95, h = 0.75); node(8.8, 1.8, "Leaf D", w = 0.95, h = 0.75)
+text(5, 10.15, "Unit i: age 29, female, income $32k", col = path, font = 2, cex = 0.95)
+# 2. response rates in Leaf A
+par(mar = c(0.5, 0.5, 2.5, 0.5), cex = 0.8)
+plot(NA, xlim = c(0, 10), ylim = c(0, 10.4), axes = FALSE, xlab = "", ylab = "", main = "2. Response rates in i's leaf", cex.main = 1.15)
+grid_row <- function(y, n_resp, lab) {
+  xs <- rep(seq(0.9, 9.1, length.out = 10), 2); ys <- y + rep(c(0.45, -0.45), each = 10)
+  resp <- seq_len(20) <= n_resp
+  symbols(xs, ys, squares = rep(0.62, 20), inches = FALSE, add = TRUE,
+          bg = ifelse(resp, adjustcolor(blue, 0.7), "white"), fg = "grey40")
+  text(5, y + 1.25, lab, cex = 0.95)
+}
+grid_row(7.6, 8,  "Control: 20 units, 8 respond")
+grid_row(3.9, 16, "Treated: 20 units, 16 respond")
+symbols(2.6, 10.0, squares = 0.5, inches = FALSE, add = TRUE, bg = adjustcolor(blue, 0.7), fg = "grey40"); text(2.95, 10.0, "responded", adj = 0, cex = 0.85)
+symbols(6.6, 10.0, squares = 0.5, inches = FALSE, add = TRUE, bg = "white", fg = "grey40"); text(6.95, 10.0, "did not", adj = 0, cex = 0.85)
+text(5, 2.35, expression(hat(p)[0](X[i]) == "8/20 = 0.40"), cex = 0.95)
+text(5, 1.5, expression(hat(p)[1](X[i]) == "16/20 = 0.80"), cex = 0.95)
+text(5, 0.35, expression(hat(q)(X[i]) == frac(0.80 - 0.40, 0.80) * " = 0.50"), cex = 1, col = colL)
+# 3. trimming among Leaf A's treated respondents
+yA <- c(14, 17, 19, 21, 22, 24, 25, 27, 28, 30, 31, 33, 35, 36, 39, 42)   # the 16 treated respondents' Y
+cutL <- (yA[8] + yA[9]) / 2
+par(mar = c(4, 4.2, 2.5, 0.8), cex = 0.8)
+plot(seq_along(yA), yA, type = "n", ylim = c(10, 46), las = 1, bty = "l", xaxt = "n",
+     xlab = "Leaf A treated respondents, by Y", ylab = "Y", main = "3. Trim within the leaf", cex.main = 1.15)
+keep <- yA <= cutL
+points(which(keep), yA[keep], pch = 16, col = blue, cex = 1.6)
+points(which(!keep), yA[!keep], pch = 5, col = "grey55", cex = 1.4)
+abline(h = cutL, col = colL, lwd = 3)
+text(1, cutL, expression(c[i]^L), pos = 3, col = colL, cex = 1.1)
+text(16.4, 13, "q = 0.50 of 16 respondents:\nlower bound drops the top 8,\nupper bound the bottom 8", adj = 1, cex = 0.85, col = "grey25")
+```
+
+A forest does not repeat steps 2–3 tree by tree. Trees only define neighbours: pool them first, $\alpha_{ij} = \frac{1}{B}\sum_b \frac{\mathbf 1\{j \in L_b(X_i)\}}{|L_b(X_i)|}$, then compute $\hat p_0(X_i)$, $\hat p_1(X_i)$, $\hat q(X_i)$ and the cutoff $c_i^L$ once, as $\alpha$-weighted rates and quantiles. Unit $i$'s observed $Y_i$ is compared with $c_i^L$, and the per-unit scores are averaged.
+
+---
+
+## From cells to forests
+
+Samii, Wang, and Zhou replace empty cells with the adaptive neighbourhoods of generalized random forests.
+
+1. **Response rates per unit.** Probability forests give $\hat p_0(X_i), \hat p_1(X_i)$, so $\hat q(X_i) = \frac{\hat p_1(X_i) - \hat p_0(X_i)}{\hat p_1(X_i)}$.
+2. **A cutoff per unit.** Quantile forests give $c_i^L$, the $(1-\hat q(X_i))$-quantile of $Y$ among treated respondents with covariates like $X_i$ (and $c_i^U$, the $\hat q(X_i)$-quantile).
+3. **Trim against your own cutoff.** Treated respondent $i$ is kept for the lower bound if $Y_i \leq c_i^L$.
+4. **Aggregate.** With randomization ($N_1$, $N_0$ assigned to each arm):
+$$
+\hat\tau^L = \frac{1}{\hat p_0}\Big[\frac{1}{N_1}\sum_{D_i=1,\,S_i=1}(Y_i - c_i^L)\,\mathbf 1\{Y_i \leq c_i^L\} \;-\; \frac{1}{N_0}\sum_{D_i=0,\,S_i=1}(Y_i - c_i^L)\Big]
+$$
+Centring at $c_i^L$ is Neyman orthogonalization; $\hat p_0$ weights by the always responders' covariate mix.
+5. **Cross-fit.** Forests are fit on $K-1$ folds; scores are computed on the held-out fold. (Warning: the paper's $q$ is $p_0/p_1$, the share *kept*.)
+
+---
+
+## Per-unit cutoffs
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.6
+set.seed(11)
+N0 <- N1 <- 50000                                 # assigned to each arm (large, so bounds are near their population values)
+p0x <- function(x) 0.3 + 0.5 * x; p1x <- function(x) rep(0.8, length(x))
+qx  <- function(x) (p1x(x) - p0x(x)) / p1x(x)     # trim share: 0.625 at x = 0, 0 at x = 1
+sim_arm <- function(n, d) {
+  x <- runif(n); u <- runif(n)
+  type <- ifelse(u < p0x(x), "AR", ifelse(u < p1x(x), "IR", "NR"))
+  y0 <- 10 + 10 * x + rnorm(n, 0, 2)
+  y  <- if (d == 1) ifelse(type == "AR", y0 + 2, 8 + 10 * x + rnorm(n, 0, 2)) else y0
+  s  <- if (d == 1) type != "NR" else type == "AR"
+  data.frame(x, y, s)[s, ]
+}
+tr <- sim_arm(N1, 1); ct <- sim_arm(N0, 0)
+shown <- sample(nrow(tr), 800)                   # plot a subsample; bounds use everyone
+# oracle conditional cutoffs: quantiles of the treated-respondent mixture at x (a forest would estimate these)
+mixq <- function(a, x) {
+  q <- qx(x); if (a >= 1 - 1e-9) return(Inf); if (a <= 1e-9) return(-Inf)
+  uniroot(function(y) (1 - q) * pnorm(y, 12 + 10 * x, 2) + q * pnorm(y, 8 + 10 * x, 2) - a, c(-20, 60))$root
+}
+grid <- seq(0, 1, length.out = 401)
+cLg <- sapply(grid, function(g) mixq(1 - qx(g), g)); cUg <- sapply(grid, function(g) mixq(qx(g), g))
+cL <- function(x) cLg[round(x * 400) + 1]       # nearest grid point
+cU <- function(x) cUg[round(x * 400) + 1]
+# per-unit cutoffs for every respondent, then the orthogonalized score (known propensity)
+score <- function(cut_t, cut_c, keep) {
+  (sum(ifelse(keep, tr$y - cut_t, 0)) / N1 - sum(ct$y - cut_c) / N0) / (nrow(ct) / N0)
+}
+tr$cL <- cL(tr$x); tr$cU <- cU(tr$x); ct$cL <- cL(ct$x); ct$cU <- cU(ct$x)
+fin <- function(v) ifelse(is.finite(v), v, 0)     # where q(x) = 0 nothing is trimmed; any centring constant works
+grfL <- score(fin(tr$cL), fin(ct$cL), tr$y <= tr$cL)
+grfU <- score(fin(tr$cU), fin(ct$cU), tr$y >= tr$cU)
+# basic Lee: one global cutoff
+q_hat <- (nrow(tr) / N1 - nrow(ct) / N0) / (nrow(tr) / N1)
+gL <- quantile(tr$y, 1 - q_hat, type = 1); gU <- quantile(tr$y, q_hat, type = 1)
+leeL <- mean(tr$y[tr$y <= gL]) - mean(ct$y); leeU <- mean(tr$y[tr$y >= gU]) - mean(ct$y)
+
+xx <- seq(0, 1, length.out = 200)
+panel <- function(keep, title, sub, cutline) {
+  plot(tr$x[shown], tr$y[shown], type = "n", las = 1, bty = "l", xlab = "X (continuous covariate)",
+       ylab = "Y among treated respondents", main = title, cex.main = 1.05)
+  mtext(sub, side = 3, line = 0.2, cex = 0.72, col = "grey30")
+  sh <- seq_len(nrow(tr)) %in% shown
+  points(tr$x[!keep & sh], tr$y[!keep & sh], pch = 5, cex = 0.45, col = "grey55")
+  points(tr$x[keep & sh], tr$y[keep & sh], pch = 16, cex = 0.45, col = blue)
+  cutline()
+}
+layout(matrix(1:3, 1), widths = c(1, 1, 0.8))
+par(mar = c(4.2, 4.2, 3, 0.8), cex = 0.95)
+keep_g <- tr$y <= gL
+panel(keep_g, "Basic Lee: one cutoff", sprintf("drop top %.0f%% overall; most dropped have high X", 100 * q_hat),
+      function() abline(h = gL, col = colL, lwd = 3))
+legend("topleft", bty = "n", pch = c(16, 5, NA), lty = c(NA, NA, 1), lwd = c(NA, NA, 3), cex = 0.85,
+       col = c(blue, "grey55", colL), legend = c("kept", "trimmed", "cutoff (lower bound)"))
+keep_c <- tr$y <= tr$cL
+panel(keep_c, "Per-unit cutoffs", "drop top q(x) near each X; q(x) falls from 0.63 to 0",
+      function() { cc <- cL(xx); cc[!is.finite(cc)] <- NA; lines(xx, cc, col = colL, lwd = 3) })
+par(mar = c(4.2, 6, 3, 0.8))
+plot(NA, xlim = c(-6, 7), ylim = c(0.4, 2.6), yaxt = "n", bty = "n", xlab = "", ylab = "",
+     main = expression("Bounds on " * Delta[AR]), cex.main = 1.05)
+axis(2, at = c(2, 1), labels = c("Basic Lee", "Per-unit"), las = 1, tick = FALSE, cex.axis = 0.95)
+for (r in 1:2) {
+  b <- list(c(leeL, leeU), c(grfL, grfU))[[r]]; y <- c(2, 1)[r]
+  segments(b[1], y, b[2], y, lwd = 8, col = adjustcolor(amber, 0.7), lend = 1)
+  points(b, c(y, y), pch = 19, col = c(colL, colU), cex = 1.3)
+  text(b, y, sprintf("%.2f", b), pos = c(1, 3), col = c(colL, colU), cex = 0.85, offset = 0.6)
+}
+abline(v = 2, lty = 3, col = "grey30")
+text(2, 2.55, "true 2", cex = 0.85, col = "grey30")
+```
 
 # Part VIII: Remarks
 

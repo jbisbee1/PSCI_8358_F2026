@@ -52,154 +52,49 @@ Last week: the two-group difference-in-differences design, parallel trends, and 
 
 Today:
 
-- A refresher on what DiD identifies, and under which assumptions
+- A brief recap of what DiD identifies (Lecture 8)
 - Why two-way fixed effects (TWFE) became the default specification
 - How TWFE fails under staggered adoption: forbidden comparisons and negative weights
 - Heterogeneity-robust alternatives: Callaway–Sant'Anna, Sun–Abraham, imputation
-- Sensitivity analysis for parallel trends: pre-tests, equivalence tests, and Rambachan–Roth
+- Sensitivity analysis for parallel trends in the staggered setting
 
 ---
 
 ## Learning objectives
 
-1. State the DiD estimand and the assumptions that identify it, in potential-outcomes notation.
+1. Restate the DiD estimand and its identifying assumptions for staggered adoption, using group-time effects $\text{ATT}(g,t)$.
 2. Explain why TWFE recovers the DiD in the 2×2 case and why that equivalence does not extend to staggered adoption.
 3. Use the Goodman-Bacon decomposition to identify which comparisons a TWFE estimate uses, and explain why the "later vs. earlier" comparison is forbidden.
 4. Compute the de Chaisemartin–D'Haultfœuille weights and say which treated cells receive negative weight.
 5. Describe the common logic of modern estimators (estimate $\text{ATT}(g,t)$ from clean comparisons, then aggregate) and the differences among them.
-6. Explain why passing a pre-trend test is weak evidence for parallel trends, and conduct a Rambachan–Roth sensitivity analysis.
+6. Conduct a Rambachan–Roth sensitivity analysis on the output of a heterogeneity-robust event study.
 
-# Part I: DiD refresher
+# Part I: Recap of Lecture 8
 
-## The canonical 2×2 design
+## What difference-in-differences identifies
 
-Two groups, two periods.
+In the 2×2 design with groups $D_i \in \{0,1\}$ and periods $t \in \{0,1\}$, the target is $\text{ATT} = E[Y_{i1}(1) - Y_{i1}(0) \mid D_i = 1]$. Two assumptions identify it:
 
-- $D_i \in \{0, 1\}$: unit $i$ is in the treated group.
-- $t \in \{0, 1\}$: treatment occurs between period 0 and period 1.
-- Potential outcomes $Y_{it}(1), Y_{it}(0)$. We observe $Y_{it} = Y_{it}(0) + D_i \cdot \mathbb{1}[t=1] \cdot (Y_{it}(1) - Y_{it}(0))$.
+- **Parallel trends:** $E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0]$.
+- **No anticipation:** $Y_{i0}(1) = Y_{i0}(0)$ for treated units.
 
-The target is the average effect of treatment on the treated in the post-period:
+Then the ATT equals the difference in mean changes. The single unobserved cell, $E[Y_{i1}(0) \mid D_i = 1]$, is imputed as the treated group's baseline plus the control group's change.
 
-$$
-\text{ATT} = E[Y_{i1}(1) - Y_{i1}(0) \mid D_i = 1].
-$$
-
-$E[Y_{i1}(1) \mid D_i=1]$ is observed. $E[Y_{i1}(0) \mid D_i = 1]$, what the treated group would have experienced without treatment, is not. DiD is a strategy for imputing it.
+Every estimator today does the same imputation for many cells at once. The estimators differ in **which** observed changes they use to fill each cell.
 
 ---
 
-## Two identifying assumptions
+## The regression and its equivalence
 
-**Parallel trends.** Absent treatment, the two groups would have experienced the same average change:
-
-$$
-E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0].
-$$
-
-**No anticipation.** Treatment has no effect before it occurs: $Y_{i0}(1) = Y_{i0}(0)$ for treated units.
-
-Together they give
+The saturated regression and the unit and period fixed effects regression both return the DiD in the 2×2 case:
 
 $$
-\text{ATT} = \underbrace{\big(E[Y_{i1} \mid D_i=1] - E[Y_{i0} \mid D_i=1]\big)}_{\text{change among treated}} - \underbrace{\big(E[Y_{i1} \mid D_i=0] - E[Y_{i0} \mid D_i=0]\big)}_{\text{change among controls}}.
+Y_{it} = \alpha + \gamma D_i + \lambda \mathbb{1}[t=1] + \beta \,(D_i \times \mathbb{1}[t=1]) + \varepsilon_{it}, \qquad Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}.
 $$
 
-The control group's change stands in for the treated group's counterfactual change. Nothing is assumed about levels.
+Lecture 8 showed that $\hat\beta = (\bar Y_{11} - \bar Y_{10}) - (\bar Y_{01} - \bar Y_{00})$ in both. With more periods, an event study estimates one such DiD per event time against a shared reference period, and the leads serve as diagnostics for parallel trends.
 
----
-
-## The 2×2 as a missing-data problem
-
-<table class="mt">
-<tr><th></th><th>Period 0</th><th>Period 1</th></tr>
-<tr><th>Treated ($D=1$)</th><td class="obs">$E[Y_0(0) \mid D=1]$<small>observed (no anticipation)</small></td><td class="obs">$E[Y_1(1) \mid D=1]$<small>observed</small></td></tr>
-<tr><th>Treated, counterfactual</th><td class="obs">$E[Y_0(0) \mid D=1]$<small>observed</small></td><td class="unk">$E[Y_1(0) \mid D=1]$<small>imputed: period 0 + control change</small></td></tr>
-<tr><th>Control ($D=0$)</th><td class="obs">$E[Y_0(0) \mid D=0]$<small>observed</small></td><td class="obs">$E[Y_1(0) \mid D=0]$<small>observed</small></td></tr>
-</table>
-
-- The single unobserved cell is filled by adding the control group's change to the treated group's baseline.
-- Every staggered-adoption estimator we discuss today does the same thing for many cells at once. The estimators differ in **which** observed changes they use to fill each cell.
-
----
-
-## What parallel trends is, and is not
-
-- It is an assumption about **untreated potential outcomes** only. It says nothing about how treatment effects evolve.
-- It is not implied by, and does not imply, balance in levels. Groups may differ permanently in their average outcomes.
-- It is **scale dependent**. Parallel trends in $Y$ and in $\log Y$ cannot generally both hold (Roth and Sant'Anna 2023).
-- It may hold only **conditionally** on covariates $X$: $E[\Delta Y(0) \mid D=1, X] = E[\Delta Y(0) \mid D=0, X]$. Estimation then requires outcome regression, weighting, or both (Sant'Anna and Zhao 2020).
-- With more than two periods, it is partly checkable. Differential trends **before** treatment are evidence against it. Their absence is not evidence for it after treatment (Part V).
-
----
-
-## Regression implementation in the 2×2
-
-The DiD estimate is the coefficient $\beta$ in either of two equivalent regressions:
-
-$$
-Y_{it} = \alpha + \gamma D_i + \lambda \mathbb{1}[t=1] + \beta \,(D_i \times \mathbb{1}[t=1]) + \varepsilon_{it}
-$$
-
-$$
-Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
-$$
-
-The second form, with unit and period fixed effects, is the **two-way fixed effects** specification. In the 2×2 case, $\hat\beta$ is numerically identical to the difference in mean changes. The next four slides show why.
-
----
-
-## The first regression is saturated
-
-Let $\bar Y_{dt}$ be the sample mean of $Y_{it}$ among units with $D_i = d$ in period $t$. There are four cells and four parameters, and the model gives each cell its own fitted value:
-
-$$
-\begin{aligned}
-\hat Y_{00} &= \alpha & \hat Y_{10} &= \alpha + \gamma \\
-\hat Y_{01} &= \alpha + \lambda & \hat Y_{11} &= \alpha + \gamma + \lambda + \beta
-\end{aligned}
-$$
-
-Because the model is **saturated**, OLS sets each fitted value equal to the corresponding cell mean, $\hat Y_{dt} = \bar Y_{dt}$, and the residuals average to zero within every cell.
-
----
-
-## Reading off the coefficients
-
-Solve the four equations in order:
-
-$$
-\begin{aligned}
-\hat\alpha &= \bar Y_{00} \\
-\hat\gamma &= \bar Y_{10} - \bar Y_{00} \\
-\hat\lambda &= \bar Y_{01} - \bar Y_{00} \\
-\hat\beta &= \bar Y_{11} - \hat\alpha - \hat\gamma - \hat\lambda = \big(\bar Y_{11} - \bar Y_{10}\big) - \big(\bar Y_{01} - \bar Y_{00}\big).
-\end{aligned}
-$$
-
-The last line is the difference in mean changes: $\hat\beta$ is the DiD estimator, with no approximation.
-
----
-
-## What each coefficient absorbs
-
-- $\hat\gamma$: the **baseline gap** between groups in period 0. DiD does not require it to be zero.
-- $\hat\lambda$: the **control group's change over time**. Under parallel trends this is also the treated group's counterfactual change.
-- $\hat\beta$: what remains. It is the treated group's change in excess of $\hat\lambda$, which is why it estimates the ATT under parallel trends and no anticipation.
-
-The level difference and the common trend each have their own parameter, so neither can contaminate $\hat\beta$. This separation is what we lose when treatment timing varies.
-
----
-
-## The two-way fixed effects form
-
-The unit-effects regression has $N + 2$ free parameters (one per unit, one period effect, and $\beta$), so it is not saturated in the sense above. The equivalence still holds in a balanced two-period panel. Differencing the equation across periods removes $\alpha_i$:
-
-$$
-\Delta Y_i = \lambda_1 - \lambda_0 + \beta D_i + \Delta\varepsilon_i, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
-$$
-
-This is a cross-sectional regression of the change in outcomes on a treatment dummy, so $\hat\beta$ is the difference in mean changes between treated and control units. The TWFE estimator and the DiD estimator coincide in the 2×2 case by construction, which is the origin of the practice we examine next.
+This equivalence is the origin of the practice we examine next.
 
 # Part II: TWFE as the default
 
@@ -730,182 +625,32 @@ The modern estimators remove the mechanical bias. They do not remove the need fo
 
 # Part V: Sensitivity analysis
 
-## The conventional check, and its limits
+## Pre-trends and sensitivity, revisited
 
-Standard practice: estimate leads, find them individually or jointly insignificant, and conclude that parallel trends holds.
+Lecture 8 developed the tools. Three points carry over to the staggered setting.
 
-Roth (2022) identifies two problems with this practice.
-
-1. **Low power.** Pre-tests often fail to detect violations large enough to produce bias comparable in size to the estimated effect.
-2. **Pre-test bias.** Conditioning on passing selects samples in which the pre-period noise happened to offset the trend. Because event-study coefficients share a reference period, that selection **amplifies** the bias in post-period estimates.
-
-Parallel trends after treatment is fundamentally untestable. Pre-period data constrain it only through an assumption about how pre- and post-period violations relate.
+- **Pre-tests are weak evidence.** They have low power, and conditioning on passing them amplifies bias in the post-period estimates (Roth 2022). Equivalence tests reverse the burden of proof (Hartman and Hidalgo 2018).
+- **Rambachan and Roth (2023)** bound the post-treatment violation by a multiple $\bar M$ of the largest pre-treatment violation (relative magnitudes), or by a limit $M$ on how much the differential trend's slope can change (smoothness). The result is a confidence set for each value of $\bar M$ or $M$, and a **breakdown value**.
+- **The restriction is substantive.** Shocks suggest relative magnitudes. Secular differential trends suggest smoothness.
 
 ---
 
-## Pre-test bias in a simulation
+## Applying HonestDiD to a modern event study
 
-```{r}
-#| echo: true
-set.seed(3)
-sims <- 20000; sig <- 0.05; trend <- 0.03          # true differential trend; true effect = 0
-per <- -4:3
-d <- matrix(trend * per, sims, length(per), byrow = TRUE) + matrix(rnorm(sims * 8, 0, sig), sims)
-colnames(d) <- per
-beta <- d - d[, "-1"]                                # event-study coefficients, ref = -1
-pass <- apply(abs(beta[, c("-4", "-3", "-2")]) / (sig * sqrt(2)) < 1.96, 1, all)
-c(pass_rate = mean(pass), bias_all = mean(beta[, "0"]), bias_if_passed = mean(beta[, "0"][pass]))
-```
+`HonestDiD` takes a vector of event-study coefficients and its covariance matrix, ordered pre then post with the reference period omitted. Any estimator that supplies both qualifies.
 
-A violation that produces bias of `r trend` in the first post-period passes the pre-test in about `r round(100 * mean(pass))`% of samples. Among those samples, the bias is larger than in the full set of samples.
-
----
-
-## Flipping the null: equivalence tests
-
-The pre-test above treats "no difference" as the null, so a noisy design passes easily. Hartman and Hidalgo (2018) propose reversing the burden of proof.
-
-- **Null:** the pre-period differences are large, $|\delta_{\text{pre}}| \geq \epsilon$.
-- **Alternative:** they are small, $|\delta_{\text{pre}}| < \epsilon$.
-- Two one-sided tests (TOST) reject only when the confidence interval lies inside $(-\epsilon, \epsilon)$.
-
-An imprecise design now **fails** to establish parallel pre-trends instead of passing by default. The researcher must state $\epsilon$, the largest violation considered substantively negligible, which makes the assumption explicit. Liu, Wang, and Xu (2024) implement equivalence tests for pre-treatment fit in `fect`.
-
-The limit is the same as before: even a successful equivalence test speaks to the pre-period, not to the post-period.
-
----
-
-## Rambachan and Roth (2023): the idea
-
-Write each event-study coefficient as effect plus bias:
-
-$$
-\beta_\ell = \tau_\ell + \delta_\ell, \qquad \delta_\ell = \text{differential trend in } Y(0) \text{ at } \ell .
-$$
-
-For $\ell < 0$, $\tau_\ell = 0$, so $\beta_{\text{pre}}$ estimates $\delta_{\text{pre}}$. For $\ell \geq 0$, $\delta_{\text{post}}$ is unobserved.
-
-Rather than assume $\delta_{\text{post}} = 0$, assume $\delta \in \Delta$, a set of restrictions that **link post-period violations to pre-period violations**. The result is an identified set for $\tau_{\text{post}}$, in the sense of Lecture 7, together with a confidence set that is valid uniformly over $\Delta$.
-
-Reporting proceeds by varying the size of $\Delta$ and finding the **breakdown value**: the smallest violation at which the conclusion no longer holds.
-
----
-
-## Two families of restrictions
-
-**Relative magnitudes**, $\Delta^{RM}(\bar M)$. Post-treatment violations between consecutive periods are no larger than $\bar M$ times the largest pre-treatment violation:
-
-$$
-|\delta_{\ell+1} - \delta_\ell| \leq \bar M \cdot \max_{s < 0} |\delta_{s+1} - \delta_s| \quad \text{for } \ell \geq 0.
-$$
-
-$\bar M = 1$: post-treatment shocks are no worse than the worst pre-treatment shock. This restriction suits confounding by **shocks**.
-
-**Smoothness**, $\Delta^{SD}(M)$. The slope of the differential trend changes by at most $M$ per period:
-
-$$
-|(\delta_{\ell+1} - \delta_\ell) - (\delta_\ell - \delta_{\ell-1})| \leq M .
-$$
-
-$M = 0$: the pre-trend continues linearly. This restriction suits confounding by **secular trends**, such as differential growth.
-
-The choice is substantive: it should follow from what could plausibly violate parallel trends.
-
----
-
-## An example with a pre-trend
-
-```{r}
-#| echo: true
-set.seed(21)
-N3 <- 600; T3 <- 15; g3 <- 11
-s3 <- expand.grid(unit = 1:N3, year = 1:T3)
-s3$tr  <- as.integer(s3$unit <= N3 / 2)
-s3$rel <- ifelse(s3$tr == 1, s3$year - g3, -1)
-s3$Y   <- rnorm(N3)[s3$unit] + 0.1 * s3$year +
-          0.03 * s3$tr * s3$year +                       # violation: differential trend
-          0.25 * s3$tr * (s3$year >= g3) + rnorm(nrow(s3), 0, 0.5)   # true effect 0.25
-es3 <- feols(Y ~ i(rel, ref = -1) | unit + year, data = s3, cluster = ~unit)
-b3  <- coef(es3); names(b3) <- sub("rel::", "", names(b3))
-round(b3, 3)
-```
-
-The leads drift upward, and the first post-period coefficient combines the true effect, $0.25$, with a bias of $0.03$.
-
----
-
-## Sensitivity sets in the example
-
-```{r}
-#| echo: true
-pre  <- c(b3[as.character(-10:-2)], `-1` = 0)
-m    <- max(abs(diff(pre)))                     # largest pre-period jump
-s    <- coef(lm(pre ~ as.numeric(names(pre))))[2]   # linear pre-trend slope
-b0   <- b3["0"]; se0 <- se(es3)["rel::0"]
-Mbar <- seq(0, 2, by = 0.25)
-rm_set <- cbind(lo = b0 - Mbar * m - 1.96 * se0, hi = b0 + Mbar * m + 1.96 * se0)
-M <- c(0, 0.01, 0.02, 0.04)
-sd_set <- cbind(lo = b0 - s - M - 1.96 * se0, hi = b0 - s + M + 1.96 * se0)
-```
-
-These are schematic versions that treat the pre-period coefficients as known. They are intended for intuition. `HonestDiD` accounts for estimation error in $\hat\delta_{\text{pre}}$ and gives confidence sets with correct coverage.
-
----
-
-## Sensitivity plots
-
-```{r}
-#| fig-width: 12
-#| fig-height: 3.8
-par(mfrow = c(1, 2), mar = c(4.2, 4.5, 2, 1), cex = 1.05)
-yl <- range(c(rm_set, sd_set, 0))
-plot(NA, xlim = range(Mbar), ylim = yl, xlab = expression(bar(M)), ylab = "Effect at event time 0",
-     main = "Relative magnitudes")
-segments(Mbar, rm_set[, 1], Mbar, rm_set[, 2], lwd = 4, col = blue)
-abline(h = 0, lty = 3); abline(h = 0.25, col = green, lwd = 2)
-plot(NA, xlim = c(-0.005, 0.045), ylim = yl, xlab = "M", ylab = "", main = "Smoothness")
-segments(M, sd_set[, 1], M, sd_set[, 2], lwd = 4, col = amber)
-abline(h = 0, lty = 3); abline(h = 0.25, col = green, lwd = 2)
-legend("topright", "True effect", col = green, lwd = 2, bty = "n")
-```
-
-Relative magnitudes treat the pre-trend as noise of bounded size. The set includes zero once $\bar M \gtrsim$ `r round((abs(b0) - 1.96 * se0) / m, 2)`. Smoothness extrapolates the trend, so at $M = 0$ it removes the bias and centers on the truth. The same data support different conclusions under different restrictions, which is why the restriction must be justified substantively.
-
----
-
-## HonestDiD in practice
-
-```{r}
-#| echo: true
-#| eval: false
-library(HonestDiD)
-betahat <- coef(es3); sigma <- vcov(es3)            # event-study coefs and vcov
-res_rm <- createSensitivityResults_relativeMagnitudes(
-  betahat = betahat, sigma = sigma,
-  numPrePeriods = 9, numPostPeriods = 5,
-  Mbarvec = seq(0, 2, by = 0.25))
-res_sd <- createSensitivityResults(
-  betahat = betahat, sigma = sigma,
-  numPrePeriods = 9, numPostPeriods = 5,
-  Mvec = seq(0, 0.04, by = 0.01))
-orig <- constructOriginalCS(betahat, sigma, numPrePeriods = 9, numPostPeriods = 5)
-createSensitivityPlot_relativeMagnitudes(res_rm, orig)
-```
-
-- Coefficients must be ordered pre then post, with the reference period omitted.
-- Use `l_vec` to target an average of post-period effects instead of the first one.
-- The procedure works with any event-study estimator that supplies a coefficient vector and covariance matrix, including Callaway–Sant'Anna and Sun–Abraham.
+- A TWFE event study from a staggered design is **not** an appropriate input, because its coefficients are contaminated (Part III).
+- Use the dynamic aggregation from Callaway–Sant'Anna, the Sun–Abraham estimates, or the imputation estimates. The package vignette shows how to extract the coefficient vector and covariance matrix from `did` output.
+- With Callaway–Sant'Anna, set `base_period = "universal"` so that pre-period and post-period estimates are measured from the same reference period (Roth 2024).
+- Report the breakdown value for the average post-treatment effect, not only the first post-period.
 
 ---
 
 ## Other robustness checks
 
-- **Placebo-in-time tests.** Assign a fake adoption date before the true one and re-estimate. `fect` automates this for imputation estimators.
 - **Leave-one-cohort-out.** Check whether a single adoption cohort drives the aggregate.
 - **Alternative comparison groups.** Report never-treated and not-yet-treated estimates. Divergence points to anticipation or to selection into never adopting.
-- **Functional form.** Parallel trends in levels and in logs are different assumptions (Roth and Sant'Anna 2023). Report both when the outcome is skewed.
-- **Inference with few treated clusters.** Clustered standard errors over-reject when few clusters are treated. Wild cluster bootstrap and randomization inference perform better (MacKinnon and Webb 2016; Ferman and Pinto 2019).
-- **Conditional parallel trends.** If adoption is predicted by pre-treatment covariates, condition on them using Callaway–Sant'Anna's doubly robust estimator, and show how much the estimate moves.
+- **Placebo, functional form, covariates, and inference.** See Lecture 8. Few treated clusters are a particular concern when only a handful of cohorts adopt.
 
 # Part VI: Remarks
 

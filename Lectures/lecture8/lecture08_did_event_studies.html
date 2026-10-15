@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="lecture08_did_event_studies_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lecture08_did_event_studies_files/libs/quarto-html/tabby.min.js"></script>
+<script src="lecture08_did_event_studies_files/libs/quarto-html/popper.min.js"></script>
+<script src="lecture08_did_event_studies_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="lecture08_did_event_studies_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lecture08_did_event_studies_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="lecture08_did_event_studies_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.7.32">
+
+  <meta name="author" content="Advanced Observational Causal Inference">
+  <meta name="dcterms.date" content="2026-10-14">
+  <title>Lecture 8: Difference-in-Differences and Event Studies</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="lecture08_did_event_studies_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="lecture08_did_event_studies_files/libs/revealjs/dist/reveal.css">
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      { color: #003b4f; background-color: #f1f3f5; }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span { color: #003b4f; } /* Normal */
+    code span.al { color: #ad0000; } /* Alert */
+    code span.an { color: #5e5e5e; } /* Annotation */
+    code span.at { color: #657422; } /* Attribute */
+    code span.bn { color: #ad0000; } /* BaseN */
+    code span.bu { } /* BuiltIn */
+    code span.cf { color: #003b4f; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #20794d; } /* Char */
+    code span.cn { color: #8f5902; } /* Constant */
+    code span.co { color: #5e5e5e; } /* Comment */
+    code span.cv { color: #5e5e5e; font-style: italic; } /* CommentVar */
+    code span.do { color: #5e5e5e; font-style: italic; } /* Documentation */
+    code span.dt { color: #ad0000; } /* DataType */
+    code span.dv { color: #ad0000; } /* DecVal */
+    code span.er { color: #ad0000; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #ad0000; } /* Float */
+    code span.fu { color: #4758ab; } /* Function */
+    code span.im { color: #00769e; } /* Import */
+    code span.in { color: #5e5e5e; } /* Information */
+    code span.kw { color: #003b4f; font-weight: bold; } /* Keyword */
+    code span.op { color: #5e5e5e; } /* Operator */
+    code span.ot { color: #003b4f; } /* Other */
+    code span.pp { color: #ad0000; } /* Preprocessor */
+    code span.sc { color: #5e5e5e; } /* SpecialChar */
+    code span.ss { color: #20794d; } /* SpecialString */
+    code span.st { color: #20794d; } /* String */
+    code span.va { color: #111111; } /* Variable */
+    code span.vs { color: #20794d; } /* VerbatimString */
+    code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
+  </style>
+  <link rel="stylesheet" href="lecture08_did_event_studies_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-chalkboard/font-awesome/css/all.css" rel="stylesheet">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-chalkboard/style.css" rel="stylesheet">
+  <link href="lecture08_did_event_studies_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <style>
+  .two { display: flex; gap: 2em; justify-content: center; }
+  .two > .col { flex: 1; }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Lecture 8: Difference-in-Differences and Event Studies</h1>
+  <p class="subtitle">Adapted from Cyrus Samii, <em>Difference in Differences for a Single Event</em> (NYU, POL-GA 1251, March 2026)</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Advanced Observational Causal Inference 
+</div>
+</div>
+</div>
+
+  <p class="date">2026-10-14</p>
+</section>
+<section>
+<section id="two-period-did" class="title-slide slide level1 center">
+<h1>Two-period DiD</h1>
+
+</section>
+<section id="setup" class="slide level2">
+<h2>Setup</h2>
+<ul>
+<li>A sample of <span class="math inline">\(N\)</span> units from a large population, indexed by <span class="math inline">\(i = 1, \dots, N\)</span>, observed in two periods <span class="math inline">\(t = 0, 1\)</span>.</li>
+<li>Outcomes <span class="math inline">\(Y_{it}\)</span> and binary treatment <span class="math inline">\(D_{it}\)</span>. No one is treated in period 0: <span class="math inline">\(D_{i0} = 0\)</span> for all <span class="math inline">\(i\)</span>.</li>
+<li>In period 1, <span class="math inline">\(D_{i1} = 1\)</span> for “treated” units and <span class="math inline">\(D_{i1} = 0\)</span> for controls.</li>
+<li>Let <span class="math inline">\(T_i = \mathbb{1}(\text{treated}_i)\)</span> and <span class="math inline">\(\text{Post}_t = \mathbb{1}(t = 1)\)</span>.</li>
+<li>Selection into treatment may depend on unobserved variables at <span class="math inline">\(t = 0\)</span>.</li>
+</ul>
+</section>
+<section id="potential-outcomes" class="slide level2">
+<h2>Potential outcomes</h2>
+<ul>
+<li>Potential outcomes <span class="math inline">\(Y_{it}(1)\)</span>, <span class="math inline">\(Y_{it}(0)\)</span>. Observed outcome <span class="math inline">\(Y_{it} = D_{it} Y_{it}(1) + (1 - D_{it}) Y_{it}(0)\)</span>.</li>
+<li>We observe <span class="math inline">\(Y_{i0} = Y_{i0}(0)\)</span> for everyone, <span class="math inline">\(Y_{i1} = Y_{i1}(1)\)</span> for treated units, and <span class="math inline">\(Y_{i1} = Y_{i1}(0)\)</span> for controls.</li>
+<li>The target is the ATT in period 1:</li>
+</ul>
+<p><span class="math display">\[
+\tau = E[Y_{i1}(1) - Y_{i1}(0) \mid T_i = 1].
+\]</span></p>
+<p>The challenge is that <span class="math inline">\(Y_{i1}(0)\)</span> is never observed for treated units.</p>
+</section>
+<section id="parallel-trends-and-no-anticipation" class="slide level2">
+<h2>Parallel trends and no anticipation</h2>
+<p><strong>Assumption 1 (Parallel trends).</strong></p>
+<p><span class="math display">\[
+E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 0].
+\]</span></p>
+<p>The average trend in untreated potential outcomes is the same for treated and control groups.</p>
+<p><strong>Assumption 2 (No anticipation).</strong> <span class="math inline">\(Y_{i0}(1) = Y_{i0}(0)\)</span> for all <span class="math inline">\(i\)</span>. Treatment has no causal effect before it is implemented.</p>
+<p>Both assumptions are untestable, because they concern counterfactual outcomes.</p>
+</section>
+<section id="att-identification" class="slide level2">
+<h2>ATT identification</h2>
+<p>Under Assumptions 1 and 2,</p>
+<p><span class="math display">\[
+\begin{aligned}
+\tau &amp;= E[Y_{i1}(1) - Y_{i1}(0) \mid T_i = 1] \\
+&amp;= E[Y_{i1}(1) - Y_{i0}(0) \mid T_i = 1] - E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 1] \\
+&amp;= E[Y_{i1}(1) - Y_{i0}(0) \mid T_i = 1] - E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 0] \\
+&amp;= E[Y_{i1} - Y_{i0} \mid T_i = 1] - E[Y_{i1} - Y_{i0} \mid T_i = 0].
+\end{aligned}
+\]</span></p>
+<ul>
+<li>Line 2 adds and subtracts <span class="math inline">\(Y_{i0}(0)\)</span> and uses no anticipation.</li>
+<li>Line 3 applies parallel trends.</li>
+<li>Line 4 substitutes observed outcomes. This is the difference-in-differences of population means.</li>
+</ul>
+</section>
+<section id="graphical-intuition" class="slide level2">
+<h2>Graphical intuition</h2>
+<p><span class="math display">\[
+\tau = {\color{#4a7fb5}E[Y_{i1} - Y_{i0} \mid T_i = 1]} - {\color{#666666}E[Y_{i1} - Y_{i0} \mid T_i = 0]}
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/gi0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/gi1.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/gi2.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/gi3.png" class="fragment" style="width:85.0%"></p>
+</div>
+</section>
+<section id="three-did-regressions" class="slide level2">
+<h2>Three DiD regressions</h2>
+<p>In two periods, each of the following produces the same <span class="math inline">\(\hat\delta\)</span>:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Y_{it} &amp;= \beta_0 + \beta_1 T_i + \beta_2 \text{Post}_t + \delta\, T_i \times \text{Post}_t + \epsilon_{it} \\
+Y_{it} &amp;= \alpha_i + \lambda_t + \delta D_{it} + \epsilon_{it} \\
+\Delta Y_i &amp;= \Delta\lambda + \delta\, T_i + \Delta\epsilon_i
+\end{aligned}
+\]</span></p>
+</section>
+<section id="the-regression-on-the-diagram" class="slide level2">
+<h2>The regression on the diagram</h2>
+<p><span class="math display">\[
+Y_{it} = {\color{#555555}\beta_0} + {\color{#e0902b}\beta_1}\, T_i + {\color{#1b7837}\beta_2}\, \text{Post}_t + {\color{#b2182b}\delta}\, T_i \times \text{Post}_t + \epsilon_{it}
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/step0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/step1.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/step2.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/step3.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/step4.png" class="fragment" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/step5.png" class="fragment" style="width:85.0%"></p>
+</div>
+</section>
+<section id="from-group-dummies-to-unit-and-time-effects" class="slide level2">
+<h2>From group dummies to unit and time effects</h2>
+<p><span class="math display">\[
+\underbrace{{\color{#555555}\beta_0} + {\color{#e0902b}\beta_1}\, T_i}_{{\color{#555555}\alpha_i}} \;+\; \underbrace{{\color{#1b7837}\beta_2}\, \text{Post}_t}_{{\color{#1b7837}\lambda_t}} \;+\; {\color{#b2182b}\delta}\, \underbrace{T_i \times \text{Post}_t}_{D_{it}}
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/unit0.png" style="width:80.0%"></p>
+<p><img data-src="figs_twfe/unit1.png" class="fragment" style="width:80.0%"></p>
+<p><img data-src="figs_twfe/unit2.png" class="fragment" style="width:80.0%"></p>
+<p><img data-src="figs_twfe/unit3.png" class="fragment" style="width:80.0%"></p>
+</div>
+</section>
+<section id="the-first-difference-version" class="slide level2">
+<h2>The first-difference version</h2>
+<p><span class="math display">\[
+Y_{i1} - Y_{i0} = \underbrace{(\alpha_i - \alpha_i)}_{=\,0} + \underbrace{(\lambda_1 - \lambda_0)}_{{\color{#1b7837}\Delta\lambda}} + {\color{#b2182b}\delta}\, \underbrace{(D_{i1} - D_{i0})}_{T_i} + \Delta\epsilon_i
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/diff0.png" style="width:90.0%"></p>
+<p><img data-src="figs_twfe/diff1.png" class="fragment" style="width:90.0%"></p>
+<p><img data-src="figs_twfe/diff2.png" class="fragment" style="width:90.0%"></p>
+</div>
+</section>
+<section id="what-the-22-requires" class="slide level2">
+<h2>What the 2×2 requires</h2>
+<p>Everything so far is correct in a <strong>2×2 setting</strong>: two groups, two periods.</p>
+<p>It requires two assumptions.</p>
+<ul>
+<li><strong>Parallel trends:</strong> absent treatment, the treated group’s average change would equal the control group’s.</li>
+<li><strong>No anticipation:</strong> treatment has no effect before it is implemented.</li>
+</ul>
+<p>Only under these assumptions does the coefficient <span class="math inline">\(\delta\)</span> equal the ATT.</p>
+<blockquote>
+<p>What if parallel trends did not hold? What if units responded before treatment began?</p>
+</blockquote>
+</section>
+<section id="what-if-parallel-trends-fails" class="slide level2">
+<h2>What if parallel trends fails?</h2>
+<p><span class="math display">\[
+E[\hat\delta] = \tau + \underbrace{E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 1] - E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 0]}_{\text{difference in counterfactual trends}}
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/pt0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/pt1.png" class="fragment" style="width:85.0%"></p>
+</div>
+</section>
+<section id="what-if-there-is-anticipation" class="slide level2">
+<h2>What if there is anticipation?</h2>
+<p><span class="math display">\[
+E[\hat\delta] = \tau - \underbrace{E[Y_{i0}(1) - Y_{i0}(0) \mid T_i = 1]}_{\text{anticipation effect in the pre-period}} \qquad \text{(parallel trends holding)}
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/ant0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/ant1.png" class="fragment" style="width:85.0%"></p>
+</div>
+</section>
+<section id="the-parallel-trends-assumption-is-untestable" class="slide level2">
+<h2>The parallel trends assumption is untestable</h2>
+<ul>
+<li>Parallel trends is about <em>counterfactual</em> outcomes for the treated. We can never directly verify what would have happened to the treated group absent treatment.</li>
+<li>Parallel pre-trends, when available, lend plausibility but do <em>not</em> guarantee parallel post-treatment trends.</li>
+<li>Trend assumptions are sensitive to the <em>scale</em> of the outcome: parallel on levels is not parallel on logs, and the reverse. The functional form needs a justification (Roth et al.&nbsp;2023).</li>
+</ul>
+</section>
+<section id="two-period-did-estimation-and-inference" class="slide level2">
+<h2>Two-period DiD: estimation and inference</h2>
+<ul>
+<li>Standard inference uses cluster-robust standard errors at the level of unit <span class="math inline">\(i\)</span>.</li>
+<li>If treatment is assigned at a higher level (for example, states), cluster at that level. The rule of thumb is to cluster at the level at which treatment is independently assigned (Roth et al.&nbsp;2023).</li>
+<li><strong>Few clusters:</strong> standard cluster-robust SEs may perform poorly.
+<ul>
+<li>Wild cluster bootstrap (Cameron, Gelbach, and Miller 2008).</li>
+<li><span class="math inline">\(t\)</span>-distribution with <span class="math inline">\(J - 2\)</span> degrees of freedom (Donald and Lang 2007).</li>
+<li>Randomization inference approaches.</li>
+</ul></li>
+</ul>
+</section>
+<section id="statistical-power-in-did-weiss-2024" class="slide level2">
+<h2>Statistical power in DiD (Weiss 2024)</h2>
+<ul>
+<li>DiD designs often have small effective sample sizes (for example, <span class="math inline">\(N = 50\)</span> US states).</li>
+<li>Weiss (2024) is a simulation study of modern DiD methods. It shows:
+<ul>
+<li>Many methods produce confidence intervals that fail to cover at nominal rates.</li>
+<li>Block bootstrap can improve coverage.</li>
+<li>Power is a serious concern, and large effect sizes are required for detection.</li>
+</ul></li>
+<li>Effective sample size is driven by the number of <em>units</em>, not by sub-units or time periods.</li>
+<li>Researchers should conduct power analyses <em>before</em> committing to a DiD design.</li>
+</ul>
+</section></section>
+<section>
+<section id="conditional-did" class="title-slide slide level1 center">
+<h1>Conditional DiD</h1>
+
+</section>
+<section id="conditional-parallel-trends" class="slide level2">
+<h2>Conditional parallel trends</h2>
+<p>Standard parallel trends may be implausible unconditionally but plausible conditional on covariates <span class="math inline">\(X_i\)</span>.</p>
+<p><strong>Assumption 1<span class="math inline">\('\)</span> (Conditional parallel trends).</strong></p>
+<p><span class="math display">\[
+\begin{aligned}
+&amp;E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 1, X_i] = E[Y_{i1}(0) - Y_{i0}(0) \mid T_i = 0, X_i]\\
+&amp;\Pr[T_i = 1 \mid X_i] &lt; 1 \text{ for all } X_i \text{ (overlap).}
+\end{aligned}
+\]</span></p>
+<ul>
+<li>Among units with the same <span class="math inline">\(X_i\)</span>, trends are parallel.</li>
+<li>This allows confounders with <em>time-invariant</em> additive effects on the outcome to differ across groups, as long as <span class="math inline">\(X_i\)</span> captures them.</li>
+</ul>
+</section>
+<section id="controls-in-the-three-did-regressions" class="slide level2">
+<h2>Controls in the three DiD regressions</h2>
+<p>Conditional parallel trends says that the <em>trend</em> in untreated outcomes depends on <span class="math inline">\(X_i\)</span>, so covariates must enter interacted with time. In each of the three forms:</p>
+<p><span class="math display">\[
+\begin{aligned}
+Y_{it} &amp;= \beta_0 + \beta_1 T_i + \beta_2 \text{Post}_t + \delta\, T_i \times \text{Post}_t + X_i'\gamma_0 + X_i'\gamma_1 \text{Post}_t + \epsilon_{it} \\
+Y_{it} &amp;= \alpha_i + \lambda_t + \delta D_{it} + X_i'\gamma_1 \text{Post}_t + \epsilon_{it} \\
+\Delta Y_i &amp;= \Delta\lambda + \delta\, T_i + X_i'\gamma_1 + \Delta\epsilon_i
+\end{aligned}
+\]</span></p>
+<ul>
+<li>The term <span class="math inline">\(X_i'\gamma_1 \text{Post}_t\)</span> lets covariates shift the trend. It is the term that matters.</li>
+<li>The level term <span class="math inline">\(X_i'\gamma_0\)</span> is kept in the dummy form so that all three give the same <span class="math inline">\(\hat\delta\)</span>. In the TWFE form it is absorbed by <span class="math inline">\(\alpha_i\)</span>, and in the first-difference form it is differenced out.</li>
+</ul>
+</section>
+<section id="conditional-did-implementation" class="slide level2">
+<h2>Conditional DiD: implementation</h2>
+<p>Three approaches.</p>
+<ol type="1">
+<li><p><strong>Regression adjustment.</strong> Add <span class="math inline">\(X_i\)</span> interacted with time, as on the previous slide. An uninteracted <span class="math inline">\(X_i\)</span> is absorbed by <span class="math inline">\(\alpha_i\)</span> in the TWFE form, so it does nothing. This imposes a common slope <span class="math inline">\(\gamma_1\)</span> for treated and control, which can bias the ATT under heterogeneous effects (Roth et al.&nbsp;2023, eq. 12).</p></li>
+<li><p><strong>IPW.</strong> Weight by the inverse propensity score <span class="math inline">\(p(X_i) = \Pr[T_i = 1 \mid X_i]\)</span> (Abadie 2005): <span class="math display">\[
+\hat\tau = \frac{1}{N_1} \sum_i \left( T_i - \frac{(1 - T_i)\hat p(X_i)}{1 - \hat p(X_i)} \right) \Delta Y_i.
+\]</span></p></li>
+<li><p><strong>Doubly robust</strong> (Sant’Anna and Zhao 2020). It combines outcome modeling and IPW, is consistent if <em>either</em> model is correct, and achieves the semiparametric efficiency bound.</p></li>
+</ol>
+</section>
+<section id="caveat-conditioning-on-pre-treatment-y" class="slide level2">
+<h2>Caveat: conditioning on pre-treatment <span class="math inline">\(Y\)</span></h2>
+<ul>
+<li>Common practice includes lagged outcomes <span class="math inline">\(Y_{i0}\)</span> in <span class="math inline">\(X_i\)</span> to make parallel trends more plausible.</li>
+<li>But this can induce regression to the mean bias (Daw and Hatfield 2018).
+<ul>
+<li>Matching on pre-treatment outcomes selects controls with unusually large “shocks” at <span class="math inline">\(t = 0\)</span>.</li>
+<li>These shocks mean-revert, creating a spurious trend difference.</li>
+</ul></li>
+<li>Whether to condition on lagged outcomes depends on which assumption is more credible: conditional unconfoundedness (given lagged <span class="math inline">\(Y\)</span>) or parallel trends.</li>
+<li>The two assumptions are <em>not nested</em>. They point to different estimators and different biases.</li>
+</ul>
+</section></section>
+<section>
+<section id="did-with-t-2-event-studies" class="title-slide slide level1 center">
+<h1>DiD with <span class="math inline">\(t &gt; 2\)</span>: event studies</h1>
+
+</section>
+<section id="setup-1" class="slide level2">
+<h2>Setup</h2>
+<ul>
+<li>There are multiple pre-event periods <span class="math inline">\(t = -J, \dots, -1, 0\)</span> and post-event periods <span class="math inline">\(t = 1, \dots, K\)</span>.</li>
+<li>All treated units receive treatment at the same time (a single event).</li>
+<li>We are interested in the dynamic ATTs:</li>
+</ul>
+<p><span class="math display">\[
+\tau_k = E[Y_{i,k}(1) - Y_{i,k}(0) \mid T_i = 1], \qquad k = 1, \dots, K.
+\]</span></p>
+<p>How does the effect evolve over time since treatment?</p>
+</section>
+<section id="event-study-specification" class="slide level2">
+<h2>Event study specification</h2>
+<p>Estimate period-specific effects relative to a reference period (typically <span class="math inline">\(t = 0\)</span> or <span class="math inline">\(t = -1\)</span>):</p>
+<p><span class="math display">\[
+Y_{it} = \alpha_i + \lambda_t + \sum_{\substack{k=-J \\ k \neq 0}}^{K} \delta_k \cdot T_i \times \mathbb{1}(t = k) + \epsilon_{it}.
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\delta_k\)</span> for <span class="math inline">\(k &gt; 0\)</span>: dynamic treatment effects, relative to the reference period.</li>
+<li><span class="math inline">\(\delta_k\)</span> for <span class="math inline">\(k &lt; 0\)</span>: pre-trend “placebo” coefficients.</li>
+<li>This is algebraically equivalent to the group-time interaction regression.</li>
+</ul>
+</section>
+<section id="an-event-study-with-dynamic-effects" class="slide level2">
+<h2>An event study with dynamic effects</h2>
+
+<img data-src="figs_twfe/dyn0.png" style="width:85.0%" class="r-stretch"></section>
+<section id="what-does-pooled-twfe-estimate" class="slide level2">
+<h2>What does pooled TWFE estimate?</h2>
+<p>The pooled (static) TWFE regression is <span class="math inline">\(Y_{it} = \alpha_i + \lambda_t + \delta \cdot D_{it} + \epsilon_{it}\)</span>.</p>
+<ul>
+<li>With a single event and homogeneous effects (<span class="math inline">\(\tau_k = \tau\)</span> for all <span class="math inline">\(k\)</span>), <span class="math inline">\(\hat\delta\)</span> consistently estimates <span class="math inline">\(\tau\)</span>.</li>
+<li>With <em>dynamic</em> effects (<span class="math inline">\(\tau_k\)</span> varying across <span class="math inline">\(k\)</span>), <span class="math inline">\(\hat\delta\)</span> estimates a weighted average,</li>
+</ul>
+<p><span class="math display">\[
+\delta = \sum_{k=1}^{K} w_k \tau_k,
+\]</span></p>
+<p>where <span class="math inline">\(w_k\)</span> are regression weights, proportional to the variance of <span class="math inline">\(D_{it}\)</span> within period <span class="math inline">\(k\)</span>.</p>
+<ul>
+<li>If effects grow over time, pooled TWFE may over- or under-weight certain periods depending on the data structure.</li>
+<li>The event study specification avoids this by estimating each <span class="math inline">\(\delta_k\)</span> separately.</li>
+</ul>
+</section>
+<section id="pooled-twfe-versus-the-event-study" class="slide level2">
+<h2>Pooled TWFE versus the event study</h2>
+<div class="r-stack">
+<p><img data-src="figs_twfe/dyn0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/dyn1.png" class="fragment" style="width:85.0%"></p>
+</div>
+</section>
+<section id="reference-period-and-anticipation" class="slide level2">
+<h2>Reference period and anticipation</h2>
+<p>Common choices for the omitted reference period:</p>
+<ul>
+<li><span class="math inline">\(t = 0\)</span> (the last pre-treatment period): pre-treatment coefficients measure differences relative to the period just before treatment.</li>
+<li><span class="math inline">\(t = -1\)</span>: allows <span class="math inline">\(\delta_0\)</span> to capture possible anticipation effects.</li>
+</ul>
+<p>The choice matters for interpretation, because it shifts <em>what the post-treatment coefficients measure</em>. If there are anticipation effects at <span class="math inline">\(t = 0\)</span>, using <span class="math inline">\(t = 0\)</span> as the reference absorbs them, and post-treatment estimates become relative to the anticipated state.</p>
+<p>If anticipation effects are suspected, use an earlier reference period and test for effects at <span class="math inline">\(t = 0\)</span>.</p>
+</section>
+<section id="an-event-study-in-a-simulation" class="slide level2">
+<h2>An event study in a simulation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">8</span>)</span>
+<span id="cb1-2"><a href=""></a>N <span class="ot">&lt;-</span> <span class="dv">600</span>; TT <span class="ot">&lt;-</span> <span class="dv">15</span>; t0 <span class="ot">&lt;-</span> <span class="dv">7</span>                               <span class="co"># t0 = last pre-treatment year</span></span>
+<span id="cb1-3"><a href=""></a>es_dat <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">unit =</span> <span class="dv">1</span><span class="sc">:</span>N, <span class="at">year =</span> <span class="dv">1</span><span class="sc">:</span>TT)</span>
+<span id="cb1-4"><a href=""></a>es_dat<span class="sc">$</span>T   <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(es_dat<span class="sc">$</span>unit <span class="sc">&lt;=</span> N <span class="sc">/</span> <span class="dv">2</span>)</span>
+<span id="cb1-5"><a href=""></a>es_dat<span class="sc">$</span>k   <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(es_dat<span class="sc">$</span>T <span class="sc">==</span> <span class="dv">1</span>, es_dat<span class="sc">$</span>year <span class="sc">-</span> t0, <span class="dv">0</span>)    <span class="co"># controls sit at the reference</span></span>
+<span id="cb1-6"><a href=""></a>es_dat<span class="sc">$</span>tau <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(es_dat<span class="sc">$</span>T <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> es_dat<span class="sc">$</span>year <span class="sc">&gt;</span> t0, <span class="fl">0.2</span> <span class="sc">*</span> (es_dat<span class="sc">$</span>year <span class="sc">-</span> t0), <span class="dv">0</span>)</span>
+<span id="cb1-7"><a href=""></a>es_dat<span class="sc">$</span>Y   <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N)[es_dat<span class="sc">$</span>unit] <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> es_dat<span class="sc">$</span>year <span class="sc">+</span> es_dat<span class="sc">$</span>tau <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(es_dat), <span class="dv">0</span>, <span class="fl">0.5</span>)</span>
+<span id="cb1-8"><a href=""></a>es <span class="ot">&lt;-</span> <span class="fu">feols</span>(Y <span class="sc">~</span> <span class="fu">i</span>(k, <span class="at">ref =</span> <span class="dv">0</span>) <span class="sc">|</span> unit <span class="sc">+</span> year, <span class="at">data =</span> es_dat, <span class="at">cluster =</span> <span class="sc">~</span>unit)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Parallel trends and no anticipation hold by construction. The true effect is <span class="math inline">\(0.2k\)</span> for <span class="math inline">\(k \geq 1\)</span>.</p>
+</section>
+<section id="the-event-study-plot" class="slide level2">
+<h2>The event study plot</h2>
+
+<img data-src="lecture08_did_event_studies_files/figure-revealjs/unnamed-chunk-10-1.png" width="960" class="r-stretch"><p>The pre-period coefficients are centered on zero and the post-period coefficients follow the true path. The reference period (<span class="math inline">\(k=0\)</span>) has no coefficient because it is zero by construction.</p>
+</section></section>
+<section>
+<section id="pre-trends" class="title-slide slide level1 center">
+<h1>Pre-trends</h1>
+
+</section>
+<section id="pre-trends-what-they-tell-us" class="slide level2">
+<h2>Pre-trends: what they tell us</h2>
+<ul>
+<li>With multiple pre-periods, the event study coefficients <span class="math inline">\(\hat\delta_k\)</span> for <span class="math inline">\(k &lt; 0\)</span> serve as a plausibility check.</li>
+<li>If <span class="math inline">\(\hat\delta_k \approx 0\)</span> for all <span class="math inline">\(k &lt; 0\)</span>, this lends support to parallel trends.</li>
+<li>If <span class="math inline">\(\hat\delta_k \neq 0\)</span>, it raises concern that trends were already diverging before treatment.</li>
+<li>But pre-trends are suggestive, not conclusive:
+<ul>
+<li>Parallel pre-trends do not imply parallel post-treatment counterfactual trends.</li>
+<li>Non-parallel pre-trends do not mean that treatment effect estimates are necessarily biased, because the divergence may not persist.</li>
+</ul></li>
+</ul>
+</section>
+<section id="the-pre-trend-testing-fallacy" class="slide level2">
+<h2>The pre-trend testing fallacy</h2>
+<p>Common practice tests <span class="math inline">\(H_0: \delta_{-1} = \delta_{-2} = \cdots = 0\)</span> and, if not rejected, concludes that parallel trends hold. This commits a logical error: failure to reject is not evidence of equality.</p>
+<p>Three problems (Rambachan and Roth 2023; Roth et al.&nbsp;2023; de Chaisemartin and D’Haultfœuille 2026):</p>
+<ol type="1">
+<li><strong>Low power.</strong> Pre-trend tests are often underpowered. A violation large enough to substantially bias estimates may go undetected.</li>
+<li><strong>Pre-test bias.</strong> Conditioning on “passing” the pre-test distorts the sampling distribution, potentially <em>increasing</em> bias relative to not testing at all.</li>
+<li><strong>Wrong null.</strong> The standard test sets <span class="math inline">\(H_0\)</span>: parallel trends. For credibility, we want evidence <em>for</em> parallelism, not merely lack of evidence against it.</li>
+</ol>
+</section>
+<section id="pre-test-bias-in-a-simulation" class="slide level2">
+<h2>Pre-test bias in a simulation</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3</span>)</span>
+<span id="cb2-2"><a href=""></a>sims <span class="ot">&lt;-</span> <span class="dv">20000</span>; sig <span class="ot">&lt;-</span> <span class="fl">0.05</span>; trend <span class="ot">&lt;-</span> <span class="fl">0.03</span>          <span class="co"># true differential trend; true effect = 0</span></span>
+<span id="cb2-3"><a href=""></a>per <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">3</span><span class="sc">:</span><span class="dv">4</span></span>
+<span id="cb2-4"><a href=""></a>d <span class="ot">&lt;-</span> <span class="fu">matrix</span>(trend <span class="sc">*</span> per, sims, <span class="fu">length</span>(per), <span class="at">byrow =</span> <span class="cn">TRUE</span>) <span class="sc">+</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(sims <span class="sc">*</span> <span class="dv">8</span>, <span class="dv">0</span>, sig), sims)</span>
+<span id="cb2-5"><a href=""></a><span class="fu">colnames</span>(d) <span class="ot">&lt;-</span> per</span>
+<span id="cb2-6"><a href=""></a>beta <span class="ot">&lt;-</span> d <span class="sc">-</span> d[, <span class="st">"0"</span>]                                 <span class="co"># event-study coefficients, ref = 0</span></span>
+<span id="cb2-7"><a href=""></a>pass <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">abs</span>(beta[, <span class="fu">c</span>(<span class="st">"-3"</span>, <span class="st">"-2"</span>, <span class="st">"-1"</span>)]) <span class="sc">/</span> (sig <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span>)) <span class="sc">&lt;</span> <span class="fl">1.96</span>, <span class="dv">1</span>, all)</span>
+<span id="cb2-8"><a href=""></a><span class="fu">c</span>(<span class="at">pass_rate =</span> <span class="fu">mean</span>(pass), <span class="at">bias_all =</span> <span class="fu">mean</span>(beta[, <span class="st">"1"</span>]), <span class="at">bias_if_passed =</span> <span class="fu">mean</span>(beta[, <span class="st">"1"</span>][pass]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>     pass_rate       bias_all bias_if_passed 
+    0.66570000     0.03061725     0.05058653 </code></pre>
+</div>
+</div>
+<p>A violation that produces bias of 0.03 in the first post-period passes the pre-test in about 67% of samples. Among those samples, the bias is larger than in the full set of samples.</p>
+<ul>
+<li>Flat leads often mean the reference period drew low.</li>
+<li>Every coefficient is measured against that period, so the same draw pushes the post-period estimates up.</li>
+<li>Passing selects for the larger bias.</li>
+</ul>
+</section>
+<section id="equivalence-testing-for-pre-trends" class="slide level2">
+<h2>Equivalence testing for pre-trends</h2>
+<p>The right framework is equivalence testing (Bilinski and Hatfield 2026; Dette and Schumann 2024). It reverses the null and alternative:</p>
+<ul>
+<li><span class="math inline">\(H_0\)</span>: pre-trend differences are at least as large as <span class="math inline">\(c\)</span> (non-parallel).</li>
+<li><span class="math inline">\(H_1\)</span>: pre-trend differences are smaller than <span class="math inline">\(c\)</span> (approximately parallel).</li>
+</ul>
+<p>Reject <span class="math inline">\(H_0\)</span> only if the data provide strong evidence that pre-trends are small. This requires specifying <span class="math inline">\(c\)</span>: how close to parallel is “close enough”? It is more demanding of the data, but it is the correct inferential question.</p>
+</section>
+<section id="sensitivity-analysis" class="slide level2">
+<h2>Sensitivity analysis</h2>
+<p>The key idea of Rambachan and Roth (2023) is to restrict how different post-treatment violations can be from the pre-trends, instead of assuming <span class="math inline">\(\delta_{\text{post}} = 0\)</span> (exact parallel trends).</p>
+<p>Decompose the event study coefficient:</p>
+<p><span class="math display">\[
+\beta_k = \underbrace{\tau_k}_{\text{causal effect}} + \underbrace{\delta_k}_{\text{trend bias}}.
+\]</span></p>
+<p>Under parallel trends, <span class="math inline">\(\delta_k = 0\)</span>. Instead, assume the vector of violations lies in a set of allowed values, <span class="math inline">\(\delta \in \Delta\)</span>. A larger <span class="math inline">\(\Delta\)</span> is a weaker assumption, and exact parallel trends is the special case <span class="math inline">\(\delta_{\text{post}} = 0\)</span>. A common choice is <em>relative magnitudes</em>, <span class="math inline">\(\Delta^{RM}(\bar M)\)</span>, which bounds the post-treatment violation by <span class="math inline">\(\bar M\)</span> times the maximum pre-treatment violation:</p>
+<p><span class="math display">\[
+|\delta_{t+1} - \delta_t| \leq \bar M \cdot \max_{s &lt; 0} |\delta_{s+1} - \delta_s|, \qquad \forall\, t \geq 0.
+\]</span></p>
+<p><span class="math inline">\(\bar M = 0\)</span> is exact parallel trends. <span class="math inline">\(\bar M = 1\)</span> allows a post-treatment violation as large as the largest pre-treatment violation.</p>
+</section>
+<section id="rambachan-and-roth-what-you-get" class="slide level2">
+<h2>Rambachan and Roth: what you get</h2>
+<ul>
+<li>For each <span class="math inline">\(\bar M\)</span>, construct a <strong>robust confidence set</strong> for <span class="math inline">\(\tau_k\)</span> that is valid under all <span class="math inline">\(\delta \in \Delta^{RM}(\bar M)\)</span>.</li>
+<li>It accounts for both statistical uncertainty (the pre-trend is noisily estimated) and identification uncertainty (even if we knew the pre-trend exactly, we would not know the post-treatment violation).</li>
+<li>It also allows <strong>smoothness</strong> restrictions, <span class="math inline">\(\Delta^{SD}(M)\)</span>, which bound changes in the slope of the violation (second differences):</li>
+</ul>
+<p><span class="math display">\[
+|(\delta_{t+1} - \delta_t) - (\delta_t - \delta_{t-1})| \leq M.
+\]</span></p>
+<ul>
+<li>Relative magnitudes suit confounding by <em>shocks</em>. Smoothness suits confounding by <em>secular trends</em>, such as differential growth. The choice should follow from what could plausibly violate parallel trends.</li>
+<li>Report results for a range of <span class="math inline">\(\bar M\)</span> values. The <strong>breakdown value</strong> is the smallest <span class="math inline">\(\bar M\)</span> at which the confidence set includes zero, a measure of robustness.</li>
+<li>R package: <code>HonestDiD</code>.</li>
+</ul>
+</section>
+<section id="an-example-with-a-pre-trend" class="slide level2">
+<h2>An example with a pre-trend</h2>
+<div class="r-stack">
+<p><img data-src="figs_twfe/ex0.png" style="width:85.0%"></p>
+<p><img data-src="figs_twfe/ex1.png" class="fragment" style="width:85.0%"></p>
+</div>
+<p>The pre-period coefficients drift upward, and the first post-period coefficient combines the true effect, <span class="math inline">\(0.25\)</span>, with a bias of <span class="math inline">\(0.03\)</span>.</p>
+</section>
+<section id="modeling-the-trend-its" class="slide level2">
+<h2>Modeling the trend: ITS</h2>
+<p><span class="math display">\[
+Y_{it} = \alpha_i + \lambda_t + \gamma\, T_i \times t + \delta\, D_{it} + \epsilon_{it}.
+\]</span></p>
+<div class="r-stack">
+<p><img data-src="figs_twfe/its0.png" style="width:75.0%"></p>
+<p><img data-src="figs_twfe/its1.png" class="fragment" style="width:75.0%"></p>
+</div>
+<ul>
+<li>Subtracting the fitted trend recovers an effect near the true 0.25, but identification now rests on extrapolating the trend.</li>
+<li>Error grows with the horizon, and an effect that builds gradually can be absorbed into the trend.</li>
+</ul>
+</section>
+<section id="sensitivity-sets-in-the-example" class="slide level2">
+<h2>Sensitivity sets in the example</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href=""></a>pre  <span class="ot">&lt;-</span> <span class="fu">c</span>(b3[<span class="fu">as.character</span>(<span class="sc">-</span><span class="dv">9</span><span class="sc">:-</span><span class="dv">1</span>)], <span class="st">`</span><span class="at">0</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">0</span>)</span>
+<span id="cb4-2"><a href=""></a>m    <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">diff</span>(pre)))                     <span class="co"># largest pre-period jump</span></span>
+<span id="cb4-3"><a href=""></a>s    <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(pre <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="fu">names</span>(pre))))[<span class="dv">2</span>]   <span class="co"># linear pre-trend slope</span></span>
+<span id="cb4-4"><a href=""></a>b1   <span class="ot">&lt;-</span> b3[<span class="st">"1"</span>]; se1 <span class="ot">&lt;-</span> <span class="fu">se</span>(es3)[<span class="st">"k::1"</span>]</span>
+<span id="cb4-5"><a href=""></a>Mbar <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span>, <span class="at">by =</span> <span class="fl">0.25</span>)</span>
+<span id="cb4-6"><a href=""></a>rm_set <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">lo =</span> b1 <span class="sc">-</span> Mbar <span class="sc">*</span> m <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se1, <span class="at">hi =</span> b1 <span class="sc">+</span> Mbar <span class="sc">*</span> m <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se1)</span>
+<span id="cb4-7"><a href=""></a>M <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.15</span>, <span class="at">by =</span> <span class="fl">0.025</span>)</span>
+<span id="cb4-8"><a href=""></a>sd_set <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">lo =</span> b1 <span class="sc">-</span> s <span class="sc">-</span> M <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se1, <span class="at">hi =</span> b1 <span class="sc">-</span> s <span class="sc">+</span> M <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se1)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>These are schematic versions that treat the pre-period coefficients as known. They are intended for intuition. <code>HonestDiD</code> accounts for estimation error in <span class="math inline">\(\hat\delta_{\text{pre}}\)</span> and gives confidence sets with correct coverage.</p>
+</section>
+<section id="sensitivity-plots" class="slide level2">
+<h2>Sensitivity plots</h2>
+
+<img data-src="lecture08_did_event_studies_files/figure-revealjs/unnamed-chunk-15-1.png" width="1152" class="r-stretch"><p>Relative magnitudes treat the pre-trend as noise of bounded size. The set includes zero once <span class="math inline">\(\bar M \gtrsim\)</span> 1.5. Smoothness extrapolates the trend, so at <span class="math inline">\(M = 0\)</span> it removes the bias and centers on the truth. The set includes zero once <span class="math inline">\(M \gtrsim\)</span> 0.13; for scale, the pre-trend slope itself is 0.03 per period. The same data support different conclusions under different restrictions, which is why the restriction must be justified substantively.</p>
+</section>
+<section id="honestdid-in-practice" class="slide level2">
+<h2>HonestDiD in practice</h2>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a><span class="fu">library</span>(HonestDiD)</span>
+<span id="cb5-2"><a href=""></a>betahat <span class="ot">&lt;-</span> <span class="fu">coef</span>(es3); sigma <span class="ot">&lt;-</span> <span class="fu">vcov</span>(es3)            <span class="co"># event-study coefs and vcov</span></span>
+<span id="cb5-3"><a href=""></a>res_rm <span class="ot">&lt;-</span> <span class="fu">createSensitivityResults_relativeMagnitudes</span>(</span>
+<span id="cb5-4"><a href=""></a>  <span class="at">betahat =</span> betahat, <span class="at">sigma =</span> sigma,</span>
+<span id="cb5-5"><a href=""></a>  <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>,</span>
+<span id="cb5-6"><a href=""></a>  <span class="at">Mbarvec =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span>, <span class="at">by =</span> <span class="fl">0.25</span>))</span>
+<span id="cb5-7"><a href=""></a>res_sd <span class="ot">&lt;-</span> <span class="fu">createSensitivityResults</span>(</span>
+<span id="cb5-8"><a href=""></a>  <span class="at">betahat =</span> betahat, <span class="at">sigma =</span> sigma,</span>
+<span id="cb5-9"><a href=""></a>  <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>,</span>
+<span id="cb5-10"><a href=""></a>  <span class="at">Mvec =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.15</span>, <span class="at">by =</span> <span class="fl">0.025</span>))</span>
+<span id="cb5-11"><a href=""></a>orig <span class="ot">&lt;-</span> <span class="fu">constructOriginalCS</span>(betahat, sigma, <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>)</span>
+<span id="cb5-12"><a href=""></a><span class="fu">createSensitivityPlot_relativeMagnitudes</span>(res_rm, orig)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<ul>
+<li>Coefficients must be ordered pre then post, with the reference period omitted.</li>
+<li>Use <code>l_vec</code> to target an average of post-period effects instead of the first one.</li>
+<li>The procedure works with any event-study estimator that supplies a coefficient vector and covariance matrix, including Callaway–Sant’Anna and Sun–Abraham (Lecture 9).</li>
+</ul>
+</section>
+<section id="covariates-in-the-event-study-specification" class="slide level2">
+<h2>Covariates in the event study: specification</h2>
+<ul>
+<li>With unit fixed effects <span class="math inline">\(\alpha_i\)</span>, any time-invariant <span class="math inline">\(X_i\)</span> is absorbed, so including <span class="math inline">\(X_i\)</span> on its own does nothing.</li>
+<li>To allow covariates to control <em>trends</em>, interact <span class="math inline">\(X_i\)</span> with time indicators (Roth et al.&nbsp;2023, eq. 12):</li>
+</ul>
+<p><span class="math display">\[
+Y_{it} = \alpha_i + \lambda_t + \sum_{k \neq 0} \delta_k\, T_i \times \mathbb{1}(t = k) + \sum_{t' \neq 0} X_i'\gamma_{t'} \times \mathbb{1}(t = t') + \epsilon_{it},
+\]</span></p>
+<p>where <span class="math inline">\(\gamma_{t'}\)</span> are period-specific covariate coefficients (reference period omitted).</p>
+<ul>
+<li>Equivalently, difference each period relative to the reference period <span class="math inline">\(t = 0\)</span> (the “long difference”):</li>
+</ul>
+<p><span class="math display">\[
+\tilde Y_{it} \equiv Y_{it} - Y_{i0} = (\lambda_t - \lambda_0) + \delta_t T_i + X_i'\gamma_t + (\epsilon_{it} - \epsilon_{i0}), \qquad t \neq 0.
+\]</span></p>
+<p>This eliminates <span class="math inline">\(\alpha_i\)</span> and is algebraically equivalent to the unit-FE event study. It is <em>not</em> the consecutive first difference <span class="math inline">\(Y_{it} - Y_{i,t-1}\)</span>.</p>
+</section>
+<section id="limitations-and-better-approaches" class="slide level2">
+<h2>Limitations and better approaches</h2>
+<p><strong>Problem.</strong> The linear specification imposes that the covariate slope <span class="math inline">\(\gamma_t\)</span> is the <em>same</em> for treated and control units. If treatment effects are heterogeneous in <span class="math inline">\(X_i\)</span>, OLS can be biased for the ATT (Roth et al.&nbsp;2023; de Chaisemartin and D’Haultfœuille 2026, Ch. 4). The regression forces <span class="math inline">\(E[\tilde Y_{it} \mid X_i]\)</span> to have the same slope in <span class="math inline">\(X_i\)</span> regardless of <span class="math inline">\(T_i\)</span>, so a conditional ATT that varies with <span class="math inline">\(X_i\)</span> gets mixed into the covariate coefficient and vice versa.</p>
+<p><strong>Semi- and nonparametric methods</strong> avoid the linearity restriction:</p>
+<ul>
+<li><strong>IPW:</strong> model <span class="math inline">\(p(X_i) = \Pr(T_i = 1 \mid X_i)\)</span> and reweight long differences. Valid if the propensity score is correct.</li>
+<li><strong>Regression adjustment:</strong> estimate <span class="math inline">\(E[\tilde Y_{it} \mid T_i = 0, X_i]\)</span> flexibly, then impute counterfactual trends for the treated.</li>
+<li><strong>Doubly robust:</strong> combine both. Consistent if <em>either</em> model is correct (Sant’Anna and Zhao 2020; Callaway and Sant’Anna 2021).</li>
+</ul>
+<p><strong>Caution:</strong> do not “balance” on pre-treatment outcomes, which can induce regression-to-the-mean artifacts (Daw and Hatfield 2018), as in the two-period case.</p>
+</section>
+<section id="inference-in-multi-period-did" class="slide level2">
+<h2>Inference in multi-period DiD</h2>
+<ul>
+<li>The clustering principles are the same as in the two-period case: cluster at the level of treatment assignment.</li>
+<li>Serial correlation within units across time periods can severely understate standard errors if not accounted for (Bertrand, Duflo, and Mullainathan 2004). Cluster-robust SEs at the unit level handle arbitrary within-unit serial correlation.</li>
+<li>For event study plots, report <em>simultaneous</em> confidence bands, not pointwise intervals, to account for multiple testing across periods (Freyaldenhoven et al.&nbsp;2021; Callaway and Sant’Anna 2021).</li>
+<li>With few clusters, the same remedies apply as before: wild cluster bootstrap and permutation inference.</li>
+</ul>
+</section></section>
+<section>
+<section id="extensions" class="title-slide slide level1 center">
+<h1>Extensions</h1>
+
+</section>
+<section id="triple-differences" class="slide level2">
+<h2>Triple differences</h2>
+<ul>
+<li>A policy in state <span class="math inline">\(S\)</span> targets subgroup <span class="math inline">\(G\)</span> (for example, girls) but not subgroup <span class="math inline">\(B\)</span> (for example, boys).</li>
+<li>Under parallel trends, the effect on <span class="math inline">\(G\)</span> in <span class="math inline">\(S\)</span> is <span class="math inline">\(\delta_S = \text{DID}(G, S)\)</span>.</li>
+<li>But <span class="math inline">\(G\)</span>’s trend may differ from <span class="math inline">\(B\)</span>’s for non-treatment reasons.</li>
+<li>Use another state <span class="math inline">\(S'\)</span> (untreated) to estimate the <span class="math inline">\(G\)</span>-vs-<span class="math inline">\(B\)</span> trend difference: <span class="math inline">\(\gamma = \text{DID}(G, S') - \text{DID}(B, S')\)</span>.</li>
+<li>The triple-difference estimator is <span class="math inline">\(\tilde\delta = \delta_S - \gamma\)</span>. The regression form is</li>
+</ul>
+<p><span class="math display">\[
+Y_{it} = \beta_0 + \beta_1 G + \beta_2 S + \beta_3 GS + \phi_0 T + \phi_1 GT + \phi_2 ST + \tilde\delta\, GST + \epsilon_{it}.
+\]</span></p>
+<p>This requires that the <span class="math inline">\(G\)</span>-vs-<span class="math inline">\(B\)</span> trend difference be the same across states absent treatment.</p>
+</section>
+<section id="continuous-treatment-did" class="slide level2">
+<h2>Continuous treatment DiD</h2>
+<p>Treatment <span class="math inline">\(D_i \in \mathbb{R}\)</span> replaces the binary indicator. A common specification is</p>
+<p><span class="math display">\[
+Y_{it} = \alpha_i + \lambda_t + \delta\, D_i \times \text{Post}_t + \epsilon_{it}, \qquad \text{equivalently} \qquad \Delta Y_i = \Delta\lambda + \delta D_i + \Delta\epsilon_i.
+\]</span></p>
+<ul>
+<li>This requires (1) <span class="math inline">\(D_i\)</span> uncorrelated with the outcome trend <span class="math inline">\(\Delta\epsilon_i\)</span>, and (2) linearity in <span class="math inline">\(D_i\)</span>.</li>
+<li>With a pure control group (<span class="math inline">\(T_i = 0\)</span>), a revised parallel trends assumption identifies <span class="math inline">\(\text{ATT}(d \mid d)\)</span>:</li>
+</ul>
+<p><span class="math display">\[
+E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = d] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0].
+\]</span></p>
+<ul>
+<li>A flexible specification, <span class="math inline">\(\Delta Y_i = \Delta\lambda + f(D_i) + \Delta\epsilon_i\)</span>, avoids imposing linearity.</li>
+<li>See Callaway, Goodman-Bacon, and Sant’Anna (2024) and de Chaisemartin et al.&nbsp;(2024).</li>
+</ul>
+</section>
+<section id="remarks" class="slide level2">
+<h2>Remarks</h2>
+<ul>
+<li>Key takeaways:
+<ul>
+<li>Parallel trends is not directly testable.</li>
+<li>Pre-trend tests should use equivalence testing.</li>
+<li>Pre-trend differences should inform sensitivity analysis or partial identification approaches.</li>
+<li>Use conditional DiD methods when unconditional parallel trends is implausible.</li>
+<li>Power is a real concern, especially in commonly encountered social science applications.</li>
+</ul></li>
+<li>Some packages (for recitation):
+<ul>
+<li><code>fixest</code>: fast TWFE estimation.</li>
+<li><code>did</code>: Callaway and Sant’Anna and other estimators.</li>
+<li><code>DIDmultiplegt</code>: de Chaisemartin and D’Haultfœuille DiD methods.</li>
+<li><code>DRDID</code>: doubly robust DiD estimation.</li>
+<li><code>HonestDiD</code>: Rambachan and Roth sensitivity analysis.</li>
+</ul></li>
+</ul>
+</section>
+<section id="references" class="slide level2">
+<h2>References</h2>
+<div style="font-size: 0.75em">
+<ul>
+<li>Abadie (2005). Semiparametric difference-in-differences estimators. <em>Review of Economic Studies</em>.</li>
+<li>Bertrand, Duflo, and Mullainathan (2004). How much should we trust differences-in-differences estimates? <em>Quarterly Journal of Economics</em>.</li>
+<li>Bilinski and Hatfield (2026). Nothing to see here? Non-inferiority approaches to parallel trends and other model assumptions.</li>
+<li>Callaway, Goodman-Bacon, and Sant’Anna (2024). Difference-in-differences with a continuous treatment.</li>
+<li>Callaway and Sant’Anna (2021). Difference-in-differences with multiple time periods. <em>Journal of Econometrics</em>.</li>
+<li>Cameron, Gelbach, and Miller (2008). Bootstrap-based improvements for inference with clustered errors. <em>Review of Economics and Statistics</em>.</li>
+<li>Daw and Hatfield (2018). Matching and regression to the mean in difference-in-differences analysis. <em>Health Services Research</em>.</li>
+<li>de Chaisemartin and D’Haultfœuille (2026). <em>Credible Answers to Hard Questions: Differences-in-Differences for Natural Experiments</em>.</li>
+<li>de Chaisemartin, D’Haultfœuille, Pasquier, and Vazquez-Bare (2024). Difference-in-differences for continuous treatments and instruments with stayers.</li>
+<li>Dette and Schumann (2024). Testing for equivalence of pre-trends in difference-in-differences estimation. <em>Journal of Business and Economic Statistics</em>.</li>
+<li>Donald and Lang (2007). Inference with difference-in-differences and other panel data. <em>Review of Economics and Statistics</em>.</li>
+<li>Freyaldenhoven, Hansen, Pérez Pérez, and Shapiro (2021). Visualization, identification, and estimation in the linear panel event-study design.</li>
+<li>Rambachan and Roth (2023). A more credible approach to parallel trends. <em>Review of Economic Studies</em>.</li>
+<li>Roth (2022). Pretest with caution: Event-study estimates after testing for parallel trends. <em>AER: Insights</em>.</li>
+<li>Roth, Sant’Anna, Bilinski, and Poe (2023). What’s trending in difference-in-differences? A synthesis of the recent econometrics literature. <em>Journal of Econometrics</em>.</li>
+<li>Sant’Anna and Zhao (2020). Doubly robust difference-in-differences estimators. <em>Journal of Econometrics</em>.</li>
+<li>Weiss (2024). Statistical power in difference-in-differences designs.</li>
+<li>Ye, Keele, Hasegawa, and Small (2021). Bracketing in difference-in-differences.</li>
+</ul>
+</div>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/reveal-chalkboard/plugin.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="lecture08_did_event_studies_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleChalkboard(event)\"><kbd>b</kbd> Toggle Chalkboard</a></li>\n<li class=\"slide-tool-item\" data-item=\"6\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleNotesCanvas(event)\"><kbd>c</kbd> Toggle Notes Canvas</a></li>\n<li class=\"slide-tool-item\" data-item=\"7\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.downloadDrawings(event)\"><kbd>d</kbd> Download Drawings</a></li>\n<li class=\"slide-tool-item\" data-item=\"8\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'chalkboard': {"buttons":true},
+'smaller': true,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 8.0e-2,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, RevealChalkboard, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+
+    <script>
+
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+
+      // slide changes (different for each slide format).
+
+      (function () {
+
+        // dispatch for htmlwidgets
+
+        function fireSlideEnter() {
+
+          const event = window.document.createEvent("Event");
+
+          event.initEvent("slideenter", true, true);
+
+          window.document.dispatchEvent(event);
+
+        }
+
+    
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+
+          fireSlideEnter();
+
+    
+
+          // dispatch for shiny
+
+          if (window.jQuery) {
+
+            if (previousSlide) {
+
+              window.jQuery(previousSlide).trigger("hidden");
+
+            }
+
+            if (currentSlide) {
+
+              window.jQuery(currentSlide).trigger("shown");
+
+            }
+
+          }
+
+        }
+
+    
+
+        // hookup for slidy
+
+        if (window.w3c_slidy) {
+
+          window.w3c_slidy.add_observer(function (slide_num) {
+
+            // slide_num starts at position 1
+
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+
+          });
+
+        }
+
+    
+
+      })();
+
+    </script>
+
+    
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+            const codeEl = trigger.previousElementSibling.cloneNode(true);
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
+            }
+            return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

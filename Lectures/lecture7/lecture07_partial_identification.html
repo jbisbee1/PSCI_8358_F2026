@@ -6,8 +6,8 @@
 <script src="lecture07_partial_identification_files/libs/quarto-html/tippy.umd.min.js"></script>
 <link href="lecture07_partial_identification_files/libs/quarto-html/tippy.css" rel="stylesheet">
 <link href="lecture07_partial_identification_files/libs/quarto-html/light-border.css" rel="stylesheet">
-<link href="lecture07_partial_identification_files/libs/quarto-html/quarto-syntax-highlighting-37eea08aefeeee20ff55810ff984fec1.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
-  <meta name="generator" content="quarto-1.7.32">
+<link href="lecture07_partial_identification_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.38">
 
   <meta name="author" content="Advanced Observational Causal Inference">
   <meta name="dcterms.date" content="2026-10-07">
@@ -18,6 +18,9 @@
   <link rel="stylesheet" href="lecture07_partial_identification_files/libs/revealjs/dist/reset.css">
   <link rel="stylesheet" href="lecture07_partial_identification_files/libs/revealjs/dist/reveal.css">
   <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
     code{white-space: pre-wrap;}
     span.smallcaps{font-variant: small-caps;}
     div.columns{display: flex; gap: min(4vw, 1.5em);}
@@ -96,7 +99,7 @@
     code span.vs { color: #20794d; } /* VerbatimString */
     code span.wa { color: #5e5e5e; font-style: italic; } /* Warning */
   </style>
-  <link rel="stylesheet" href="lecture07_partial_identification_files/libs/revealjs/dist/theme/quarto-f563837468303362081e247dddd440d0.css">
+  <link rel="stylesheet" href="lecture07_partial_identification_files/libs/revealjs/dist/theme/quarto-2740581606dc327e82f18f789b69d8a0.css">
   <link href="lecture07_partial_identification_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
   <link href="lecture07_partial_identification_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
   <link href="lecture07_partial_identification_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
@@ -233,7 +236,7 @@ Advanced Observational Causal Inference
 <li>Point versus set identification</li>
 <li>Manski worst-case bounds, and how assumptions tighten them</li>
 <li>Bounds with an instrument</li>
-<li>Lee bounds for outcomes that are missing or zero for some units</li>
+<li>Lee bounds when treatment changes who we observe (differential attrition)</li>
 <li>Inference for sets, and how bounds relate to sensitivity analysis</li>
 </ul>
 </section>
@@ -244,7 +247,7 @@ Advanced Observational Causal Inference
 <li>Derive the Manski no-assumption bounds on the ATE for a bounded outcome.</li>
 <li>State monotone treatment response (MTR) and monotone treatment selection (MTS). Say how each changes the bounds.</li>
 <li>Explain what an instrument adds to the bounds, and state the one-sided noncompliance bound.</li>
-<li>Define the extensive and intensive margins. Construct Lee trimming bounds.</li>
+<li>Explain how differential attrition breaks randomization. Derive and construct Lee trimming bounds.</li>
 <li>Say what a confidence interval for a bounded parameter must cover.</li>
 </ol>
 </section>
@@ -542,10 +545,10 @@ p = 0.2, \qquad E[Y \mid D=1] = 0.60, \qquad E[Y \mid D=0] = 0.45.
 \]</span></p>
 <p>A normal has unbounded support, so the Manski bounds require an assumption: <span class="math inline">\(Y\)</span> lies in <span class="math inline">\([y_{\min}, y_{\max}]\)</span>. Take <span class="math inline">\([-3, 3]\)</span>, which holds about 99.7% of a standard normal.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>p <span class="ot">&lt;-</span> <span class="fl">0.2</span>; m1 <span class="ot">&lt;-</span> <span class="fl">0.60</span>; m0 <span class="ot">&lt;-</span> <span class="fl">0.45</span>; lo <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">3</span>; hi <span class="ot">&lt;-</span> <span class="dv">3</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href=""></a>p <span class="ot">&lt;-</span> <span class="fl">0.2</span>; m1 <span class="ot">&lt;-</span> <span class="fl">0.60</span>; m0 <span class="ot">&lt;-</span> <span class="fl">0.45</span>; lo <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">3</span>; hi <span class="ot">&lt;-</span> <span class="dv">3</span></span>
 <span id="cb1-2"><a href=""></a>L <span class="ot">&lt;-</span> m1<span class="sc">*</span>p <span class="sc">+</span> lo<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p) <span class="sc">-</span> hi<span class="sc">*</span>p <span class="sc">-</span> m0<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p)</span>
 <span id="cb1-3"><a href=""></a>U <span class="ot">&lt;-</span> m1<span class="sc">*</span>p <span class="sc">+</span> hi<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p) <span class="sc">-</span> lo<span class="sc">*</span>p <span class="sc">-</span> m0<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p)</span>
-<span id="cb1-4"><a href=""></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">lower =</span> L, <span class="at">upper =</span> U, <span class="at">width =</span> U <span class="sc">-</span> L), <span class="dv">2</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-4"><a href=""></a><span class="fu">round</span>(<span class="fu">c</span>(<span class="at">lower =</span> L, <span class="at">upper =</span> U, <span class="at">width =</span> U <span class="sc">-</span> L), <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>lower upper width 
 -3.24  2.76  6.00 </code></pre>
@@ -751,7 +754,7 @@ E[Y(1)] = E[Y(1) \mid D(1)=1]\Pr[D(1)=1] + E[Y(1) \mid D(1)=0](1 - \Pr[D(1)=1])
 <h2>A simulated example</h2>
 <p>Randomized assignment <span class="math inline">\(Z\)</span>, one-sided noncompliance, binary turnout <span class="math inline">\(Y\)</span>. Compliers (30% of the sample) have higher baseline turnout than never-takers, so contact is positively selected.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">136</span>)   <span class="co"># a draw with the expected 2 misses per endpoint (5% of 40)</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">136</span>)   <span class="co"># a draw with the expected 2 misses per endpoint (5% of 40)</span></span>
 <span id="cb3-2"><a href=""></a>n <span class="ot">&lt;-</span> <span class="fl">1e6</span></span>
 <span id="cb3-3"><a href=""></a>Z <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.5</span>)</span>
 <span id="cb3-4"><a href=""></a>C <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fl">0.3</span>)                      <span class="co"># complier</span></span>
@@ -760,7 +763,7 @@ E[Y(1)] = E[Y(1) \mid D(1)=1]\Pr[D(1)=1] + E[Y(1) \mid D(1)=0](1 - \Pr[D(1)=1])
 <span id="cb3-7"><a href=""></a>Y1 <span class="ot">&lt;-</span> <span class="fu">pmax</span>(Y0, <span class="fu">rbinom</span>(n, <span class="dv">1</span>, <span class="fu">ifelse</span>(C <span class="sc">==</span> <span class="dv">1</span>, <span class="fl">0.25</span>, <span class="fl">0.04</span>)))   <span class="co"># MTR holds</span></span>
 <span id="cb3-8"><a href=""></a>Y  <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(D <span class="sc">==</span> <span class="dv">1</span>, Y1, Y0)</span>
 <span id="cb3-9"><a href=""></a><span class="fu">c</span>(<span class="at">true_ATE =</span> <span class="fu">mean</span>(Y1 <span class="sc">-</span> Y0), <span class="at">naive =</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">1</span>]) <span class="sc">-</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">0</span>]),</span>
-<span id="cb3-10"><a href=""></a>  <span class="at">ITT =</span> <span class="fu">mean</span>(Y[Z<span class="sc">==</span><span class="dv">1</span>]) <span class="sc">-</span> <span class="fu">mean</span>(Y[Z<span class="sc">==</span><span class="dv">0</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb3-10"><a href=""></a>  <span class="at">ITT =</span> <span class="fu">mean</span>(Y[Z<span class="sc">==</span><span class="dv">1</span>]) <span class="sc">-</span> <span class="fu">mean</span>(Y[Z<span class="sc">==</span><span class="dv">0</span>]))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  true_ATE      naive        ITT 
 0.05533300 0.24814378 0.03631001 </code></pre>
@@ -771,7 +774,7 @@ E[Y(1)] = E[Y(1) \mid D(1)=1]\Pr[D(1)=1] + E[Y(1) \mid D(1)=0](1 - \Pr[D(1)=1])
 <section id="bounds-from-the-simulated-data" class="slide level2">
 <h2>Bounds from the simulated data</h2>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>p  <span class="ot">&lt;-</span> <span class="fu">mean</span>(D); m1 <span class="ot">&lt;-</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">1</span>]); m0 <span class="ot">&lt;-</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">0</span>])</span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href=""></a>p  <span class="ot">&lt;-</span> <span class="fu">mean</span>(D); m1 <span class="ot">&lt;-</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">1</span>]); m0 <span class="ot">&lt;-</span> <span class="fu">mean</span>(Y[D<span class="sc">==</span><span class="dv">0</span>])</span>
 <span id="cb5-2"><a href=""></a>manski <span class="ot">&lt;-</span> <span class="fu">c</span>(m1<span class="sc">*</span>p <span class="sc">+</span> <span class="dv">0</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p) <span class="sc">-</span> <span class="dv">1</span><span class="sc">*</span>p <span class="sc">-</span> m0<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p),  m1<span class="sc">*</span>p <span class="sc">+</span> <span class="dv">1</span><span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p) <span class="sc">-</span> <span class="dv">0</span><span class="sc">*</span>p <span class="sc">-</span> m0<span class="sc">*</span>(<span class="dv">1</span><span class="sc">-</span>p))</span>
 <span id="cb5-3"><a href=""></a>mtr    <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, manski[<span class="dv">2</span>])</span>
 <span id="cb5-4"><a href=""></a>mts    <span class="ot">&lt;-</span> <span class="fu">c</span>(manski[<span class="dv">1</span>], m1 <span class="sc">-</span> m0)</span>
@@ -780,7 +783,7 @@ E[Y(1)] = E[Y(1) \mid D(1)=1]\Pr[D(1)=1] + E[Y(1) \mid D(1)=0](1 - \Pr[D(1)=1])
 <span id="cb5-7"><a href=""></a>iv     <span class="ot">&lt;-</span> <span class="fu">c</span>(a <span class="sc">-</span> y0, a <span class="sc">+</span> (<span class="dv">1</span> <span class="sc">-</span> q1) <span class="sc">-</span> y0)</span>
 <span id="cb5-8"><a href=""></a>bounds <span class="ot">&lt;-</span> <span class="fu">rbind</span>(<span class="at">Manski =</span> manski, <span class="at">MTR =</span> mtr, <span class="at">MTS =</span> mts, <span class="st">`</span><span class="at">MTR + MTS</span><span class="st">`</span> <span class="ot">=</span> both,</span>
 <span id="cb5-9"><a href=""></a>                <span class="st">`</span><span class="at">IV, one-sided</span><span class="st">`</span> <span class="ot">=</span> iv)</span>
-<span id="cb5-10"><a href=""></a><span class="fu">colnames</span>(bounds) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"lower"</span>, <span class="st">"upper"</span>); <span class="fu">round</span>(bounds, <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb5-10"><a href=""></a><span class="fu">colnames</span>(bounds) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"lower"</span>, <span class="st">"upper"</span>); <span class="fu">round</span>(bounds, <span class="dv">3</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>               lower upper
 Manski        -0.377 0.623
@@ -801,128 +804,125 @@ IV, one-sided -0.208 0.491</code></pre>
 <h1>Part VII: Lee bounds</h1>
 
 </section>
-<section id="extensive-and-intensive-margins" class="slide level2">
-<h2>Extensive and intensive margins</h2>
-<p>Many outcomes are nonnegative with a mass at zero (Staub 2014): hours worked, expenditures, tax payments.</p>
-<p>Treatment can act through two channels:</p>
+<section id="differential-attrition" class="slide level2">
+<h2>Differential attrition</h2>
+<p><span class="math inline">\(D\)</span> is randomized, but we only see <span class="math inline">\(Y\)</span> for units who respond to the survey. Let <span class="math inline">\(S_i(d) \in \{0, 1\}\)</span> indicate whether unit <span class="math inline">\(i\)</span> responds under treatment <span class="math inline">\(d\)</span>, and <span class="math inline">\(S_i = S_i(D_i)\)</span>.</p>
 <ul>
-<li><strong>Extensive margin</strong>: whether <span class="math inline">\(Y &gt; 0\)</span> at all (participation).</li>
-<li><strong>Intensive margin</strong>: the level of <span class="math inline">\(Y\)</span> given <span class="math inline">\(Y &gt; 0\)</span> (amount).</li>
+<li>If treatment changes who responds, <span class="math inline">\(S_i(1) \neq S_i(0)\)</span> for some units. This is <strong>differential attrition</strong>.</li>
+<li>We can only compare respondents: <span class="math inline">\(E[Y \mid D=1, S=1] - E[Y \mid D=0, S=1]\)</span>.</li>
+<li><span class="math inline">\(S\)</span> is a post-treatment variable. Conditioning on <span class="math inline">\(S=1\)</span> undoes the comparability that randomization bought us.</li>
 </ul>
-<p>These are distinct causal effects, and we often want the intensive margin. The same structure arises with sample selection and attrition: wages are observed only for the employed, and outcomes only for survey respondents.</p>
+<p>The same structure appears whenever <span class="math inline">\(Y\)</span> is only defined for some units: wages exist only for the employed (the extensive margin is <span class="math inline">\(S\)</span>, the intensive margin is <span class="math inline">\(Y\)</span>).</p>
 </section>
-<section id="potential-outcomes-decomposition" class="slide level2">
-<h2>Potential outcomes decomposition</h2>
-<p>With <span class="math inline">\(Y_i \geq 0\)</span>, joint potential outcomes <span class="math inline">\((Y_{0i}, Y_{1i})\)</span> define four groups (Staub 2014):</p>
+<section id="monotonicity-and-principal-strata" class="slide level2">
+<h2>Monotonicity and principal strata</h2>
+<p>Lee (2009) assumes treatment can only induce response: <span class="math inline">\(S_i(1) \geq S_i(0)\)</span> for all <span class="math inline">\(i\)</span>.</p>
 <table class="caption-top">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
 <thead>
 <tr class="header">
-<th style="text-align: left;">Group</th>
-<th style="text-align: left;">Name</th>
-<th style="text-align: left;"><span class="math inline">\((Y_{0i}, Y_{1i})\)</span></th>
+<th style="text-align: left;">Stratum</th>
+<th style="text-align: center;"><span class="math inline">\(S_i(0)\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(S_i(1)\)</span></th>
+<th style="text-align: left;">Verdict</th>
 </tr>
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">NP</td>
-<td style="text-align: left;">Non-participants</td>
-<td style="text-align: left;"><span class="math inline">\((0,\ 0)\)</span></td>
+<td style="text-align: left;">Always responders (AR)</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">We love these people.</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;"><span class="math inline">\(S_1\)</span></td>
-<td style="text-align: left;">Switchers (into)</td>
-<td style="text-align: left;"><span class="math inline">\((0,\ Y_{1i} &gt; 0)\)</span></td>
+<td style="text-align: left;">Never responders (NR)</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Never observed, but not because of treatment. Harmless.</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;"><span class="math inline">\(S_2\)</span></td>
-<td style="text-align: left;">Switchers (out of)</td>
-<td style="text-align: left;"><span class="math inline">\((Y_{0i} &gt; 0,\ 0)\)</span></td>
+<td style="text-align: left;">Induced responders (IR)</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: left;">Look like IV compliers, but they break the comparison.</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">P</td>
-<td style="text-align: left;">Participants</td>
-<td style="text-align: left;"><span class="math inline">\((Y_{0i} &gt; 0,\ Y_{1i} &gt; 0)\)</span></td>
+<td style="text-align: left;">Defiers</td>
+<td style="text-align: center;">1</td>
+<td style="text-align: center;">0</td>
+<td style="text-align: left;">Ruled out by monotonicity.</td>
 </tr>
 </tbody>
 </table>
-<ul>
-<li>The <strong>intensive margin effect</strong> is the ATE among group P.</li>
-<li>The <strong>extensive margin effect</strong> is the contribution of <span class="math inline">\(S_1\)</span> and <span class="math inline">\(S_2\)</span>.</li>
-</ul>
+<p>The target is the effect among always responders: <span class="math inline">\(\Delta_{AR} := E[Y_i(1) - Y_i(0) \mid \text{AR}]\)</span>.</p>
 </section>
-<section id="the-identification-problem" class="slide level2">
-<h2>The identification problem</h2>
-<p>Under randomization, the ATE is point-identified as <span class="math inline">\(E[Y|D=1] - E[Y|D=0]\)</span>, but it mixes the two margins.</p>
-<p>Group membership depends on the joint potential outcomes, which are not observed. The data show only <span class="math inline">\(\Pr[Y&gt;0 \mid D=d]\)</span> and <span class="math inline">\(E[Y \mid Y&gt;0, D=d]\)</span>.</p>
-<ul>
-<li>Among treated units with <span class="math inline">\(Y &gt; 0\)</span>: groups <span class="math inline">\(S_1\)</span> and P.</li>
-<li>Among control units with <span class="math inline">\(Y &gt; 0\)</span>: groups <span class="math inline">\(S_2\)</span> and P.</li>
-<li>Comparing <span class="math inline">\(E[Y \mid Y&gt;0, D=1]\)</span> with <span class="math inline">\(E[Y \mid Y&gt;0, D=0]\)</span> confounds the intensive margin effect with compositional differences.</li>
-<li><span class="math inline">\(Y&gt;0\)</span> is affected by treatment, so conditioning on it is conditioning on a post-treatment variable. Randomization no longer guarantees comparable groups.</li>
-</ul>
-</section>
-<section id="monotonicity" class="slide level2">
-<h2>Monotonicity</h2>
-<p>Assume (Lee 2009)</p>
-<p><span class="math display">\[
-\mathbf 1\{Y_i(1) &gt; 0\} \geq \mathbf 1\{Y_i(0) &gt; 0\} \quad \text{for all } i.
-\]</span></p>
-<p>Treatment never moves a unit out of participation. This holds for every unit, which is stronger than <span class="math inline">\(p_1 \geq p_0\)</span>.</p>
-<ul>
-<li>This eliminates group <span class="math inline">\(S_2\)</span>.</li>
-<li>Among control units with <span class="math inline">\(Y &gt; 0\)</span>: only group P.</li>
-<li>Among treated units with <span class="math inline">\(Y &gt; 0\)</span>: groups P and <span class="math inline">\(S_1\)</span>.</li>
-</ul>
-<p>The target is the intensive margin effect among always-participants,</p>
-<p><span class="math display">\[
-\Delta_P := E[Y_{1i} - Y_{0i} \mid Y_{0i} &gt; 0, Y_{1i} &gt; 0].
-\]</span></p>
-<p>It is not point-identified, but it can be bounded.</p>
-</section>
-<section id="trimming-logic" class="slide level2">
-<h2>Trimming logic</h2>
-<p>Let <span class="math inline">\(p_1 = \Pr[Y&gt;0 \mid D=1]\)</span> and <span class="math inline">\(p_0 = \Pr[Y&gt;0 \mid D=0]\)</span>. Under monotonicity <span class="math inline">\(p_1 \geq p_0\)</span>.</p>
-<p>Among treated units with <span class="math inline">\(Y&gt;0\)</span>, the share who are switchers is</p>
-<p><span class="math display">\[
-q = \frac{p_1 - p_0}{p_1}.
-\]</span></p>
-<ul>
-<li>The control group with <span class="math inline">\(Y&gt;0\)</span> is pure P, so <span class="math inline">\(E[Y \mid D=0, Y&gt;0] = E[Y_{0i} \mid P]\)</span>.</li>
-<li>The treated group with <span class="math inline">\(Y&gt;0\)</span> mixes P and <span class="math inline">\(S_1\)</span>. Removing the <span class="math inline">\(S_1\)</span> units would leave pure P.</li>
-<li>We do not know which treated units are switchers, but we know the fraction <span class="math inline">\(q\)</span>.</li>
-</ul>
-</section>
-<section id="who-participates-in-each-arm" class="slide level2">
-<h2>Who participates in each arm?</h2>
+<section id="who-do-we-observe" class="slide level2">
+<h2>Who do we observe?</h2>
 
-<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-10-1.png" width="1056" class="r-stretch"><p>Of the 80 treated units with <span class="math inline">\(Y&gt;0\)</span>, 20 are switchers, so <span class="math inline">\(q = 20/80 = 0.25\)</span>.</p>
+<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-10-1.png" width="1056" class="r-stretch"><p>Control respondents are all AR. Treated respondents are AR plus IR, and we cannot tell which is which.</p>
 </section>
-<section id="constructing-the-bounds" class="slide level2">
-<h2>Constructing the bounds</h2>
-<p>Trim a fraction <span class="math inline">\(q\)</span> from the treated <span class="math inline">\(Y \mid D=1, Y&gt;0\)</span> distribution.</p>
-<ul>
-<li>Upper bound: trim the bottom <span class="math inline">\(q\)</span>. If switchers have the lowest outcomes, removing them isolates P.</li>
-<li>Lower bound: trim the top <span class="math inline">\(q\)</span>. If switchers have the highest outcomes, removing them isolates P.</li>
-</ul>
+<section id="what-the-data-identify" class="slide level2">
+<h2>What the data identify</h2>
+<p>Randomization makes the strata shares <span class="math inline">\(\pi_{AR}, \pi_{IR}, \pi_{NR}\)</span> the same in both arms. Monotonicity then gives</p>
 <p><span class="math display">\[
-\Delta_{P,L} = E[Y \mid D=1, Y&gt;0, Y \leq y_{1-q}] - E[Y \mid D=0, Y&gt;0]
+p_0 := \Pr(S=1 \mid D=0) = \pi_{AR}, \qquad p_1 := \Pr(S=1 \mid D=1) = \pi_{AR} + \pi_{IR}.
 \]</span></p>
-<p><span class="math display">\[
-\Delta_{P,U} = E[Y \mid D=1, Y&gt;0, Y \geq y_{q}] - E[Y \mid D=0, Y&gt;0]
-\]</span></p>
-<p>where <span class="math inline">\(y_q\)</span> and <span class="math inline">\(y_{1-q}\)</span> are quantiles of <span class="math inline">\(Y \mid D=1, Y&gt;0\)</span>. We do not know where in the distribution the switchers fall, so we compute both.</p>
+<ol type="1">
+<li><strong>Controls.</strong> <span class="math inline">\(\{D=0, S=1\}\)</span> is exactly the AR stratum, so <span class="math inline">\(E[Y \mid D=0, S=1] = E[Y(0) \mid \text{AR}]\)</span>. No trimming is needed.</li>
+<li><strong>Share of IR among treated respondents.</strong> <span class="math display">\[
+q := \frac{\pi_{IR}}{\pi_{AR} + \pi_{IR}} = \frac{p_1 - p_0}{p_1}.
+\]</span></li>
+<li><strong>Treated respondents are a mixture.</strong> With <span class="math inline">\(f\)</span> the density of <span class="math inline">\(Y \mid D=1, S=1\)</span>, and <span class="math inline">\(g\)</span>, <span class="math inline">\(h\)</span> the densities of <span class="math inline">\(Y(1)\)</span> among AR and IR, <span class="math display">\[
+f(y) = (1-q)\, g(y) + q\, h(y).
+\]</span> We observe <span class="math inline">\(f\)</span> and <span class="math inline">\(q\)</span>, but not <span class="math inline">\(g\)</span> or <span class="math inline">\(h\)</span>. The missing piece is <span class="math inline">\(E[Y(1) \mid \text{AR}] = \int y\, g(y)\, dy\)</span>.</li>
+</ol>
 </section>
-<section id="lee-bounds-a-numerical-example" class="slide level2">
-<h2>Lee bounds: a numerical example</h2>
-<p>Suppose <span class="math inline">\(p_1 = 0.80\)</span> and <span class="math inline">\(p_0 = 0.60\)</span>, so <span class="math inline">\(q = 0.25\)</span>. In this simulation the true <span class="math inline">\(\Delta_P\)</span> is 2.</p>
+<section id="the-bounds-and-their-proof" class="slide level2">
+<h2>The bounds and their proof</h2>
+<p>Since <span class="math inline">\(h \geq 0\)</span>, the mixture implies <span class="math inline">\(0 \leq (1-q)\, g(y) \leq f(y)\)</span>. Let <span class="math inline">\(y_u\)</span> be the <span class="math inline">\(u\)</span>-quantile of <span class="math inline">\(f\)</span>.</p>
+<p><strong>Claim.</strong> Among all densities <span class="math inline">\(g\)</span> with <span class="math inline">\(0 \leq (1-q)\, g \leq f\)</span>, the mean is smallest for <span class="math inline">\(g^* = f \cdot \mathbf 1\{y \leq y_{1-q}\} / (1-q)\)</span>: the bottom <span class="math inline">\(1-q\)</span> of the treated respondents.</p>
+<p><strong>Proof.</strong> Both <span class="math inline">\(g\)</span> and <span class="math inline">\(g^*\)</span> integrate to 1, so <span class="math display">\[
+\int y\, (g - g^*)\, dy = \int (y - y_{1-q})\, (g - g^*)\, dy \geq 0.
+\]</span> Below <span class="math inline">\(y_{1-q}\)</span>, <span class="math inline">\(g^*\)</span> is at its cap <span class="math inline">\(f/(1-q)\)</span>, so <span class="math inline">\(g - g^* \leq 0\)</span> and <span class="math inline">\(y - y_{1-q} \leq 0\)</span>. Above it, <span class="math inline">\(g^* = 0\)</span>, so both factors are <span class="math inline">\(\geq 0\)</span>. <span class="math inline">\(\square\)</span></p>
+<p>The same argument with the top <span class="math inline">\(1-q\)</span> gives the maximum. Subtracting the control mean:</p>
+<p><span class="math display">\[
+\Delta_{AR,L} = E[Y \mid D=1, S=1, Y \leq y_{1-q}] - E[Y \mid D=0, S=1]
+\]</span> <span class="math display">\[
+\Delta_{AR,U} = E[Y \mid D=1, S=1, Y \geq y_{q}] - E[Y \mid D=0, S=1]
+\]</span></p>
+<p>The bounds are sharp: each is attained if the IR all sit at the top (or bottom) of the treated distribution.</p>
+</section>
+<section id="the-recipe" class="slide level2">
+<h2>The recipe</h2>
+<ol type="1">
+<li>Compute <span class="math inline">\(p_1\)</span> and <span class="math inline">\(p_0\)</span>, the response rates in each arm, and <span class="math inline">\(q = (p_1 - p_0)/p_1\)</span>.</li>
+<li>Rank the <strong>treated respondents</strong> by <span class="math inline">\(Y\)</span>.</li>
+<li><strong>Lower bound:</strong> drop the top <span class="math inline">\(q\)</span> of them, as if the IR had the highest outcomes. Compare the remaining mean with the control respondents’ mean.</li>
+<li><strong>Upper bound:</strong> drop the bottom <span class="math inline">\(q\)</span>, as if the IR had the lowest outcomes. Compare again.</li>
+<li>Control respondents are never trimmed: under monotonicity they are all AR.</li>
+</ol>
+<p>If <span class="math inline">\(p_1 = p_0\)</span>, then <span class="math inline">\(q = 0\)</span>, nothing is trimmed, and <span class="math inline">\(\Delta_{AR}\)</span> is point-identified.</p>
+</section>
+<section id="trimming-unit-by-unit" class="slide level2">
+<h2>Trimming, unit by unit</h2>
 
 <img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-11-1.png" width="1056" class="r-stretch"></section>
+<section id="lee-bounds-a-numerical-example" class="slide level2">
+<h2>Lee bounds: a numerical example</h2>
+<p>Suppose <span class="math inline">\(p_1 = 0.80\)</span> and <span class="math inline">\(p_0 = 0.60\)</span>, so <span class="math inline">\(q = 0.25\)</span>. In this simulation the true <span class="math inline">\(\Delta_{AR}\)</span> is 2.</p>
+
+<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-12-1.png" width="1056" class="r-stretch"></section>
 <section id="estimation-and-inference-for-lee-bounds" class="slide level2">
 <h2>Estimation and inference for Lee bounds</h2>
 <ul>
-<li>Estimate <span class="math inline">\(\hat p_1, \hat p_0\)</span> from participation rates by treatment status.</li>
+<li>Estimate <span class="math inline">\(\hat p_1, \hat p_0\)</span> from response rates by treatment status.</li>
 <li>Compute <span class="math inline">\(\hat q = (\hat p_1 - \hat p_0)/\hat p_1\)</span>.</li>
-<li>Trim the empirical distribution of <span class="math inline">\(Y \mid D=1, Y&gt;0\)</span> and compute trimmed means.</li>
+<li>Trim the empirical distribution of <span class="math inline">\(Y \mid D=1, S=1\)</span> and compute trimmed means.</li>
 </ul>
 <p>Inference:</p>
 <ul>
@@ -932,11 +932,71 @@ q = \frac{p_1 - p_0}{p_1}.
 </ul>
 <p>With covariates <span class="math inline">\(X\)</span>, one can weaken the monotonicity assumption and obtain tighter bounds (Samii, Wang, and Zhou 2026; Semenova 2025).</p>
 </section>
-<section id="trimming-within-covariate-groups" class="slide level2">
-<h2>Trimming within covariate groups</h2>
+<section id="a-toy-example-young-and-old" class="slide level2">
+<h2>A toy example: young and old</h2>
+<p>Two equal-sized age groups, with <span class="math inline">\(S_i(1) \geq S_i(0)\)</span> in each. Let <span class="math inline">\(\pi_x = \Pr(X=x)\)</span> and <span class="math inline">\(p_d(x) = \Pr(S=1 \mid D=d, X=x)\)</span>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: center;"><span class="math inline">\(p_0(x)\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(p_1(x)\)</span></th>
+<th style="text-align: center;"><span class="math inline">\(q(x) = \frac{p_1(x) - p_0(x)}{p_1(x)}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Young</td>
+<td style="text-align: center;">0.4</td>
+<td style="text-align: center;">0.8</td>
+<td style="text-align: center;">0.50</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Old</td>
+<td style="text-align: center;">0.8</td>
+<td style="text-align: center;">0.8</td>
+<td style="text-align: center;">0</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Pooled</td>
+<td style="text-align: center;">0.6</td>
+<td style="text-align: center;">0.8</td>
+<td style="text-align: center;">0.25</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Pooled Lee</strong> trims 25% of treated respondents from anywhere, including old respondents, who are all always responders.</li>
+<li><strong>Within age</strong>, trim 50% of young treated respondents and none of the old. Then average the age-specific bounds using the always responders’ age mix, <span class="math inline">\(\Pr(X=x \mid \text{AR}) = \pi_x\, p_0(x)/p_0\)</span>: young <span class="math inline">\(1/3\)</span>, old <span class="math inline">\(2/3\)</span>.</li>
+<li><strong>The total trimmed is the same.</strong> <span class="math inline">\(\sum_x \Pr(X=x \mid D=1, S=1)\, q(x) = \sum_x \frac{\pi_x\, p_1(x)}{p_1} \cdot \frac{p_1(x) - p_0(x)}{p_1(x)} = \frac{p_1 - p_0}{p_1} = q\)</span>. Conditioning changes <em>which</em> units can be trimmed, not how many, so the bounds can only get tighter.</li>
+</ul>
+</section>
+<section id="where-the-trimming-happens" class="slide level2">
+<h2>Where the trimming happens</h2>
 
-<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-12-1.png" width="1056" class="r-stretch"><p>Same pooled response rates as before (0.80 vs 0.60), split across three equal-sized groups (Samii, Wang, and Zhou).</p>
-</section></section>
+<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-13-1.png" width="1056" class="r-stretch"></section>
+<section id="one-tree-one-unit" class="slide level2">
+<h2>One tree, one unit</h2>
+
+<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-14-1.png" width="883" class="r-stretch"><p>A forest does not repeat steps 2–3 tree by tree. Trees only define neighbours: pool them first, <span class="math inline">\(\alpha_{ij} = \frac{1}{B}\sum_b \frac{\mathbf 1\{j \in L_b(X_i)\}}{|L_b(X_i)|}\)</span>, then compute <span class="math inline">\(\hat p_0(X_i)\)</span>, <span class="math inline">\(\hat p_1(X_i)\)</span>, <span class="math inline">\(\hat q(X_i)\)</span> and the cutoff <span class="math inline">\(c_i^L\)</span> once, as <span class="math inline">\(\alpha\)</span>-weighted rates and quantiles. Unit <span class="math inline">\(i\)</span>’s observed <span class="math inline">\(Y_i\)</span> is compared with <span class="math inline">\(c_i^L\)</span>, and the per-unit scores are averaged.</p>
+</section>
+<section id="from-cells-to-forests" class="slide level2">
+<h2>From cells to forests</h2>
+<p>Samii, Wang, and Zhou replace empty cells with the adaptive neighbourhoods of generalized random forests.</p>
+<ol type="1">
+<li><strong>Response rates per unit.</strong> Probability forests give <span class="math inline">\(\hat p_0(X_i), \hat p_1(X_i)\)</span>, so <span class="math inline">\(\hat q(X_i) = \frac{\hat p_1(X_i) - \hat p_0(X_i)}{\hat p_1(X_i)}\)</span>.</li>
+<li><strong>A cutoff per unit.</strong> Quantile forests give <span class="math inline">\(c_i^L\)</span>, the <span class="math inline">\((1-\hat q(X_i))\)</span>-quantile of <span class="math inline">\(Y\)</span> among treated respondents with covariates like <span class="math inline">\(X_i\)</span> (and <span class="math inline">\(c_i^U\)</span>, the <span class="math inline">\(\hat q(X_i)\)</span>-quantile).</li>
+<li><strong>Trim against your own cutoff.</strong> Treated respondent <span class="math inline">\(i\)</span> is kept for the lower bound if <span class="math inline">\(Y_i \leq c_i^L\)</span>.</li>
+<li><strong>Aggregate.</strong> With randomization (<span class="math inline">\(N_1\)</span>, <span class="math inline">\(N_0\)</span> assigned to each arm): <span class="math display">\[
+\hat\tau^L = \frac{1}{\hat p_0}\Big[\frac{1}{N_1}\sum_{D_i=1,\,S_i=1}(Y_i - c_i^L)\,\mathbf 1\{Y_i \leq c_i^L\} \;-\; \frac{1}{N_0}\sum_{D_i=0,\,S_i=1}(Y_i - c_i^L)\Big]
+\]</span> Centring at <span class="math inline">\(c_i^L\)</span> is Neyman orthogonalization; <span class="math inline">\(\hat p_0\)</span> weights by the always responders’ covariate mix.</li>
+<li><strong>Cross-fit.</strong> Forests are fit on <span class="math inline">\(K-1\)</span> folds; scores are computed on the held-out fold. (Warning: the paper’s <span class="math inline">\(q\)</span> is <span class="math inline">\(p_0/p_1\)</span>, the share <em>kept</em>.)</li>
+</ol>
+</section>
+<section id="per-unit-cutoffs" class="slide level2">
+<h2>Per-unit cutoffs</h2>
+
+<img data-src="lecture07_partial_identification_files/figure-revealjs/unnamed-chunk-15-1.png" width="1056" class="r-stretch"></section></section>
 <section>
 <section id="part-viii-remarks" class="title-slide slide level1 center">
 <h1>Part VIII: Remarks</h1>
@@ -1311,13 +1371,14 @@ q = \frac{p_1 - p_0}{p_1}.
           e.clearSelection();
         }
         const getTextToCopy = function(trigger) {
-            const codeEl = trigger.previousElementSibling.cloneNode(true);
-            for (const childEl of codeEl.children) {
-              if (isCodeAnnotation(childEl)) {
-                childEl.remove();
-              }
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
             }
-            return codeEl.innerText;
+          }
+          return codeEl.innerText;
         }
         const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
           text: getTextToCopy
