@@ -1,0 +1,1523 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<script src="lecture11_synthetic_control_files/libs/clipboard/clipboard.min.js"></script>
+<script src="lecture11_synthetic_control_files/libs/quarto-html/tabby.min.js"></script>
+<script src="lecture11_synthetic_control_files/libs/quarto-html/popper.min.js"></script>
+<script src="lecture11_synthetic_control_files/libs/quarto-html/tippy.umd.min.js"></script>
+<link href="lecture11_synthetic_control_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="lecture11_synthetic_control_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<link href="lecture11_synthetic_control_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles"><meta charset="utf-8">
+  <meta name="generator" content="quarto-1.9.38">
+
+  <meta name="author" content="Jim Bisbee">
+  <title>Synthetic Control and Panel Imputation</title>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+  <link rel="stylesheet" href="lecture11_synthetic_control_files/libs/revealjs/dist/reset.css">
+  <link rel="stylesheet" href="lecture11_synthetic_control_files/libs/revealjs/dist/reveal.css">
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    ul.task-list{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+      vertical-align: middle;
+    }
+  </style>
+  <link rel="stylesheet" href="lecture11_synthetic_control_files/libs/revealjs/dist/theme/quarto-0427d8d92a431aa6a6430e53ec02a470.css">
+  <link href="lecture11_synthetic_control_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.css" rel="stylesheet">
+  <link href="lecture11_synthetic_control_files/libs/revealjs/plugin/reveal-menu/menu.css" rel="stylesheet">
+  <link href="lecture11_synthetic_control_files/libs/revealjs/plugin/reveal-menu/quarto-menu.css" rel="stylesheet">
+  <link href="lecture11_synthetic_control_files/libs/revealjs/plugin/quarto-support/footer.css" rel="stylesheet">
+  <style type="text/css">
+    .reveal div.sourceCode {
+      margin: 0;
+      overflow: auto;
+    }
+    .reveal div.hanging-indent {
+      margin-left: 1em;
+      text-indent: -1em;
+    }
+    .reveal .slide:not(.center) {
+      height: 100%;
+    }
+    .reveal .slide.scrollable {
+      overflow-y: auto;
+    }
+    .reveal .footnotes {
+      height: 100%;
+      overflow-y: auto;
+    }
+    .reveal .slide .absolute {
+      position: absolute;
+      display: block;
+    }
+    .reveal .footnotes ol {
+      counter-reset: ol;
+      list-style-type: none; 
+      margin-left: 0;
+    }
+    .reveal .footnotes ol li:before {
+      counter-increment: ol;
+      content: counter(ol) ". "; 
+    }
+    .reveal .footnotes ol li > p:first-child {
+      display: inline-block;
+    }
+    .reveal .slide ul,
+    .reveal .slide ol {
+      margin-bottom: 0.5em;
+    }
+    .reveal .slide ul li,
+    .reveal .slide ol li {
+      margin-top: 0.4em;
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide ul[role="tablist"] li {
+      margin-bottom: 0;
+    }
+    .reveal .slide ul li > *:first-child,
+    .reveal .slide ol li > *:first-child {
+      margin-block-start: 0;
+    }
+    .reveal .slide ul li > *:last-child,
+    .reveal .slide ol li > *:last-child {
+      margin-block-end: 0;
+    }
+    .reveal .slide .columns:nth-child(3) {
+      margin-block-start: 0.8em;
+    }
+    .reveal blockquote {
+      box-shadow: none;
+    }
+    .reveal .tippy-content>* {
+      margin-top: 0.2em;
+      margin-bottom: 0.7em;
+    }
+    .reveal .tippy-content>*:last-child {
+      margin-bottom: 0.2em;
+    }
+    .reveal .slide > img.stretch.quarto-figure-center,
+    .reveal .slide > img.r-stretch.quarto-figure-center {
+      display: block;
+      margin-left: auto;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-left,
+    .reveal .slide > img.r-stretch.quarto-figure-left  {
+      display: block;
+      margin-left: 0;
+      margin-right: auto; 
+    }
+    .reveal .slide > img.stretch.quarto-figure-right,
+    .reveal .slide > img.r-stretch.quarto-figure-right  {
+      display: block;
+      margin-left: auto;
+      margin-right: 0; 
+    }
+  </style>
+  <style>
+  .reveal table { font-size: 0.8em; margin: 0.6em auto; }
+  </style>
+</head>
+<body class="quarto-light">
+  <div class="reveal">
+    <div class="slides">
+
+<section id="title-slide" class="quarto-title-block center">
+  <h1 class="title">Synthetic Control and Panel Imputation</h1>
+  <p class="subtitle">One Treated Unit, Then Many</p>
+
+<div class="quarto-title-authors">
+<div class="quarto-title-author">
+<div class="quarto-title-author-name">
+Jim Bisbee 
+</div>
+</div>
+</div>
+
+</section>
+<section id="plan-for-today" class="slide level2">
+<h2>Plan for today</h2>
+<p>When can a weighted combination of untreated units stand in for the counterfactual?</p>
+<ol type="1">
+<li>Identification: the factor model</li>
+<li>Estimation: weights, the convex hull, comparison to DiD</li>
+<li>Inference with one treated unit</li>
+<li>Failure modes and practice</li>
+<li>Many treated units: interactive FEs, matrix completion, SDID</li>
+</ol>
+</section>
+<section id="from-did" class="slide level2">
+<h2>From DiD</h2>
+<ul>
+<li>DiD imputes <span class="math inline">\(Y_{1t}(0)\)</span> from the average donor change</li>
+<li>Requires parallel trends</li>
+<li>Imputation (L9): fit <span class="math inline">\(Y(0)\)</span> on untreated cells, predict the rest</li>
+</ul>
+<div class="fragment">
+<p>Today: same imputation, weaker restriction on <span class="math inline">\(Y(0)\)</span>, one treated unit.</p>
+</div>
+</section>
+<section>
+<section id="block-1-identification" class="title-slide slide level1 center">
+<h1>Block 1: Identification</h1>
+
+</section>
+<section id="one-treated-unit" class="slide level2">
+<h2>One treated unit</h2>
+<ul>
+<li>One unit, treated at a known date</li>
+<li>Several untreated units</li>
+<li>Target: the <strong>path</strong> of effects for that unit</li>
+</ul>
+<div class="fragment">
+<p>Abadie and Gardeazabal (2003): ETA terrorism and Basque GDP. Donors: 16 other Spanish regions.</p>
+</div>
+</section>
+<section id="setup" class="slide level2">
+<h2>Setup</h2>
+<p>Abadie, Diamond, and Hainmueller (ADH 2010):</p>
+<ul>
+<li>Units <span class="math inline">\(j \in \{1, \dots, J+1\}\)</span>, periods <span class="math inline">\(t \in \{1, \dots, T\}\)</span></li>
+<li><span class="math inline">\(Y_{jt} = Y_{jt}(0) + D_{jt}\tau_{jt}\)</span></li>
+<li>Unit 1 treated: <span class="math inline">\(D_{1t} = \mathbf{1}\{t &gt; T_0\}\)</span></li>
+<li>Donors: <span class="math inline">\(D_{jt} = 0\)</span> for all <span class="math inline">\(t\)</span>, <span class="math inline">\(j \geq 2\)</span></li>
+</ul>
+<div class="fragment">
+<p>Target, for <span class="math inline">\(t &gt; T_0\)</span>:</p>
+<p><span class="math display">\[
+\tau_{1t} = Y_{1t} - \underbrace{Y_{1t}(0)}_{\text{unobserved}}
+\]</span></p>
+</div>
+</section>
+<section id="basque-country-vs.-spain" class="slide level2">
+<h2>Basque Country vs.&nbsp;Spain</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-4-1.png" width="1056" class="r-stretch"><p>1960s GDP per capita: 5.29 vs.&nbsp;3.63. Different levels, different structure before ETA.</p>
+</section>
+<section id="factor-model" class="slide level2">
+<h2>Factor model</h2>
+<p><span class="math display">\[
+Y_{jt}(0) = \delta_t + \theta_t X_j + \lambda_t \mu_j + \varepsilon_{jt}
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\delta_t\)</span>: common shock</li>
+<li><span class="math inline">\(X_j\)</span>: observed covariates, <span class="math inline">\(\theta_t\)</span> time-varying coefficients</li>
+<li><span class="math inline">\(\lambda_t\)</span>: <span class="math inline">\(R\)</span> unobserved common factors</li>
+<li><span class="math inline">\(\mu_j\)</span>: unobserved loadings</li>
+<li><span class="math inline">\(\varepsilon_{jt}\)</span>: mean-zero shocks</li>
+</ul>
+<div class="fragment">
+<p><span class="math inline">\(\lambda_t = \lambda\)</span> and <span class="math inline">\(\theta_t = \theta\)</span>: unit FE, parallel trends.</p>
+<p>Otherwise units load differently on common shocks. Requires <span class="math inline">\(T_0 &gt; R\)</span>.</p>
+</div>
+</section>
+<section id="parallel-trends-fails-in-the-simulation" class="slide level2">
+<h2>Parallel trends fails in the simulation</h2>
+<p><span class="math inline">\(J = 30\)</span>, <span class="math inline">\(T = 40\)</span>, <span class="math inline">\(T_0 = 28\)</span>, <span class="math inline">\(R = 2\)</span>, effect ramps to 3. Treated loadings <span class="math inline">\((0.55, 0.50)\)</span>, not the donor mean.</p>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-5-1.png" width="1056" class="r-stretch"><p>DiD pre-period RMSE 0.98. ATT 2.87; truth 1.62.</p>
+</section>
+<section id="balancing-weights" class="slide level2">
+<h2>Balancing weights</h2>
+<p><span class="math inline">\(w = (w_2, \dots, w_{J+1})\)</span>, <span class="math inline">\(w_j \geq 0\)</span>, <span class="math inline">\(\sum_j w_j = 1\)</span>:</p>
+<p><span class="math display">\[
+\sum_j w_j Y_{jt} = \delta_t + \theta_t \sum_j w_j X_j + \lambda_t \sum_j w_j \mu_j + \sum_j w_j \varepsilon_{jt}
+\]</span></p>
+<div class="fragment">
+<p>Suppose for all <span class="math inline">\(t \leq T_0\)</span>: <span class="math inline">\(\sum_j w_j Y_{jt} = Y_{1t}\)</span> and <span class="math inline">\(\sum_j w_j X_j = X_1\)</span>.</p>
+<ul>
+<li><span class="math inline">\(\delta_t\)</span>, <span class="math inline">\(X_j\)</span> cancel</li>
+<li><span class="math inline">\(\mu_j\)</span> balance only approximately: the fit is on <span class="math inline">\(Y\)</span>, which includes <span class="math inline">\(\varepsilon\)</span></li>
+</ul>
+</div>
+</section>
+<section id="bias-bound" class="slide level2">
+<h2>Bias bound</h2>
+<p>With exact fit and <span class="math inline">\(T_0 &gt; R\)</span>, for <span class="math inline">\(t &gt; T_0\)</span>:</p>
+<p><span class="math display">\[
+Y_{1t}(0) - \sum_j w_j Y_{jt} = \sum_j w_j \sum_{s=1}^{T_0} \psi_{st} (\varepsilon_{js} - \varepsilon_{1s}) - \sum_j w_j (\varepsilon_{jt} - \varepsilon_{1t})
+\]</span></p>
+<p><span class="math display">\[
+\psi_{st} = \lambda_t \Big( \sum_{n=1}^{T_0} \lambda_n' \lambda_n \Big)^{-1} \lambda_s'
+\]</span></p>
+<ul>
+<li>First term: vanishes in <span class="math inline">\(T_0\)</span>, relative to the scale of <span class="math inline">\(\varepsilon\)</span></li>
+<li>Second term: mean zero</li>
+<li>Bound grows with <span class="math inline">\(J\)</span> and <span class="math inline">\(R\)</span> (Abadie 2021)</li>
+</ul>
+</section></section>
+<section>
+<section id="block-2-estimation" class="title-slide slide level1 center">
+<h1>Block 2: Estimation</h1>
+
+</section>
+<section id="the-estimator" class="slide level2">
+<h2>The estimator</h2>
+<p>For <span class="math inline">\(t &gt; T_0\)</span>:</p>
+<p><span class="math display">\[
+\hat\tau_{1t} = Y_{1t} - \sum_j \hat w_j Y_{jt}
+\]</span></p>
+<p>Exact balance requires <span class="math inline">\((Y_{11}, \dots, Y_{1T_0}, X_1)\)</span> in the convex hull of the donors.</p>
+<p>Otherwise minimize imbalance.</p>
+</section>
+<section id="choosing-w-and-v" class="slide level2">
+<h2>Choosing <span class="math inline">\(w\)</span> and <span class="math inline">\(V\)</span></h2>
+<p><span class="math inline">\(\mathbf{X}_1\)</span>, <span class="math inline">\(\mathbf{X}_0\)</span>: predictors, including summaries of pre-period outcomes.</p>
+<p><span class="math display">\[
+\hat w(V) = \arg\min_{w \in \Delta} (\mathbf{X}_1 - \mathbf{X}_0 w)' V (\mathbf{X}_1 - \mathbf{X}_0 w)
+\]</span></p>
+<p><span class="math inline">\(V\)</span> diagonal, non-negative. Data-driven choices:</p>
+<ul>
+<li>Minimize pre-period outcome MSPE (ADH 2010)</li>
+<li>Cross-validate on train and validation periods (ADH 2015)</li>
+</ul>
+</section>
+<section id="inside-the-hull" class="slide level2">
+<h2>Inside the hull</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-6-1.png" width="1056" class="r-stretch"><p>Pre-period RMSE 0.17. ATT 1.48; truth 1.62. Circles: <span class="math inline">\(\hat w_j\)</span>, sparse. Star: treated.</p>
+</section>
+<section id="outside-the-hull" class="slide level2">
+<h2>Outside the hull</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-7-1.png" width="1056" class="r-stretch"><p>Pre-period RMSE 2.74. ATT 4.98; truth 1.62. All weight on 1 donor.</p>
+</section>
+<section id="synth-vs.-did" class="slide level2">
+<h2>Synth vs.&nbsp;DiD</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>DiD</th>
+<th>Synth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\hat Y_{1t}(0)\)</span></td>
+<td><span class="math inline">\(\hat\alpha + \frac{1}{J} \sum_j Y_{jt}\)</span></td>
+<td><span class="math inline">\(\sum_j \hat w_j Y_{jt}\)</span></td>
+</tr>
+<tr class="even">
+<td>Weights</td>
+<td>uniform</td>
+<td>convex, data-driven</td>
+</tr>
+<tr class="odd">
+<td>Intercept</td>
+<td>yes</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(Y(0)\)</span></td>
+<td>parallel trends</td>
+<td>interactive FE</td>
+</tr>
+<tr class="odd">
+<td>Beyond donors</td>
+<td>extrapolates (level shift)</td>
+<td>interpolates (convex hull)</td>
+</tr>
+</tbody>
+</table>
+<p>Simulation, truth 1.62:</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>DiD</th>
+<th>Synth</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Inside the hull</td>
+<td>2.87</td>
+<td>1.48</td>
+</tr>
+<tr class="even">
+<td>Outside the hull</td>
+<td>5.09</td>
+<td>4.98</td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exercise" class="slide level2">
+<h2>Exercise</h2>
+<p><span class="math inline">\(j = 1\)</span> treated at <span class="math inline">\(T_0 = 4\)</span>; donors <span class="math inline">\(j = 2, 3, 4\)</span>.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th><span class="math inline">\(t=1\)</span></th>
+<th><span class="math inline">\(t=2\)</span></th>
+<th><span class="math inline">\(t=3\)</span></th>
+<th><span class="math inline">\(t=4\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(Y_{1t}\)</span></td>
+<td>5</td>
+<td>7</td>
+<td>6</td>
+<td>8</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(Y_{2t}\)</span></td>
+<td>4</td>
+<td>6</td>
+<td>5</td>
+<td>7</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(Y_{3t}\)</span></td>
+<td>6</td>
+<td>8</td>
+<td>7</td>
+<td>9</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(Y_{4t}\)</span></td>
+<td>3</td>
+<td>5</td>
+<td>8</td>
+<td>6</td>
+</tr>
+</tbody>
+</table>
+<ol type="a">
+<li><p>Write the SC problem for <span class="math inline">\(w\)</span> with all pre-period outcomes as predictors, <span class="math inline">\(V = I\)</span>.</p></li>
+<li><p>If <span class="math inline">\(Y_{1t} = (2, 2, 2, 2)\)</span>, does an exact <span class="math inline">\(w\)</span> exist?</p></li>
+<li><p>Compute synth and DiD estimates of <span class="math inline">\(Y_{1,5}(0)\)</span> when <span class="math inline">\(Y_{2,5} = 8\)</span>, <span class="math inline">\(Y_{3,5} = 10\)</span>, <span class="math inline">\(Y_{4,5} = 7\)</span>. Why do they differ?</p></li>
+</ol>
+<aside class="notes">
+<ol type="a">
+<li>min over the simplex of sum_t (Y_1t - sum_j w_j Y_jt)^2. Exact solution, unique: w = (1/2, 1/2, 0).</li>
+<li>No.&nbsp;Every donor is at least 3 in every period, so 2 is outside the hull.</li>
+<li>Synth: 0.5(8) + 0.5(10) = 9. DiD: alpha-hat = 6.5 - 6.167 = 0.333; donor mean at t = 5 is 8.333; DiD = 8.667. DiD gives unit 4 weight 1/3 even though its pre-period path differs.</li>
+</ol>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="basque-country-fit-and-gap" class="slide level2">
+<h2>Basque Country: fit and gap</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-8-1.png" width="1056" class="r-stretch"><p>Mean post-1969 gap: -0.58, -7.1% of synthetic GDP.</p>
+</section>
+<section id="basque-country-weights-and-balance" class="slide level2">
+<h2>Basque Country: weights and balance</h2>
+<div class="columns">
+<div class="column" style="width:35%;">
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Region</th>
+<th style="text-align: right;">Weight</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Cataluna</td>
+<td style="text-align: right;">0.8508</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Madrid</td>
+<td style="text-align: right;">0.1492</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Other 14 regions: 0.</p>
+</div><div class="column" style="width:65%;">
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th style="text-align: left;">Predictor</th>
+<th style="text-align: right;">Basque</th>
+<th style="text-align: right;">Synthetic</th>
+<th style="text-align: right;">Donor mean</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">GDP per capita</td>
+<td style="text-align: right;">5.29</td>
+<td style="text-align: right;">5.27</td>
+<td style="text-align: right;">3.58</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Investment ratio</td>
+<td style="text-align: right;">24.65</td>
+<td style="text-align: right;">21.58</td>
+<td style="text-align: right;">21.42</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Agriculture</td>
+<td style="text-align: right;">6.84</td>
+<td style="text-align: right;">6.18</td>
+<td style="text-align: right;">21.35</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Energy and water</td>
+<td style="text-align: right;">4.11</td>
+<td style="text-align: right;">2.76</td>
+<td style="text-align: right;">5.31</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Industry</td>
+<td style="text-align: right;">45.08</td>
+<td style="text-align: right;">37.64</td>
+<td style="text-align: right;">22.42</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Construction</td>
+<td style="text-align: right;">6.15</td>
+<td style="text-align: right;">6.95</td>
+<td style="text-align: right;">7.28</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Marketable services</td>
+<td style="text-align: right;">33.75</td>
+<td style="text-align: right;">41.10</td>
+<td style="text-align: right;">36.53</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Non-marketable services</td>
+<td style="text-align: right;">4.07</td>
+<td style="text-align: right;">5.37</td>
+<td style="text-align: right;">7.11</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Population density</td>
+<td style="text-align: right;">246.89</td>
+<td style="text-align: right;">196.28</td>
+<td style="text-align: right;">99.41</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div></div>
+<p>Schooling predictors omitted from the table.</p>
+</section></section>
+<section>
+<section id="block-3-inference" class="title-slide slide level1 center">
+<h1>Block 3: Inference</h1>
+
+</section>
+<section id="the-problem" class="slide level2">
+<h2>The problem</h2>
+<ul>
+<li>Trends treated as fixed</li>
+<li>Uncertainty: error in the approximation of <span class="math inline">\(Y_{1t}(0)\)</span></li>
+<li><span class="math inline">\(N_1 = 1\)</span>: no averaging over treated units</li>
+</ul>
+</section>
+<section id="placebo-test" class="slide level2">
+<h2>Placebo test</h2>
+<p>ADH (2010): apply SC to each donor as if treated.</p>
+<p><span class="math display">\[
+r_j = \frac{\text{RMSPE}_j(T_0 + 1, \dots, T)}{\text{RMSPE}_j(1, \dots, T_0)}, \qquad
+p = \frac{1}{J+1} \sum_{j=1}^{J+1} \mathbf{1}\{r_j \geq r_1\}
+\]</span></p>
+<ul>
+<li>Exact under exchangeable assignment</li>
+<li>Minimum <span class="math inline">\(p\)</span>: <span class="math inline">\(1/(J+1)\)</span></li>
+</ul>
+</section>
+<section id="placebos-basque-country" class="slide level2">
+<h2>Placebos: Basque Country</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-11-1.png" width="1056" class="r-stretch"><p><span class="math inline">\(p =\)</span> 0.35. Minimum possible: <span class="math inline">\(1/17 \approx\)</span> 0.059. Basque Country stays in each placebo pool, as in ADH.</p>
+</section>
+<section id="hahn-and-shi-2017" class="slide level2">
+<h2>Hahn and Shi (2017)</h2>
+<ul>
+<li>Permutation validity requires symmetry</li>
+<li>Repeated-sampling view: symmetry generally fails; size distorted (Monte Carlo)</li>
+<li>Randomization view (Abadie): symmetry built in by assumption</li>
+</ul>
+<div class="fragment">
+<p>What is the <span class="math inline">\(p\)</span>-value about: assignment, or sampling?</p>
+</div>
+</section>
+<section id="firpo-and-possebom-2018" class="slide level2">
+<h2>Firpo and Possebom (2018)</h2>
+<ul>
+<li>Placebo test: uniform assignment across units</li>
+<li>Parametric family of assignment probabilities; uniform is a special case</li>
+<li>Sensitivity of the decision to departures from uniform</li>
+</ul>
+</section>
+<section id="conformal-chernozhukov-wüthrich-and-zhu-2021" class="slide level2">
+<h2>Conformal: Chernozhukov, Wüthrich, and Zhu (2021)</h2>
+<p>Under the sharp null <span class="math inline">\(\tau_{1t} = 0\)</span>: fit on <strong>all</strong> periods, residuals <span class="math inline">\(\hat u_t = Y_{1t} - \hat Y_{1t}(0)\)</span>.</p>
+<p><span class="math display">\[
+S_q(\hat u) = \Big( \frac{1}{\sqrt{T - T_0}} \sum_{t &gt; T_0} |\hat u_t|^q \Big)^{1/q}
+\]</span></p>
+<ul>
+<li><span class="math inline">\(q = \infty\)</span>: large transient effects; <span class="math inline">\(q = 1, 2\)</span>: persistent effects</li>
+<li>iid permutations: exact under exchangeability of <span class="math inline">\(\{u_t\}\)</span></li>
+<li>Moving blocks: stationarity and weak dependence</li>
+<li>Works with DiD, SC, constrained Lasso, factor models, matrix completion</li>
+<li>CIs by test inversion</li>
+<li>Ignores weight estimation error (Cattaneo et al.&nbsp;2021)</li>
+</ul>
+</section>
+<section id="inference-summary" class="slide level2">
+<h2>Inference: summary</h2>
+<p>All need the factor model (or similar) for the estimator itself.</p>
+<table class="caption-top">
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Additional assumption</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Placebo (ADH 2010)</td>
+<td>Exchangeable assignment</td>
+</tr>
+<tr class="even">
+<td>Conformal (Chernozhukov et al.&nbsp;2021)</td>
+<td>Stationary/exchangeable shocks</td>
+</tr>
+<tr class="odd">
+<td>Prediction intervals (Cattaneo et al.&nbsp;2021)</td>
+<td>Moment conditions on estimation and shock errors</td>
+</tr>
+<tr class="even">
+<td>Subsampling (Li 2020)</td>
+<td>Long panel</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section>
+<section id="block-4-failure-modes-and-practice" class="title-slide slide level1 center">
+<h1>Block 4: Failure modes and practice</h1>
+
+</section>
+<section id="dormant-factors" class="slide level2">
+<h2>Dormant factors</h2>
+<p>Hollingsworth and Wing (2022): factors collinear before <span class="math inline">\(T_0\)</span>, distinct after. Treated <span class="math inline">\(\mu = (1, 0)\)</span>.</p>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-12-1.png" width="1056" class="r-stretch"><p>Pre-period RMSE 0.09. Weighted loadings <span class="math inline">\((0.80, 0.20)\)</span>. ATT 2.47; truth 1.62.</p>
+</section>
+<section id="imperfect-fit" class="slide level2">
+<h2>Imperfect fit</h2>
+<p>Ferman and Pinto (2021). Without exact fit, <span class="math inline">\(\hat w\)</span> trades off:</p>
+<ul>
+<li>Matching loadings</li>
+<li>Minimizing variance of weighted shocks</li>
+</ul>
+<div class="fragment">
+<ul>
+<li><span class="math inline">\(\hat w\)</span> does not recover the loadings, even as <span class="math inline">\(T_0 \to \infty\)</span></li>
+<li>Biased if assignment is correlated with the factors</li>
+</ul>
+</div>
+<div class="fragment">
+<p>Demeaned SC (add an intercept):</p>
+<ul>
+<li>Can improve on DiD in bias and variance</li>
+<li>Still biased under selection on time-varying factors</li>
+</ul>
+</div>
+</section>
+<section id="non-unique-w" class="slide level2">
+<h2>Non-unique <span class="math inline">\(W\)</span></h2>
+<p>Abadie and L’Hour (2021):</p>
+<ul>
+<li>Inside the hull: many <span class="math inline">\(w\)</span> with the same fit</li>
+<li>Different <span class="math inline">\(w\)</span>, different post-period estimates</li>
+<li>Near the boundary: corner solution, few donors</li>
+</ul>
+</section>
+<section id="unstable-v" class="slide level2">
+<h2>Unstable <span class="math inline">\(V\)</span></h2>
+<p>Kuosmanen, Zhou, Eskelinen, and Malo (2021): Basque application, three algorithms.</p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>Synth</th>
+<th>MSCMT</th>
+<th>Global optimum</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(w\)</span>: Catalonia</td>
+<td>0.851</td>
+<td>0.633</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(w\)</span>: Madrid</td>
+<td>0.149</td>
+<td>0.148</td>
+<td>0.441</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(w\)</span>: Baleares</td>
+<td>0</td>
+<td>0.219</td>
+<td>0.370</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(w\)</span>: La Rioja</td>
+<td>0</td>
+<td>0</td>
+<td>0.190</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(v\)</span>: GDP per capita</td>
+<td>0.201</td>
+<td>0.999</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<td>Pre-period <span class="math inline">\(R^2\)</span></td>
+<td>0.969</td>
+<td>0.985</td>
+<td>0.985</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Bilevel problem; <code>Synth</code> numerically unstable</li>
+<li>Optimum typically a corner: all <span class="math inline">\(V\)</span> on one predictor</li>
+<li>Other predictors then irrelevant</li>
+</ul>
+</section>
+<section id="donor-pool-and-covariates" class="slide level2">
+<h2>Donor pool and covariates</h2>
+<p>Abadie (2021):</p>
+<ul>
+<li>Exclude units with similar interventions or large idiosyncratic shocks</li>
+<li>Small, curated pool over large, heterogeneous one</li>
+</ul>
+<p>Covariates:</p>
+<ul>
+<li>Omitted <span class="math inline">\(X_j\)</span> go into <span class="math inline">\(\mu_j\)</span>: more factors, larger bound</li>
+</ul>
+<p>Multiple outcomes:</p>
+<ul>
+<li>Reduce overfitting (Sun, Ben-Michael, and Feller 2025)</li>
+</ul>
+</section>
+<section id="diagnostics" class="slide level2">
+<h2>Diagnostics</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-13-1.png" width="1056" class="r-stretch"><ul>
+<li>Report weights, predictor balance, pre-period gap</li>
+<li>Vary <span class="math inline">\(V\)</span> and the donor pool</li>
+<li>Effect large relative to outcome volatility (Abadie and Vives-i-Bastida 2022)</li>
+</ul>
+<p>Mean gap: -0.58; drop Catalonia -0.85; drop Madrid -0.54.</p>
+</section>
+<section id="augmented-scm" class="slide level2">
+<h2>Augmented SCM</h2>
+<p>Ben-Michael, Feller, and Rothstein (2021). Bias correction, as in matching (L3):</p>
+<p><span class="math display">\[
+\hat Y_{1T}^{\text{aug}}(0) = \sum_j \hat w_j Y_{jT} + \Big( \hat m_{1T} - \sum_j \hat w_j \hat m_{jT} \Big)
+\]</span></p>
+<p><span class="math inline">\(\hat m\)</span>: outcome model on pre-period outcomes. Ridge ASCM:</p>
+<p><span class="math display">\[
+\hat w_j^{\text{aug}} = \hat w_j + (X_1 - X_0' \hat w)' (X_0' X_0 + \kappa I)^{-1} X_j
+\]</span></p>
+<ul>
+<li><span class="math inline">\(X_j\)</span> centered; <span class="math inline">\(\kappa\)</span> sets the extrapolation</li>
+<li>Negative weights allowed</li>
+<li>Good fit: <span class="math inline">\(\hat m\)</span> correction small, ASCM <span class="math inline">\(\approx\)</span> SCM</li>
+</ul>
+</section>
+<section id="ridge-ascm-outside-the-hull" class="slide level2">
+<h2>Ridge ASCM outside the hull</h2>
+
+<img data-src="lecture11_synthetic_control_files/figure-revealjs/unnamed-chunk-14-1.png" width="1056" class="r-stretch"><table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th>Pre-period RMSE</th>
+<th>ATT</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>SCM</td>
+<td>2.74</td>
+<td>4.98</td>
+</tr>
+<tr class="even">
+<td>Ridge ASCM</td>
+<td>0.20</td>
+<td>1.55</td>
+</tr>
+<tr class="odd">
+<td>Truth</td>
+<td></td>
+<td>1.62</td>
+</tr>
+</tbody>
+</table>
+</section></section>
+<section>
+<section id="block-5-many-treated-units" class="title-slide slide level1 center">
+<h1>Block 5: Many treated units</h1>
+
+</section>
+<section id="matrix-view" class="slide level2">
+<h2>Matrix view</h2>
+<p><span class="math display">\[
+Y(0) = \begin{pmatrix} Y_{co,pre}(0) &amp; Y_{co,post}(0) \\ Y_{tr,pre}(0) &amp; \textbf{?} \end{pmatrix}
+\]</span></p>
+<p><span class="math display">\[
+\text{ATT} = \frac{1}{N_1} \sum_{it: D_{it} = 1} \big( Y_{it} - \hat Y_{it}(0) \big)
+\]</span></p>
+<p>Fit on untreated cells, impute <strong>?</strong>, average (L9). Methods differ in the model for <span class="math inline">\(\hat Y_{it}(0)\)</span>.</p>
+</section>
+<section id="interactive-fe-xu-2017" class="slide level2">
+<h2>Interactive FE: Xu (2017)</h2>
+<p><span class="math display">\[
+Y_{it}(0) = X_{it}' \beta + \alpha_i + \xi_t + \mu_i' \lambda_t + \varepsilon_{it}
+\]</span></p>
+<p>Generalized synthetic control:</p>
+<ol type="1">
+<li>Estimate <span class="math inline">\(\hat\beta, \hat\lambda_t, \hat\mu_{co}\)</span> on controls (Bai 2009)</li>
+<li>Estimate <span class="math inline">\(\hat\mu_i\)</span> for treated units on pre-period outcomes</li>
+<li>Impute</li>
+</ol>
+<ul>
+<li><span class="math inline">\(R\)</span> by cross-validation</li>
+<li>Consistent as <span class="math inline">\(N_{co}, T_0 \to \infty\)</span>; suggested <span class="math inline">\(N_{co} \geq 40\)</span>, <span class="math inline">\(T_0 \geq 10\)</span></li>
+<li>Strict exogeneity of <span class="math inline">\(X_{it}\)</span></li>
+</ul>
+</section>
+<section id="matrix-completion-athey-et-al.-2021" class="slide level2">
+<h2>Matrix completion: Athey et al.&nbsp;(2021)</h2>
+<p>Same factor structure, <span class="math inline">\(L\)</span> low rank:</p>
+<p><span class="math display">\[
+\hat L = \arg\min_L \frac{1}{|\mathcal{O}|} \| P_{\mathcal{O}}(Y - L) \|_F^2 + \kappa \|L\|_*
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\|L\|_*\)</span>: sum of singular values</li>
+<li>Soft-thresholds rank, no fixed <span class="math inline">\(R\)</span>; <span class="math inline">\(\kappa\)</span> by cross-validation</li>
+</ul>
+<div class="fragment">
+<p><span class="math display">\[
+\begin{pmatrix} 1 &amp; ? \\ 4 &amp; 8 \\ 3 &amp; 6 \end{pmatrix}
+\quad \Rightarrow \quad
+\begin{pmatrix} 1 &amp; 2 \\ 4 &amp; 8 \\ 3 &amp; 6 \end{pmatrix}
+= (1, 4, 3)' (1, 2)
+\]</span></p>
+</div>
+</section>
+<section id="one-objective" class="slide level2">
+<h2>One objective</h2>
+<p>Athey et al.&nbsp;(2021):</p>
+<p><span class="math display">\[
+\min \frac{1}{|\mathcal{O}|} \big\| P_{\mathcal{O}}\big( Y - AB' - \alpha 1_T' - 1_N \xi' \big) \big\|_F^2
+\]</span></p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th>Method</th>
+<th>Restriction</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DiD</td>
+<td><span class="math inline">\(AB' = 0\)</span></td>
+</tr>
+<tr class="even">
+<td>Synthetic control</td>
+<td><span class="math inline">\(A\)</span>: non-negative columns summing to 1</td>
+</tr>
+<tr class="odd">
+<td>Interactive FE</td>
+<td>Fixed rank <span class="math inline">\(R\)</span></td>
+</tr>
+<tr class="even">
+<td>Matrix completion</td>
+<td>Penalty <span class="math inline">\(\kappa \| AB' \|_*\)</span></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="exercise-1" class="slide level2">
+<h2>Exercise</h2>
+<p>Units 3 and 4 treated from <span class="math inline">\(t = 3\)</span>:</p>
+<p><span class="math display">\[
+Y(0) = \begin{pmatrix} 1 &amp; 2 &amp; 4 \\ 2 &amp; 4 &amp; 8 \\ 3 &amp; 6 &amp; ? \\ 1 &amp; 2 &amp; ? \end{pmatrix}
+\]</span></p>
+<ol type="a">
+<li><p>Does <span class="math inline">\(Y_{it}(0) = \alpha_i + \xi_t\)</span> fit the observed cells?</p></li>
+<li><p>Does <span class="math inline">\(Y_{it}(0) = \mu_i \lambda_t\)</span>? If so, impute.</p></li>
+<li><p>What does this imply for TWFE vs.&nbsp;interactive FE?</p></li>
+</ol>
+<aside class="notes">
+<ol type="a">
+<li>No.&nbsp;Changes t=1 to t=2 are 1, 2, 3, 1: not parallel.</li>
+<li>Yes. mu = (1, 2, 3, 1), lambda = (1, 2, 4). Missing entries: 12 and 4.</li>
+<li>TWFE would impute from additive changes; the factor model fits exactly. Fit on the untreated cells can discriminate.</li>
+</ol>
+<style type="text/css">
+        span.MJX_Assistive_MathML {
+          position:absolute!important;
+          clip: rect(1px, 1px, 1px, 1px);
+          padding: 1px 0 0 0!important;
+          border: 0!important;
+          height: 1px!important;
+          width: 1px!important;
+          overflow: hidden!important;
+          display:block!important;
+      }</style></aside>
+</section>
+<section id="scm-with-staggered-adoption" class="slide level2">
+<h2>SCM with staggered adoption</h2>
+<p>Ben-Michael, Feller, and Rothstein (2022). Treated unit <span class="math inline">\(j\)</span>, imbalance <span class="math inline">\(q_j\)</span>:</p>
+<ul>
+<li><span class="math inline">\(q^{sep}\)</span>: root mean of <span class="math inline">\(q_j^2\)</span></li>
+<li><span class="math inline">\(q^{pool}\)</span>: imbalance of the average pre-period gap</li>
+</ul>
+<p><span class="math display">\[
+\min_{\Gamma} \; \nu (\tilde q^{pool})^2 + (1 - \nu)(\tilde q^{sep})^2 + \kappa \|\Gamma\|_F^2
+\]</span></p>
+<ul>
+<li><span class="math inline">\(\nu = 0\)</span>: separate; <span class="math inline">\(\nu = 1\)</span>: pooled</li>
+<li>With intercept: weighted DiD</li>
+</ul>
+</section>
+<section id="synthetic-did-arkhangelsky-et-al.-2021" class="slide level2">
+<h2>Synthetic DiD: Arkhangelsky et al.&nbsp;(2021)</h2>
+<p><span class="math display">\[
+\hat\tau^{sdid} = \arg\min_{\tau, \alpha, \xi, m} \sum_{i, t} (Y_{it} - m - \alpha_i - \xi_t - D_{it} \tau)^2 \, \hat\omega_i \hat\phi_t
+\]</span></p>
+<table class="caption-top">
+<thead>
+<tr class="header">
+<th></th>
+<th><span class="math inline">\(\alpha_i\)</span></th>
+<th>Unit weights</th>
+<th>Time weights</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>DiD</td>
+<td>yes</td>
+<td>uniform</td>
+<td>uniform</td>
+</tr>
+<tr class="even">
+<td>SC</td>
+<td>no</td>
+<td><span class="math inline">\(\hat\omega_i\)</span></td>
+<td>none</td>
+</tr>
+<tr class="odd">
+<td>SDID</td>
+<td>yes</td>
+<td><span class="math inline">\(\hat\omega_i\)</span></td>
+<td><span class="math inline">\(\hat\phi_t\)</span></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><span class="math inline">\(\hat\omega_i\)</span>: regularized toward uniform</li>
+<li><span class="math inline">\(\hat\phi_t\)</span>: pre-periods that predict the post-period among controls</li>
+<li>Either set removes bias: approximately unbiased</li>
+<li>Inference: placebo, jackknife, block bootstrap</li>
+</ul>
+</section>
+<section id="which-method" class="slide level2">
+<h2>Which method</h2>
+<table class="caption-top">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>Short <span class="math inline">\(T_{pre}\)</span></th>
+<th>Long <span class="math inline">\(T_{pre}\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>Many <span class="math inline">\(N_{co}\)</span></strong></td>
+<td>TWFE imputation</td>
+<td>Matrix completion, SDID</td>
+</tr>
+<tr class="even">
+<td><strong>Few <span class="math inline">\(N_{co}\)</span></strong></td>
+<td>SDID or TWFE imputation; hard for all</td>
+<td>GSC, SCM-based</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Short <span class="math inline">\(T_{pre}\)</span> and interactive FE: incidental parameters</li>
+<li>Hold-out test: hide untreated periods, predict them (Liu, Wang, and Xu 2024)</li>
+<li><code>fect</code>, <code>gsynth</code>, <code>augsynth</code>, <code>synthdid</code></li>
+</ul>
+</section>
+<section id="summary" class="slide level2">
+<h2>Summary</h2>
+<ul>
+<li>SC: weights balancing a factor model in pre-period outcomes</li>
+<li>Good fit is necessary, not sufficient (dormant factors)</li>
+<li>Outside the hull: SC fails; augmentation extrapolates</li>
+<li>Inference: placebos, conformal, intervals. One treated unit, strong assumptions</li>
+<li>Many units: same imputation, different <span class="math inline">\(Y(0)\)</span> models</li>
+</ul>
+</section>
+<section id="references-12" class="slide level2">
+<h2>References (1/2)</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li>Abadie (2021), <em>JEL</em></li>
+<li>Abadie, Diamond, Hainmueller (2010), <em>JASA</em></li>
+<li>Abadie, Diamond, Hainmueller (2015), <em>AJPS</em></li>
+<li>Abadie and Gardeazabal (2003), <em>AER</em></li>
+<li>Abadie and L’Hour (2021), <em>JASA</em></li>
+<li>Abadie and Vives-i-Bastida (2022), “Synthetic Controls in Action,” arXiv:2203.06279</li>
+<li>Arkhangelsky, Athey, Hirshberg, Imbens, Wager (2021), <em>AER</em></li>
+<li>Athey, Bayati, Doudchenko, Imbens, Khosravi (2021), <em>JASA</em></li>
+</ul>
+</div><div class="column" style="width:50%;">
+<ul>
+<li>Bai (2009), <em>Econometrica</em></li>
+<li>Becker and Klößner (2018), <em>Econometrics and Statistics</em></li>
+<li>Ben-Michael, Feller, Rothstein (2021), <em>JASA</em></li>
+<li>Ben-Michael, Feller, Rothstein (2022), <em>JRSS-B</em></li>
+<li>Cattaneo, Feng, Titiunik (2021), <em>JASA</em></li>
+<li>Chernozhukov, Wüthrich, Zhu (2021), <em>JASA</em></li>
+<li>Ferman and Pinto (2021), <em>Quantitative Economics</em></li>
+</ul>
+</div></div>
+</section>
+<section id="references-22" class="slide level2">
+<h2>References (2/2)</h2>
+<div class="columns">
+<div class="column" style="width:50%;">
+<ul>
+<li>Firpo and Possebom (2018), <em>Journal of Causal Inference</em></li>
+<li>Hahn and Shi (2017), <em>Econometrics</em></li>
+<li>Hollingsworth and Wing (2022), “Tactics for Design and Inference in Synthetic Control Studies,” working paper</li>
+<li>Kuosmanen, Zhou, Eskelinen, Malo (2021), “Design Flaw of the Synthetic Control Method,” MPRA 106390</li>
+</ul>
+</div><div class="column" style="width:50%;">
+<ul>
+<li>Li (2020), <em>JASA</em></li>
+<li>Liu, Wang, Xu (2024), <em>AJPS</em></li>
+<li>Sun, Ben-Michael, Feller (2025), “Using Multiple Outcomes to Improve the Synthetic Control Method,” <em>REStat</em></li>
+<li>Xu (2017), <em>Political Analysis</em></li>
+</ul>
+</div></div>
+
+</section></section>
+    </div>
+  <div class="quarto-auto-generated-content" style="display: none;">
+<div class="footer footer-default">
+
+</div>
+</div></div>
+
+  <script>window.backupDefine = window.define; window.define = undefined;</script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/dist/reveal.js"></script>
+  <!-- reveal.js plugins -->
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/quarto-line-highlight/line-highlight.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/pdf-export/pdfexport.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/reveal-menu/menu.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/reveal-menu/quarto-menu.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/quarto-support/support.js"></script>
+  
+
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/notes/notes.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/search/search.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/zoom/zoom.js"></script>
+  <script src="lecture11_synthetic_control_files/libs/revealjs/plugin/math/math.js"></script>
+  <script>window.define = window.backupDefine; window.backupDefine = undefined;</script>
+
+  <script>
+
+      // Full list of configuration options available at:
+      // https://revealjs.com/config/
+      Reveal.initialize({
+'controlsAuto': true,
+'previewLinksAuto': false,
+'pdfSeparateFragments': false,
+'autoAnimateEasing': "ease",
+'autoAnimateDuration': 1,
+'autoAnimateUnmatched': true,
+'jumpToSlide': true,
+'menu': {"side":"left","useTextContentForMissingTitles":true,"markers":false,"loadIcons":false,"custom":[{"title":"Tools","icon":"<i class=\"fas fa-gear\"></i>","content":"<ul class=\"slide-menu-items\">\n<li class=\"slide-tool-item active\" data-item=\"0\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.fullscreen(event)\"><kbd>f</kbd> Fullscreen</a></li>\n<li class=\"slide-tool-item\" data-item=\"1\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.speakerMode(event)\"><kbd>s</kbd> Speaker View</a></li>\n<li class=\"slide-tool-item\" data-item=\"2\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.overview(event)\"><kbd>o</kbd> Slide Overview</a></li>\n<li class=\"slide-tool-item\" data-item=\"3\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.togglePdfExport(event)\"><kbd>e</kbd> PDF Export Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"4\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.toggleScrollView(event)\"><kbd>r</kbd> Scroll View Mode</a></li>\n<li class=\"slide-tool-item\" data-item=\"5\"><a href=\"#\" onclick=\"RevealMenuToolHandlers.keyboardHelp(event)\"><kbd>?</kbd> Keyboard Help</a></li>\n</ul>"}],"openButton":true},
+'smaller': true,
+ 
+        // Display controls in the bottom right corner
+        controls: false,
+
+        // Help the user learn the controls by providing hints, for example by
+        // bouncing the down arrow when they first encounter a vertical slide
+        controlsTutorial: false,
+
+        // Determines where controls appear, "edges" or "bottom-right"
+        controlsLayout: 'edges',
+
+        // Visibility rule for backwards navigation arrows; "faded", "hidden"
+        // or "visible"
+        controlsBackArrows: 'faded',
+
+        // Display a presentation progress bar
+        progress: true,
+
+        // Display the page number of the current slide
+        slideNumber: 'c/t',
+
+        // 'all', 'print', or 'speaker'
+        showSlideNumber: 'all',
+
+        // Add the current slide number to the URL hash so that reloading the
+        // page/copying the URL will return you to the same slide
+        hash: true,
+
+        // Start with 1 for the hash rather than 0
+        hashOneBasedIndex: false,
+
+        // Flags if we should monitor the hash and change slides accordingly
+        respondToHashChanges: true,
+
+        // Push each slide change to the browser history
+        history: true,
+
+        // Enable keyboard shortcuts for navigation
+        keyboard: true,
+
+        // Enable the slide overview mode
+        overview: true,
+
+        // Disables the default reveal.js slide layout (scaling and centering)
+        // so that you can use custom CSS layout
+        disableLayout: false,
+
+        // Vertical centering of slides
+        center: false,
+
+        // Enables touch navigation on devices with touch input
+        touch: true,
+
+        // Loop the presentation
+        loop: false,
+
+        // Change the presentation direction to be RTL
+        rtl: false,
+
+        // see https://revealjs.com/vertical-slides/#navigation-mode
+        navigationMode: 'linear',
+
+        // Randomizes the order of slides each time the presentation loads
+        shuffle: false,
+
+        // Turns fragments on and off globally
+        fragments: true,
+
+        // Flags whether to include the current fragment in the URL,
+        // so that reloading brings you to the same fragment position
+        fragmentInURL: false,
+
+        // Flags if the presentation is running in an embedded mode,
+        // i.e. contained within a limited portion of the screen
+        embedded: false,
+
+        // Flags if we should show a help overlay when the questionmark
+        // key is pressed
+        help: true,
+
+        // Flags if it should be possible to pause the presentation (blackout)
+        pause: true,
+
+        // Flags if speaker notes should be visible to all viewers
+        showNotes: false,
+
+        // Global override for autoplaying embedded media (null/true/false)
+        autoPlayMedia: null,
+
+        // Global override for preloading lazy-loaded iframes (null/true/false)
+        preloadIframes: null,
+
+        // Number of milliseconds between automatically proceeding to the
+        // next slide, disabled when set to 0, this value can be overwritten
+        // by using a data-autoslide attribute on your slides
+        autoSlide: 0,
+
+        // Stop auto-sliding after user input
+        autoSlideStoppable: true,
+
+        // Use this method for navigation when auto-sliding
+        autoSlideMethod: null,
+
+        // Specify the average time in seconds that you think you will spend
+        // presenting each slide. This is used to show a pacing timer in the
+        // speaker view
+        defaultTiming: null,
+
+        // Enable slide navigation via mouse wheel
+        mouseWheel: false,
+
+        // The display mode that will be used to show slides
+        display: 'block',
+
+        // Hide cursor if inactive
+        hideInactiveCursor: true,
+
+        // Time before the cursor is hidden (in ms)
+        hideCursorTime: 5000,
+
+        // Opens links in an iframe preview overlay
+        previewLinks: false,
+
+        // Transition style (none/fade/slide/convex/concave/zoom)
+        transition: 'none',
+
+        // Transition speed (default/fast/slow)
+        transitionSpeed: 'default',
+
+        // Transition style for full page slide backgrounds
+        // (none/fade/slide/convex/concave/zoom)
+        backgroundTransition: 'none',
+
+        // Number of slides away from the current that are visible
+        viewDistance: 3,
+
+        // Number of slides away from the current that are visible on mobile
+        // devices. It is advisable to set this to a lower number than
+        // viewDistance in order to save resources.
+        mobileViewDistance: 2,
+
+        // The "normal" size of the presentation, aspect ratio will be preserved
+        // when the presentation is scaled to fit different resolutions. Can be
+        // specified using percentage units.
+        width: 1280,
+
+        height: 720,
+
+        // Factor of the display size that should remain empty around the content
+        margin: 8.0e-2,
+
+        math: {
+          mathjax: 'https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js',
+          config: 'TeX-AMS_HTML-full',
+          tex2jax: {
+            inlineMath: [['\\(','\\)']],
+            displayMath: [['\\[','\\]']],
+            balanceBraces: true,
+            processEscapes: false,
+            processRefs: true,
+            processEnvironments: true,
+            preview: 'TeX',
+            skipTags: ['script','noscript','style','textarea','pre','code'],
+            ignoreClass: 'tex2jax_ignore',
+            processClass: 'tex2jax_process'
+          },
+        },
+
+        // reveal.js plugins
+        plugins: [QuartoLineHighlight, PdfExport, RevealMenu, QuartoSupport,
+
+          RevealMath,
+          RevealNotes,
+          RevealSearch,
+          RevealZoom
+        ]
+      });
+    </script>
+    
+
+    <script>
+
+      // htmlwidgets need to know to resize themselves when slides are shown/hidden.
+
+      // Fire the "slideenter" event (handled by htmlwidgets.js) when the current
+
+      // slide changes (different for each slide format).
+
+      (function () {
+
+        // dispatch for htmlwidgets
+
+        function fireSlideEnter() {
+
+          const event = window.document.createEvent("Event");
+
+          event.initEvent("slideenter", true, true);
+
+          window.document.dispatchEvent(event);
+
+        }
+
+    
+
+        function fireSlideChanged(previousSlide, currentSlide) {
+
+          fireSlideEnter();
+
+    
+
+          // dispatch for shiny
+
+          if (window.jQuery) {
+
+            if (previousSlide) {
+
+              window.jQuery(previousSlide).trigger("hidden");
+
+            }
+
+            if (currentSlide) {
+
+              window.jQuery(currentSlide).trigger("shown");
+
+            }
+
+          }
+
+        }
+
+    
+
+        // hookup for slidy
+
+        if (window.w3c_slidy) {
+
+          window.w3c_slidy.add_observer(function (slide_num) {
+
+            // slide_num starts at position 1
+
+            fireSlideChanged(null, w3c_slidy.slides[slide_num - 1]);
+
+          });
+
+        }
+
+    
+
+      })();
+
+    </script>
+
+    
+
+    <script id="quarto-html-after-body" type="application/javascript">
+      window.document.addEventListener("DOMContentLoaded", function (event) {
+        const tabsets =  window.document.querySelectorAll(".panel-tabset-tabby")
+        tabsets.forEach(function(tabset) {
+          const tabby = new Tabby('#' + tabset.id);
+        });
+        const isCodeAnnotation = (el) => {
+          for (const clz of el.classList) {
+            if (clz.startsWith('code-annotation-')) {                     
+              return true;
+            }
+          }
+          return false;
+        }
+        const onCopySuccess = function(e) {
+          // button target
+          const button = e.trigger;
+          // don't keep focus
+          button.blur();
+          // flash "checked"
+          button.classList.add('code-copy-button-checked');
+          var currentTitle = button.getAttribute("title");
+          button.setAttribute("title", "Copied!");
+          let tooltip;
+          if (window.bootstrap) {
+            button.setAttribute("data-bs-toggle", "tooltip");
+            button.setAttribute("data-bs-placement", "left");
+            button.setAttribute("data-bs-title", "Copied!");
+            tooltip = new bootstrap.Tooltip(button, 
+              { trigger: "manual", 
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8]});
+            tooltip.show();    
+          }
+          setTimeout(function() {
+            if (tooltip) {
+              tooltip.hide();
+              button.removeAttribute("data-bs-title");
+              button.removeAttribute("data-bs-toggle");
+              button.removeAttribute("data-bs-placement");
+            }
+            button.setAttribute("title", currentTitle);
+            button.classList.remove('code-copy-button-checked');
+          }, 1000);
+          // clear code selection
+          e.clearSelection();
+        }
+        const getTextToCopy = function(trigger) {
+          const outerScaffold = trigger.parentElement.cloneNode(true);
+          const codeEl = outerScaffold.querySelector('code');
+          for (const childEl of codeEl.children) {
+            if (isCodeAnnotation(childEl)) {
+              childEl.remove();
+            }
+          }
+          return codeEl.innerText;
+        }
+        const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+          text: getTextToCopy
+        });
+        clipboard.on('success', onCopySuccess);
+        if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+          const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+            text: getTextToCopy,
+            container: window.document.getElementById('quarto-embedded-source-code-modal')
+          });
+          clipboardModal.on('success', onCopySuccess);
+        }
+          var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+          var mailtoRegex = new RegExp(/^mailto:/);
+            var filterRegex = new RegExp('/' + window.location.host + '/');
+          var isInternal = (href) => {
+              return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+          }
+          // Inspect non-navigation links and adorn them if external
+         var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+          for (var i=0; i<links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+        function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+          const config = {
+            allowHTML: true,
+            maxWidth: 500,
+            delay: 100,
+            arrow: false,
+            appendTo: function(el) {
+                return el.closest('section.slide') || el.parentElement;
+            },
+            interactive: true,
+            interactiveBorder: 10,
+            theme: 'light-border',
+            placement: 'bottom-start',
+          };
+          if (contentFn) {
+            config.content = contentFn;
+          }
+          if (onTriggerFn) {
+            config.onTrigger = onTriggerFn;
+          }
+          if (onUntriggerFn) {
+            config.onUntrigger = onUntriggerFn;
+          }
+            config['offset'] = [0,0];
+            config['maxWidth'] = 700;
+          window.tippy(el, config); 
+        }
+        const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+        for (var i=0; i<noterefs.length; i++) {
+          const ref = noterefs[i];
+          tippyHover(ref, function() {
+            // use id or data attribute instead here
+            let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+            try { href = new URL(href).hash; } catch {}
+            const id = href.replace(/^#\/?/, "");
+            const note = window.document.getElementById(id);
+            if (note) {
+              return note.innerHTML;
+            } else {
+              return "";
+            }
+          });
+        }
+        const findCites = (el) => {
+          const parentEl = el.parentElement;
+          if (parentEl) {
+            const cites = parentEl.dataset.cites;
+            if (cites) {
+              return {
+                el,
+                cites: cites.split(' ')
+              };
+            } else {
+              return findCites(el.parentElement)
+            }
+          } else {
+            return undefined;
+          }
+        };
+        var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+        for (var i=0; i<bibliorefs.length; i++) {
+          const ref = bibliorefs[i];
+          const citeInfo = findCites(ref);
+          if (citeInfo) {
+            tippyHover(citeInfo.el, function() {
+              var popup = window.document.createElement('div');
+              citeInfo.cites.forEach(function(cite) {
+                var citeDiv = window.document.createElement('div');
+                citeDiv.classList.add('hanging-indent');
+                citeDiv.classList.add('csl-entry');
+                var biblioDiv = window.document.getElementById('ref-' + cite);
+                if (biblioDiv) {
+                  citeDiv.innerHTML = biblioDiv.innerHTML;
+                }
+                popup.appendChild(citeDiv);
+              });
+              return popup.innerHTML;
+            });
+          }
+        }
+      });
+      </script>
+    
+
+</body></html>

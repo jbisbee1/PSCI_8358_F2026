@@ -222,135 +222,52 @@ Advanced Observational Causal Inference
 </section>
 <section id="where-we-are-going" class="slide level2">
 <h2>Where we are going</h2>
-<p>Last week: the two-group difference-in-differences design, parallel trends, and event studies.</p>
+<p>Last week: 2×2 DiD, parallel trends, event studies.</p>
 <blockquote>
-<p>When units adopt treatment at different times, does the regression we have always run still estimate a difference-in-differences?</p>
+<p>When units adopt at different times, does two-way fixed effects (TWFE) still estimate a DiD?</p>
 </blockquote>
 <p>Today:</p>
 <ul>
-<li>A refresher on what DiD identifies, and under which assumptions</li>
-<li>Why two-way fixed effects (TWFE) became the default specification</li>
-<li>How TWFE fails under staggered adoption: forbidden comparisons and negative weights</li>
-<li>Heterogeneity-robust alternatives: Callaway–Sant’Anna, Sun–Abraham, imputation</li>
-<li>Sensitivity analysis for parallel trends: pre-tests, equivalence tests, and Rambachan–Roth</li>
+<li>Recap of Lecture 8</li>
+<li>Why TWFE became the default</li>
+<li>How it fails: forbidden comparisons, negative weights</li>
+<li>Robust alternatives: Callaway–Sant’Anna, Sun–Abraham, imputation</li>
+<li>Sensitivity analysis</li>
 </ul>
 </section>
 <section id="learning-objectives" class="slide level2">
 <h2>Learning objectives</h2>
 <ol type="1">
-<li>State the DiD estimand and the assumptions that identify it, in potential-outcomes notation.</li>
-<li>Explain why TWFE recovers the DiD in the 2×2 case and why that equivalence does not extend to staggered adoption.</li>
-<li>Use the Goodman-Bacon decomposition to identify which comparisons a TWFE estimate uses, and explain why the “later vs.&nbsp;earlier” comparison is forbidden.</li>
-<li>Compute the de Chaisemartin–D’Haultfœuille weights and say which treated cells receive negative weight.</li>
-<li>Describe the common logic of modern estimators (estimate <span class="math inline">\(\text{ATT}(g,t)\)</span> from clean comparisons, then aggregate) and the differences among them.</li>
-<li>Explain why passing a pre-trend test is weak evidence for parallel trends, and conduct a Rambachan–Roth sensitivity analysis.</li>
+<li>State the estimand and assumptions for staggered adoption using <span class="math inline">\(\text{ATT}(g,t)\)</span>.</li>
+<li>Explain why TWFE equals DiD in the 2×2 case but not under staggered adoption.</li>
+<li>Use the Goodman-Bacon decomposition; explain why “later vs.&nbsp;earlier” is forbidden.</li>
+<li>Compute the de Chaisemartin–D’Haultfœuille weights.</li>
+<li>Describe what the modern estimators share and where they differ.</li>
+<li>Run a Rambachan–Roth sensitivity analysis on a robust event study.</li>
 </ol>
 </section>
 <section>
-<section id="part-i-did-refresher" class="title-slide slide level1 center">
-<h1>Part I: DiD refresher</h1>
+<section id="part-i-recap-of-lecture-8" class="title-slide slide level1 center">
+<h1>Part I: Recap of Lecture 8</h1>
 
 </section>
-<section id="the-canonical-22-design" class="slide level2">
-<h2>The canonical 2×2 design</h2>
-<p>Two groups, two periods.</p>
+<section id="what-difference-in-differences-identifies" class="slide level2">
+<h2>What difference-in-differences identifies</h2>
+<p>2×2: groups <span class="math inline">\(D_i \in \{0,1\}\)</span>, periods <span class="math inline">\(t \in \{0,1\}\)</span>, target <span class="math inline">\(\text{ATT} = E[Y_{i1}(1) - Y_{i1}(0) \mid D_i = 1]\)</span>.</p>
 <ul>
-<li><span class="math inline">\(D_i \in \{0, 1\}\)</span>: unit <span class="math inline">\(i\)</span> is in the treated group.</li>
-<li><span class="math inline">\(t \in \{0, 1\}\)</span>: treatment occurs between period 0 and period 1.</li>
-<li>Potential outcomes <span class="math inline">\(Y_{it}(1), Y_{it}(0)\)</span>. We observe <span class="math inline">\(Y_{it} = Y_{it}(0) + D_i \cdot \mathbb{1}[t=1] \cdot (Y_{it}(1) - Y_{it}(0))\)</span>.</li>
+<li><strong>Parallel trends:</strong> <span class="math inline">\(E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0]\)</span>.</li>
+<li><strong>No anticipation:</strong> <span class="math inline">\(Y_{i0}(1) = Y_{i0}(0)\)</span> for treated units.</li>
 </ul>
-<p>The target is the average effect of treatment on the treated in the post-period:</p>
-<p><span class="math display">\[
-\text{ATT} = E[Y_{i1}(1) - Y_{i1}(0) \mid D_i = 1].
-\]</span></p>
-<p><span class="math inline">\(E[Y_{i1}(1) \mid D_i=1]\)</span> is observed. <span class="math inline">\(E[Y_{i1}(0) \mid D_i = 1]\)</span>, what the treated group would have experienced without treatment, is not. DiD is a strategy for imputing it.</p>
+<p>The missing cell <span class="math inline">\(E[Y_{i1}(0) \mid D_i = 1]\)</span> is the treated baseline plus the control change.</p>
+<p>Every estimator today does this imputation for many cells. They differ in <strong>which</strong> changes they use.</p>
 </section>
-<section id="two-identifying-assumptions" class="slide level2">
-<h2>Two identifying assumptions</h2>
-<p><strong>Parallel trends.</strong> Absent treatment, the two groups would have experienced the same average change:</p>
+<section id="the-regression-and-its-equivalence" class="slide level2">
+<h2>The regression and its equivalence</h2>
+<p>In the 2×2 case, both return the DiD:</p>
 <p><span class="math display">\[
-E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 1] = E[Y_{i1}(0) - Y_{i0}(0) \mid D_i = 0].
+Y_{it} = \alpha + \gamma D_i + \lambda \mathbb{1}[t=1] + \beta \,(D_i \times \mathbb{1}[t=1]) + \varepsilon_{it}, \qquad Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}.
 \]</span></p>
-<p><strong>No anticipation.</strong> Treatment has no effect before it occurs: <span class="math inline">\(Y_{i0}(1) = Y_{i0}(0)\)</span> for treated units.</p>
-<p>Together they give</p>
-<p><span class="math display">\[
-\text{ATT} = \underbrace{\big(E[Y_{i1} \mid D_i=1] - E[Y_{i0} \mid D_i=1]\big)}_{\text{change among treated}} - \underbrace{\big(E[Y_{i1} \mid D_i=0] - E[Y_{i0} \mid D_i=0]\big)}_{\text{change among controls}}.
-\]</span></p>
-<p>The control group’s change stands in for the treated group’s counterfactual change. Nothing is assumed about levels.</p>
-</section>
-<section id="the-22-as-a-missing-data-problem" class="slide level2">
-<h2>The 2×2 as a missing-data problem</h2>
-<table class="mt">
-<tbody><tr>
-<th>
-</th>
-<th>
-Period 0
-</th>
-<th>
-Period 1
-</th>
-</tr>
-<tr>
-<th>
-Treated (<span class="math inline">\(D=1\)</span>)
-</th>
-<td class="obs">
-<span class="math inline">\(E[Y_0(0) \mid D=1]\)</span><small>observed (no anticipation)</small>
-</td>
-<td class="obs">
-<span class="math inline">\(E[Y_1(1) \mid D=1]\)</span><small>observed</small>
-</td>
-</tr>
-<tr>
-<th>
-Treated, counterfactual
-</th>
-<td class="obs">
-<span class="math inline">\(E[Y_0(0) \mid D=1]\)</span><small>observed</small>
-</td>
-<td class="unk">
-<span class="math inline">\(E[Y_1(0) \mid D=1]\)</span><small>imputed: period 0 + control change</small>
-</td>
-</tr>
-<tr>
-<th>
-Control (<span class="math inline">\(D=0\)</span>)
-</th>
-<td class="obs">
-<span class="math inline">\(E[Y_0(0) \mid D=0]\)</span><small>observed</small>
-</td>
-<td class="obs">
-<span class="math inline">\(E[Y_1(0) \mid D=0]\)</span><small>observed</small>
-</td>
-</tr>
-</tbody></table>
-<ul>
-<li>The single unobserved cell is filled by adding the control group’s change to the treated group’s baseline.</li>
-<li>Every staggered-adoption estimator we discuss today does the same thing for many cells at once. The estimators differ in <strong>which</strong> observed changes they use to fill each cell.</li>
-</ul>
-</section>
-<section id="what-parallel-trends-is-and-is-not" class="slide level2">
-<h2>What parallel trends is, and is not</h2>
-<ul>
-<li>It is an assumption about <strong>untreated potential outcomes</strong> only. It says nothing about how treatment effects evolve.</li>
-<li>It is not implied by, and does not imply, balance in levels. Groups may differ permanently in their average outcomes.</li>
-<li>It is <strong>scale dependent</strong>. Parallel trends in <span class="math inline">\(Y\)</span> and in <span class="math inline">\(\log Y\)</span> cannot generally both hold (Roth and Sant’Anna 2023).</li>
-<li>It may hold only <strong>conditionally</strong> on covariates <span class="math inline">\(X\)</span>: <span class="math inline">\(E[\Delta Y(0) \mid D=1, X] = E[\Delta Y(0) \mid D=0, X]\)</span>. Estimation then requires outcome regression, weighting, or both (Sant’Anna and Zhao 2020).</li>
-<li>With more than two periods, it is partly checkable. Differential trends <strong>before</strong> treatment are evidence against it. Their absence is not evidence for it after treatment (Part V).</li>
-</ul>
-</section>
-<section id="regression-implementation-in-the-22" class="slide level2">
-<h2>Regression implementation in the 2×2</h2>
-<p>The DiD estimate is the coefficient <span class="math inline">\(\beta\)</span> in either of two equivalent regressions:</p>
-<p><span class="math display">\[
-Y_{it} = \alpha + \gamma D_i + \lambda \mathbb{1}[t=1] + \beta \,(D_i \times \mathbb{1}[t=1]) + \varepsilon_{it}
-\]</span></p>
-<p><span class="math display">\[
-Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}, \qquad D_{it} = D_i \cdot \mathbb{1}[t=1].
-\]</span></p>
-<p>The second form, with unit and period fixed effects, is the <strong>two-way fixed effects</strong> specification. In the 2×2 case, <span class="math inline">\(\hat\beta\)</span> is numerically identical to the difference in mean changes.</p>
-<p>This equivalence is the origin of the practice we examine next.</p>
+<p><span class="math inline">\(\hat\beta = (\bar Y_{11} - \bar Y_{10}) - (\bar Y_{01} - \bar Y_{00})\)</span> in both. With more periods, an event study estimates one DiD per event time against a common reference period.</p>
 </section></section>
 <section>
 <section id="part-ii-twfe-as-the-default" class="title-slide slide level1 center">
@@ -359,38 +276,38 @@ Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + \varepsilon_{it}, \qquad D_{it} =
 </section>
 <section id="the-natural-generalization" class="slide level2">
 <h2>The natural generalization</h2>
-<p>With many units, many periods, and treatment that switches on at different times, applied work has typically estimated</p>
+<p>With staggered adoption, standard practice is</p>
 <p><span class="math display">\[
 Y_{it} = \alpha_i + \lambda_t + \beta D_{it} + X_{it}'\gamma + \varepsilon_{it}
 \]</span></p>
-<p>and interpreted <span class="math inline">\(\hat\beta\)</span> as “the” DiD effect. A dynamic version replaces <span class="math inline">\(D_{it}\)</span> with indicators for time relative to adoption:</p>
+<p>with <span class="math inline">\(\hat\beta\)</span> read as “the” DiD effect. The dynamic version:</p>
 <p><span class="math display">\[
 Y_{it} = \alpha_i + \lambda_t + \sum_{\ell \neq -1} \beta_\ell \, \mathbb{1}[t - G_i = \ell] + \varepsilon_{it}.
 \]</span></p>
-<p>Leads (<span class="math inline">\(\ell &lt; 0\)</span>) serve as placebo tests; lags (<span class="math inline">\(\ell \geq 0\)</span>) trace the dynamic effect.</p>
+<p>Leads (<span class="math inline">\(\ell &lt; 0\)</span>): placebo tests. Lags (<span class="math inline">\(\ell \geq 0\)</span>): dynamic effects. Each <span class="math inline">\(\beta_\ell\)</span> is shared by all cohorts.</p>
 </section>
 <section id="why-twfe-seemed-sufficient" class="slide level2">
 <h2>Why TWFE seemed sufficient</h2>
-<p>The specification was not adopted carelessly. Three arguments supported it.</p>
 <ol type="1">
-<li><strong>It reduces to DiD in the canonical case.</strong> Unit effects remove time-invariant confounding; period effects remove common shocks.</li>
-<li><strong>It is correct under a constant effect.</strong> If <span class="math inline">\(Y_{it}(1) - Y_{it}(0) = \beta\)</span> for all <span class="math inline">\(i, t\)</span>, the TWFE estimator is consistent under parallel trends.</li>
-<li><strong>It is convenient.</strong> It accommodates unbalanced panels, covariates, continuous treatments, and clustered standard errors in a single regression.</li>
+<li><strong>Reduces to DiD</strong> in the 2×2 case.</li>
+<li><strong>Correct under a constant effect.</strong> If <span class="math inline">\(Y_{it}(1) - Y_{it}(0) = \beta\)</span> for all <span class="math inline">\(i, t\)</span>, TWFE is consistent under parallel trends.</li>
+<li><strong>Convenient.</strong> Unbalanced panels, covariates, continuous treatments, clustering.</li>
 </ol>
-<p>The problem lies in argument 2. Treatment effects are rarely constant across adoption cohorts or over time since adoption, and TWFE’s behavior under heterogeneity was not well understood until roughly 2018–2021.</p>
+<p>Argument 2 is the problem. Effects are rarely constant across cohorts or exposure time.</p>
 </section>
 <section id="staggered-adoption-notation" class="slide level2">
 <h2>Staggered adoption: notation</h2>
 <ul>
 <li>Periods <span class="math inline">\(t = 1, \dots, T\)</span>. Treatment is <strong>absorbing</strong>: once on, it stays on.</li>
-<li><span class="math inline">\(G_i\)</span>: the period in which unit <span class="math inline">\(i\)</span> is first treated. Units with the same <span class="math inline">\(G_i\)</span> form a <strong>cohort</strong>. <span class="math inline">\(G_i = \infty\)</span> for never-treated units.</li>
-<li><span class="math inline">\(Y_{it}(g)\)</span>: potential outcome in period <span class="math inline">\(t\)</span> if first treated in period <span class="math inline">\(g\)</span>. <span class="math inline">\(Y_{it}(\infty)\)</span> is the never-treated outcome.</li>
+<li><span class="math inline">\(G_i\)</span>: first treated period. Same <span class="math inline">\(G_i\)</span> = <strong>cohort</strong>. <span class="math inline">\(G_i = \infty\)</span>: never treated.</li>
+<li><span class="math inline">\(Y_{it}(g)\)</span>: potential outcome in <span class="math inline">\(t\)</span> if first treated in <span class="math inline">\(g\)</span>. <span class="math inline">\(Y_{it}(\infty)\)</span>: never-treated outcome.</li>
 </ul>
-<p>The building block is the <strong>group-time average treatment effect</strong> (Callaway and Sant’Anna 2021):</p>
+<p>The <strong>group-time ATT</strong> (Callaway and Sant’Anna 2021):</p>
 <p><span class="math display">\[
 \text{ATT}(g, t) = E[Y_{it}(g) - Y_{it}(\infty) \mid G_i = g].
 \]</span></p>
-<p>The effect of adopting in period <span class="math inline">\(g\)</span>, evaluated in period <span class="math inline">\(t\)</span>, for units that adopted in <span class="math inline">\(g\)</span>. Any summary effect, whether overall, by cohort, or by event time <span class="math inline">\(e = t - g\)</span>, is a weighted average of these.</p>
+<p>Overall, cohort, and event-time (<span class="math inline">\(e = t - g\)</span>) effects are weighted averages of these.</p>
+<p><strong>2×2 analogue.</strong> One cohort, <span class="math inline">\(g = 1\)</span>; controls have <span class="math inline">\(G_i = \infty\)</span>. So <span class="math inline">\(Y(1) \to Y(g)\)</span>, <span class="math inline">\(Y(0) \to Y(\infty)\)</span>, and the 2×2 ATT is <span class="math inline">\(\text{ATT}(1,1)\)</span>.</p>
 </section>
 <section id="assumptions-under-staggered-adoption" class="slide level2">
 <h2>Assumptions under staggered adoption</h2>
@@ -398,9 +315,11 @@ Y_{it} = \alpha_i + \lambda_t + \sum_{\ell \neq -1} \beta_\ell \, \mathbb{1}[t -
 <p><span class="math display">\[
 E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = g] = E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = \infty].
 \]</span></p>
-<p>A not-yet-treated version replaces the never-treated with units for which <span class="math inline">\(G_i &gt; t\)</span>.</p>
+<p>Not-yet-treated version: replace <span class="math inline">\(G_i = \infty\)</span> with <span class="math inline">\(G_i &gt; t\)</span>.</p>
+<p><em>2×2:</em> one <span class="math inline">\(g\)</span>, one <span class="math inline">\(t\)</span>, one equation, with <span class="math inline">\(Y(0)\)</span> for <span class="math inline">\(Y(\infty)\)</span>. Here it is one equation per cohort per period.</p>
 <p><strong>No anticipation.</strong> <span class="math inline">\(Y_{it}(g) = Y_{it}(\infty)\)</span> for all <span class="math inline">\(t &lt; g\)</span>.</p>
-<p>Under these assumptions, every <span class="math inline">\(\text{ATT}(g,t)\)</span> is identified. The question for TWFE is whether <span class="math inline">\(\hat\beta\)</span> recovers a sensible average of them.</p>
+<p><em>2×2:</em> <span class="math inline">\(Y_{i0}(1) = Y_{i0}(0)\)</span>.</p>
+<p>Then every <span class="math inline">\(\text{ATT}(g,t)\)</span> is identified. Does <span class="math inline">\(\hat\beta^{\text{TWFE}}\)</span> recover a sensible average of them?</p>
 </section>
 <section id="a-running-simulation" class="slide level2">
 <h2>A running simulation</h2>
@@ -423,7 +342,7 @@ E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = g] = E[Y_{it}(\infty) - Y_{i,t-1
  1.78125 </code></pre>
 </div>
 </div>
-<p>Parallel trends and no anticipation hold by construction. The only complication is that effects <strong>grow with exposure</strong> and differ <strong>across cohorts</strong>.</p>
+<p>Parallel trends and no anticipation hold by construction. Effects <strong>grow with exposure</strong> and <strong>differ by cohort</strong>.</p>
 </section>
 <section id="the-simulated-data" class="slide level2">
 <h2>The simulated data</h2>
@@ -444,46 +363,225 @@ E[Y_{it}(\infty) - Y_{i,t-1}(\infty) \mid G_i = g] = E[Y_{it}(\infty) - Y_{i,t-1
  0.78496  1.78125 </code></pre>
 </div>
 </div>
-<p>TWFE recovers less than half the true average effect. Every unit-period effect in the data is nonnegative, parallel trends holds exactly, and there is no confounding. The bias comes entirely from how the regression combines comparisons.</p>
+<p>Less than half the true ATT. All effects are nonnegative, parallel trends holds exactly, and there is no confounding. The bias comes entirely from how TWFE combines comparisons.</p>
+</section>
+<section id="goodman-bacons-setup" class="slide level2">
+<h2>Goodman-Bacon’s setup</h2>
+<p>Three timing groups: early <span class="math inline">\(k\)</span>, late <span class="math inline">\(\ell\)</span>, untreated <span class="math inline">\(U\)</span>. Group <span class="math inline">\(k\)</span> is first treated in period <span class="math inline">\(k\)</span>. Their adoption dates cut the panel into three windows:</p>
+<table class="mt">
+<tbody><tr>
+<th>
+</th>
+<th>
+PRE(<span class="math inline">\(k\)</span>)
+</th>
+<th>
+MID(<span class="math inline">\(k,\ell\)</span>)
+</th>
+<th>
+POST(<span class="math inline">\(\ell\)</span>)
+</th>
+</tr>
+<tr>
+<th>
+Periods
+</th>
+<td>
+<span class="math inline">\(1, \dots, k-1\)</span>
+</td>
+<td>
+<span class="math inline">\(k, \dots, \ell-1\)</span>
+</td>
+<td>
+<span class="math inline">\(\ell, \dots, T\)</span>
+</td>
+</tr>
+<tr>
+<th>
+Early <span class="math inline">\(k\)</span>
+</th>
+<td>
+untreated
+</td>
+<td class="obs">
+treated
+</td>
+<td class="obs">
+treated
+</td>
+</tr>
+<tr>
+<th>
+Late <span class="math inline">\(\ell\)</span>
+</th>
+<td>
+untreated
+</td>
+<td>
+untreated
+</td>
+<td class="obs">
+treated
+</td>
+</tr>
+<tr>
+<th>
+Untreated <span class="math inline">\(U\)</span>
+</th>
+<td>
+untreated
+</td>
+<td>
+untreated
+</td>
+<td>
+untreated
+</td>
+</tr>
+</tbody></table>
+<p><span class="math inline">\(\bar D_j\)</span>: share of the panel group <span class="math inline">\(j\)</span> spends treated.</p>
+<p>In the running simulation: <span class="math inline">\(k = 6\)</span>, <span class="math inline">\(\ell = 12\)</span>, <span class="math inline">\(T = 20\)</span>. PRE = 1–5, MID = 6–11, POST = 12–20.</p>
 </section>
 <section id="the-goodman-bacon-decomposition" class="slide level2">
 <h2>The Goodman-Bacon decomposition</h2>
-<p>Goodman-Bacon (2021) shows that, in a balanced panel with staggered adoption, the TWFE estimate is a weighted average of <strong>every possible 2×2 DiD</strong> between timing groups:</p>
+<p>Each 2×2 uses two groups over two adjacent windows in which one group’s treatment switches on and the other’s does not.</p>
+<table class="mt cmp">
+<tbody><tr>
+<th>
+2×2
+</th>
+<th>
+Treated
+</th>
+<th>
+Control
+</th>
+<th>
+Before → after
+</th>
+<th>
+</th>
+</tr>
+<tr>
+<td>
+<span class="math inline">\(\hat\beta^{2\times2}_{kU}\)</span>
+</td>
+<td>
+<span class="math inline">\(k\)</span>
+</td>
+<td>
+<span class="math inline">\(U\)</span>
+</td>
+<td>
+PRE(<span class="math inline">\(k\)</span>) → MID + POST
+</td>
+<td>
+clean
+</td>
+</tr>
+<tr>
+<td>
+<span class="math inline">\(\hat\beta^{2\times2}_{\ell U}\)</span>
+</td>
+<td>
+<span class="math inline">\(\ell\)</span>
+</td>
+<td>
+<span class="math inline">\(U\)</span>
+</td>
+<td>
+PRE + MID → POST(<span class="math inline">\(\ell\)</span>)
+</td>
+<td>
+clean
+</td>
+</tr>
+<tr>
+<td>
+<span class="math inline">\(\hat\beta^{2\times2,k}_{k\ell}\)</span>
+</td>
+<td>
+<span class="math inline">\(k\)</span>
+</td>
+<td>
+<span class="math inline">\(\ell\)</span>, not yet treated
+</td>
+<td>
+PRE(<span class="math inline">\(k\)</span>) → MID(<span class="math inline">\(k,\ell\)</span>)
+</td>
+<td>
+clean
+</td>
+</tr>
+<tr>
+<td class="bad">
+<span class="math inline">\(\hat\beta^{2\times2,\ell}_{k\ell}\)</span>
+</td>
+<td>
+<span class="math inline">\(\ell\)</span>
+</td>
+<td>
+<span class="math inline">\(k\)</span>, <strong>already treated</strong>
+</td>
+<td>
+MID(<span class="math inline">\(k,\ell\)</span>) → POST(<span class="math inline">\(\ell\)</span>)
+</td>
+<td>
+<strong>forbidden</strong>
+</td>
+</tr>
+</tbody></table>
 <p><span class="math display">\[
-\hat\beta^{\text{TWFE}} = \sum_{k} s_{kU}\,\hat\beta^{2\times2}_{kU} \;+\; \sum_{k \neq \ell} s_{k\ell}\,\hat\beta^{2\times2}_{k\ell}.
+\hat\beta^{\text{TWFE}} = \sum_{k \neq U} s_{kU}\,\hat\beta^{2\times2}_{kU} + \sum_{k \neq U} \sum_{\ell &gt; k} \big[s^k_{k\ell}\,\hat\beta^{2\times2,k}_{k\ell} + s^\ell_{k\ell}\,\hat\beta^{2\times2,\ell}_{k\ell}\big]
 \]</span></p>
-<p>Three types of comparison appear:</p>
-<ul>
-<li><strong>Treated vs.&nbsp;never treated</strong> (<span class="math inline">\(kU\)</span>): a clean comparison.</li>
-<li><strong>Earlier vs.&nbsp;later treated</strong>: cohort <span class="math inline">\(k\)</span> switches on while cohort <span class="math inline">\(\ell\)</span> is not yet treated. A clean comparison.</li>
-<li><strong>Later vs.&nbsp;earlier treated</strong>: cohort <span class="math inline">\(\ell\)</span> switches on while the <strong>already-treated</strong> cohort <span class="math inline">\(k\)</span> serves as the control. This is the <strong>forbidden comparison</strong>.</li>
-</ul>
-<p>Weights <span class="math inline">\(s \geq 0\)</span> sum to one and are proportional to subsample size × within-pair treatment variance <span class="math inline">\(\bar D(1 - \bar D)\)</span>, so cohorts treated mid-panel get the most weight.</p>
+<p>Weights <span class="math inline">\(s \geq 0\)</span> sum to one. Each is <span class="math inline">\(\propto\)</span> (subsample size)² × variance of <span class="math inline">\(D\)</span> within the subsample.</p>
 </section>
 <section id="why-the-forbidden-comparison-is-forbidden" class="slide level2">
 <h2>Why the forbidden comparison is forbidden</h2>
-<p>Let cohort <span class="math inline">\(k\)</span> adopt before cohort <span class="math inline">\(\ell\)</span>. Take the window after <span class="math inline">\(k\)</span> adopts. “Mid” is the span when only <span class="math inline">\(k\)</span> is treated; “post” is the span after <span class="math inline">\(\ell\)</span> also adopts. The 2×2 is</p>
+<p>Add and subtract untreated outcomes (Goodman-Bacon eq. 14):</p>
 <p><span class="math display">\[
-\hat\beta^{2\times2}_{\ell k} = \big(\bar Y_\ell^{\text{post}} - \bar Y_\ell^{\text{mid}}\big) - \big(\bar Y_k^{\text{post}} - \bar Y_k^{\text{mid}}\big).
+\hat\beta^{2\times2,k}_{k\ell} \to \text{ATT}_k(\text{MID}) + \underbrace{\big[\text{trend in } Y(0)\text{: } k \text{ vs. } \ell\big]}_{0 \text{ under parallel trends}}
 \]</span></p>
-<p>Under parallel trends its expectation is</p>
 <p><span class="math display">\[
-\underbrace{\text{ATT}_\ell(\text{post})}_{\text{what we want}} \;-\; \underbrace{\big[\text{ATT}_k(\text{post}) - \text{ATT}_k(\text{mid})\big]}_{\text{change in } k\text{'s effect}}.
+\hat\beta^{2\times2,\ell}_{k\ell} \to \text{ATT}_\ell(\text{POST}) + \underbrace{\big[\text{trend in } Y(0)\text{: } \ell \text{ vs. } k\big]}_{0 \text{ under parallel trends}} - \underbrace{\big[\text{ATT}_k(\text{POST}) - \text{ATT}_k(\text{MID})\big]}_{\text{change in } k\text{'s effect}}
 \]</span></p>
-<p>The control group is itself treated, so its <strong>change in treatment effect</strong> is subtracted out. If effects grow over time, this comparison is biased downward, and it can be negative even when every effect is positive.</p>
+<p>Both are 2×2s between the same two groups. Only the second uses a treated control, so it also subtracts the <strong>change in the control’s effect</strong>. Parallel trends does not remove this term. Growing effects push the estimate down, possibly below zero.</p>
+</section>
+<section id="where-each-22-is-estimated-constant-effects" class="slide level2">
+<h2>Where each 2×2 is estimated: constant effects</h2>
+
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-5-1.png" width="1248" class="r-stretch"><p>Effect fixed at 1; data otherwise unchanged. Every 2×2, forbidden included, is about 1; TWFE <span class="math inline">\(=\)</span> 0.99. <span class="math inline">\(k\)</span>’s effect does not change, so it is a harmless control. Light/dark shading: before/after windows. Dashed: counterfactual from the control’s change. The jump at year 12 is a common year shock, shared by <span class="math inline">\(U\)</span>, and removed by the year fixed effects.</p>
+</section>
+<section id="where-each-22-is-estimated-growing-effects" class="slide level2">
+<h2>Where each 2×2 is estimated: growing effects</h2>
+
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-6-1.png" width="1248" class="r-stretch"><p>Same data and weights; effects grow with exposure. In <span class="math inline">\(\hat\beta^{\ell}_{k\ell}\)</span>, <span class="math inline">\(k\)</span>’s rise is its own treatment effect, not a failure of parallel trends in <span class="math inline">\(Y(0)\)</span>. The 2×2 reads it as <span class="math inline">\(\ell\)</span>’s counterfactual trend.</p>
+</section>
+<section id="where-the-weights-come-from" class="slide level2">
+<h2>Where the weights come from</h2>
+<p>The variance of <span class="math inline">\(D\)</span> in a subsample is large when</p>
+<ul>
+<li>the two groups are similar in size, and</li>
+<li>treatment is on for about half the subsample’s periods (<span class="math inline">\(\bar D \approx 1/2\)</span>).</li>
+</ul>
+<p>So a group treated <strong>mid-panel</strong> gets the most weight, and groups treated near the start or end get little. They get <em>more</em> weight as controls than as treated groups.</p>
+<p>Consequences:</p>
+<ul>
+<li>Weights depend on <em>when</em> groups adopt, not just how many units they have.</li>
+<li>Panel length alone changes the weights. Add periods to the end and later groups move toward the middle.</li>
+</ul>
 </section>
 <section id="the-probability-limit" class="slide level2">
 <h2>The probability limit</h2>
-<p>Goodman-Bacon (2021) writes the limit of TWFE as three terms:</p>
 <p><span class="math display">\[
 \beta^{\text{TWFE}} = \text{VWATT} + \text{VWCT} - \Delta\text{ATT}.
 \]</span></p>
 <ul>
-<li><strong>VWATT</strong>: a variance-weighted average of cohort ATTs. Weights are positive, but they are not proportional to sample shares, so this is not the ATT.</li>
-<li><strong>VWCT</strong>: a variance-weighted sum of differences in counterfactual trends. It is zero under parallel trends.</li>
-<li><strong><span class="math inline">\(\Delta\)</span>ATT</strong>: a weighted sum of changes in treatment effects within already-treated cohorts. It is zero only if effects are constant over time.</li>
+<li><strong>VWATT</strong>: variance-weighted average of cohort ATTs. Positive weights, but not sample shares.</li>
+<li><strong>VWCT</strong>: variance-weighted differences in counterfactual trends. Zero under parallel trends.</li>
+<li><strong><span class="math inline">\(\Delta\)</span>ATT</strong>: changes in effects within already-treated cohorts. Zero only if effects are constant over time.</li>
 </ul>
-<p>Even with parallel trends, then, TWFE estimates a non-standard weighted average of effects, minus a bias term that grows with treatment-effect dynamics.</p>
+<p>Under parallel trends: an odd weighted average, minus a bias that grows with the dynamics.</p>
 </section>
 <section id="the-decomposition-in-the-simulation" class="slide level2">
 <h2>The decomposition in the simulation</h2>
@@ -500,44 +598,58 @@ Treated vs Untreated      0.674    1.442</code></pre>
 </div>
 </div>
 
-<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-6-1.png" width="960" class="r-stretch"></section>
-<section id="a-sign-reversal" class="slide level2">
-<h2>A sign reversal</h2>
-<p>Two cohorts, no never-treated units, effects that grow by one unit per year of exposure.</p>
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-8-1.png" width="960" class="r-stretch"></section>
+<section id="a-sign-reversal-drop-the-never-treated" class="slide level2">
+<h2>A sign reversal: drop the never-treated</h2>
+<p>Same data; the never-treated units are removed. Every unit is eventually treated.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">2</span>)</span>
-<span id="cb7-2"><a href=""></a>N2 <span class="ot">&lt;-</span> <span class="dv">200</span>; T2 <span class="ot">&lt;-</span> <span class="dv">10</span></span>
-<span id="cb7-3"><a href=""></a>s2 <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">unit =</span> <span class="dv">1</span><span class="sc">:</span>N2, <span class="at">year =</span> <span class="dv">1</span><span class="sc">:</span>T2)</span>
-<span id="cb7-4"><a href=""></a>s2<span class="sc">$</span>G   <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">7</span>), <span class="at">each =</span> N2 <span class="sc">/</span> <span class="dv">2</span>)[s2<span class="sc">$</span>unit]</span>
-<span id="cb7-5"><a href=""></a>s2<span class="sc">$</span>D   <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(s2<span class="sc">$</span>year <span class="sc">&gt;=</span> s2<span class="sc">$</span>G)</span>
-<span id="cb7-6"><a href=""></a>s2<span class="sc">$</span>tau <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(s2<span class="sc">$</span>D <span class="sc">==</span> <span class="dv">1</span>, s2<span class="sc">$</span>year <span class="sc">-</span> s2<span class="sc">$</span>G <span class="sc">+</span> <span class="dv">1</span>, <span class="dv">0</span>)            <span class="co"># all effects &gt;= 1</span></span>
-<span id="cb7-7"><a href=""></a>s2<span class="sc">$</span>Y   <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N2)[s2<span class="sc">$</span>unit] <span class="sc">+</span> <span class="fl">0.2</span> <span class="sc">*</span> s2<span class="sc">$</span>year <span class="sc">+</span> s2<span class="sc">$</span>tau <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(s2), <span class="dv">0</span>, <span class="fl">0.3</span>)</span>
-<span id="cb7-8"><a href=""></a><span class="fu">c</span>(<span class="at">true_ATT =</span> <span class="fu">mean</span>(s2<span class="sc">$</span>tau[s2<span class="sc">$</span>D <span class="sc">==</span> <span class="dv">1</span>]), <span class="at">TWFE =</span> <span class="fu">unname</span>(<span class="fu">coef</span>(<span class="fu">feols</span>(Y <span class="sc">~</span> D <span class="sc">|</span> unit <span class="sc">+</span> year, s2))))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href=""></a>nn <span class="ot">&lt;-</span> panel[panel<span class="sc">$</span>G <span class="sc">!=</span> <span class="dv">0</span>, ]</span>
+<span id="cb7-2"><a href=""></a><span class="fu">c</span>(<span class="at">TWFE =</span> <span class="fu">unname</span>(<span class="fu">coef</span>(<span class="fu">feols</span>(Y <span class="sc">~</span> D <span class="sc">|</span> unit <span class="sc">+</span> year, <span class="at">data =</span> nn))), <span class="at">true_ATT =</span> <span class="fu">mean</span>(nn<span class="sc">$</span>tau[nn<span class="sc">$</span>D <span class="sc">==</span> <span class="dv">1</span>]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code> true_ATT      TWFE 
- 4.230769 -1.065681 </code></pre>
+<pre><code>      TWFE   true_ATT 
+-0.5753956  1.7812500 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a><span class="fu">bacon</span>(Y <span class="sc">~</span> D, <span class="at">data =</span> s2, <span class="at">id_var =</span> <span class="st">"unit"</span>, <span class="at">time_var =</span> <span class="st">"year"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)[, <span class="fu">c</span>(<span class="st">"type"</span>, <span class="st">"estimate"</span>, <span class="st">"weight"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href=""></a>bd_nn <span class="ot">&lt;-</span> <span class="fu">bacon</span>(Y <span class="sc">~</span> D, <span class="at">data =</span> nn, <span class="at">id_var =</span> <span class="st">"unit"</span>, <span class="at">time_var =</span> <span class="st">"year"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb9-2"><a href=""></a>bd_nn[, <span class="fu">c</span>(<span class="st">"type"</span>, <span class="st">"estimate"</span>, <span class="st">"weight"</span>)]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>                      type  estimate weight
-2 Later vs Earlier Treated -2.086853    0.8
-3 Earlier vs Later Treated  3.019010    0.2</code></pre>
+<pre><code>                      type  estimate    weight
+2 Later vs Earlier Treated -1.502074 0.6428571
+3 Earlier vs Later Treated  1.092626 0.3571429</code></pre>
 </div>
 </div>
-<p>The forbidden comparison carries 80% of the weight and is negative, so TWFE reports a negative effect of a treatment that helps every unit in every period.</p>
+<p>Two comparisons remain. The forbidden one gets weight 0.64 and is negative. Every effect is positive; TWFE is negative.</p>
 </section>
 <section id="a-second-lens-negative-weights" class="slide level2">
 <h2>A second lens: negative weights</h2>
-<p>de Chaisemartin and D’Haultfœuille (2020) express TWFE directly as a weighted average of unit-period effects. Under parallel trends,</p>
+<p>de Chaisemartin and D’Haultfœuille (2020). Under parallel trends,</p>
 <p><span class="math display">\[
 E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qquad w_{it} = \frac{\hat\varepsilon_{it}}{\sum_{(j,s):\, D_{js}=1} \hat\varepsilon_{js}},
 \]</span></p>
-<p>where <span class="math inline">\(\hat\varepsilon_{it}\)</span> is the residual from regressing <span class="math inline">\(D_{it}\)</span> on unit and period fixed effects.</p>
+<p>where <span class="math inline">\(\hat\varepsilon_{it}\)</span> is the residual from regressing <span class="math inline">\(D_{it}\)</span> on unit and period FEs.</p>
 <ul>
-<li>The weights sum to one, but nothing forces them to be positive.</li>
-<li><span class="math inline">\(\hat\varepsilon_{it} &lt; 0\)</span> when a treated cell’s fitted value from the fixed effects exceeds one. This happens for units treated <strong>for many periods</strong>, in periods when <strong>most units are treated</strong>.</li>
-<li>With negative weights, <span class="math inline">\(\hat\beta\)</span> can lie outside the range of the <span class="math inline">\(\tau_{it}\)</span>. It need not satisfy <strong>sign preservation</strong>: every <span class="math inline">\(\tau_{it} &gt; 0\)</span> does not guarantee <span class="math inline">\(\beta &gt; 0\)</span>.</li>
+<li>Weights sum to one but can be negative.</li>
+<li><span class="math inline">\(\hat\varepsilon_{it} &lt; 0\)</span> for units treated <strong>many periods</strong>, in periods when <strong>most units are treated</strong>.</li>
+<li>So <span class="math inline">\(\hat\beta\)</span> can fall outside the range of the <span class="math inline">\(\tau_{it}\)</span>, with the wrong sign.</li>
+<li>Denominator: one constant, the sum of <span class="math inline">\(\hat\varepsilon_{js}\)</span> over all treated cells. It equals <span class="math inline">\(\sum_{j,s} \hat\varepsilon_{js}^2 &gt; 0\)</span> (FWL), so the sign of <span class="math inline">\(w_{it}\)</span> is the sign of <span class="math inline">\(\hat\varepsilon_{it}\)</span>.</li>
 </ul>
+</section>
+<section id="residuals-in-the-simulation" class="slide level2 nostretch">
+<h2>Residuals in the simulation</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure>
+<p><img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-10-1.png" style="width:100.0%"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Residuals <span class="math inline">\(\hat\varepsilon_{it}\)</span>, constant within cohort × window. Outlined: treated. <span class="math inline">\(k\)</span> in POST: <span class="math inline">\(\hat D = \tfrac34 + \tfrac23 - \tfrac25 = \tfrac{61}{60}\)</span> with never-treated, <span class="math inline">\(\tfrac34 + 1 - \tfrac35 = \tfrac{23}{20}\)</span> without. Never-treated units shrink the negative residual; they do not remove it.</p>
+</section>
+<section id="weights-and-contributions" class="slide level2">
+<h2>Weights and contributions</h2>
+
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-11-1.png" width="1248" class="r-stretch"><p>Bars sum to TWFE (up to noise). With never-treated, <span class="math inline">\(k\)</span>’s POST block, which holds the largest effects, gets weight -0.03: attenuation. Without, it gets -0.64: the sign flips.</p>
 </section>
 <section id="computing-the-weights" class="slide level2">
 <h2>Computing the weights</h2>
@@ -552,25 +664,19 @@ E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qqu
        2400.000         900.000          -0.035           0.794           0.785 </code></pre>
 </div>
 </div>
-<p>Weighting the true effects by <span class="math inline">\(w_{it}\)</span> reproduces the TWFE estimate up to sampling noise. The largest effects, those of the early cohort late in the panel, are exactly the cells that receive negative weight.</p>
-</section>
-<section id="where-the-negative-weights-fall" class="slide level2">
-<h2>Where the negative weights fall</h2>
-
-<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-9-1.png" width="1152" class="r-stretch"><p>The red cells hold the largest true effects. TWFE subtracts them.</p>
+<p><span class="math inline">\(\sum w_{it}\tau_{it}\)</span> reproduces TWFE up to noise. The early cohort’s late-panel cells have the largest effects and get negative weight.</p>
 </section>
 <section id="dynamic-specifications-are-not-immune" class="slide level2">
 <h2>Dynamic specifications are not immune</h2>
-<p>One response is to estimate the event-study version with leads and lags. Sun and Abraham (2021) show that this does not solve the problem.</p>
-<p>Under heterogeneity across cohorts, the TWFE coefficient on relative period <span class="math inline">\(\ell\)</span> is</p>
+<p>Adding leads and lags doesn’t fix it (Sun and Abraham 2021). With cohort heterogeneity,</p>
 <p><span class="math display">\[
 \beta_\ell = \underbrace{\sum_g \omega^{\ell}_{g,\ell}\, \text{CATT}_{g,\ell}}_{\text{own period}} \;+\; \underbrace{\sum_{\ell' \neq \ell} \sum_g \omega^{\ell}_{g,\ell'}\, \text{CATT}_{g,\ell'}}_{\text{contamination from other periods}}
 \]</span></p>
-<p>where <span class="math inline">\(\text{CATT}_{g,\ell}\)</span> is the effect for cohort <span class="math inline">\(g\)</span> at <span class="math inline">\(\ell\)</span> periods since adoption.</p>
+<p>where <span class="math inline">\(\text{CATT}_{g,\ell}\)</span> is cohort <span class="math inline">\(g\)</span>’s effect <span class="math inline">\(\ell\)</span> periods after adoption.</p>
 <ul>
-<li>The contamination weights sum to zero across <span class="math inline">\(g\)</span>, so they vanish only if effect paths are identical across cohorts.</li>
-<li>Binning distant periods or dropping some relative periods adds a further contamination term from the excluded periods.</li>
-<li>Pre-period coefficients can be nonzero <strong>even when parallel trends holds</strong>, because post-treatment heterogeneity contaminates them.</li>
+<li>Contamination weights sum to zero across <span class="math inline">\(g\)</span>: they vanish only if cohorts share effect paths.</li>
+<li>Binning or dropping relative periods adds more contamination.</li>
+<li>Leads can be nonzero <strong>even under parallel trends</strong>.</li>
 </ul>
 </section>
 <section id="dynamic-twfe-in-the-simulation" class="slide level2">
@@ -582,22 +688,24 @@ E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qqu
 <span id="cb13-4"><a href=""></a>             <span class="fu">tapply</span>(panel<span class="sc">$</span>tau[panel<span class="sc">$</span>D <span class="sc">==</span> <span class="dv">1</span>], panel<span class="sc">$</span>e[panel<span class="sc">$</span>D <span class="sc">==</span> <span class="dv">1</span>], mean)[<span class="fu">as.character</span>(<span class="dv">0</span><span class="sc">:</span><span class="dv">8</span>)])</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
-<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-11-1.png" width="960" class="r-stretch"><p>The binned endpoints absorb the long-run effects of the early cohort, which produces a spurious lead at <span class="math inline">\(-5\)</span> and an inflated lag at <span class="math inline">\(8\)</span>. Intermediate coefficients are also contaminated, though less visibly here.</p>
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-14-1.png" width="1248" class="r-stretch"><ul>
+<li><strong>Left.</strong> A large never-treated group pins down the year effects. Close to the truth except at the binned endpoints, and much better than static TWFE (0.79 vs.&nbsp;1.78).</li>
+<li><strong>Right.</strong> Drop the never-treated. Late year effects now come from treated units and absorb their growing effects: lags flatten, and the <span class="math inline">\(-5\)</span> lead shows a spurious pre-trend. This is the usual case when everyone eventually adopts.</li>
+</ul>
 </section>
 <section id="when-twfe-is-fine-and-how-to-check" class="slide level2">
 <h2>When TWFE is fine, and how to check</h2>
-<p>TWFE is reliable when either condition holds:</p>
+<p>TWFE is fine with either:</p>
 <ul>
-<li><strong>No staggering.</strong> All treated units adopt at once (the 2×2 or a single event), or</li>
-<li><strong>Homogeneous effects.</strong> Effects are constant across cohorts and over exposure time, or at least uncorrelated with the weights.</li>
+<li><strong>No staggering</strong>: everyone adopts at once, or</li>
+<li><strong>Homogeneous effects</strong> across cohorts and exposure time. Rarely credible when effects accumulate.</li>
 </ul>
-<p>The second is a substantive claim, rarely credible for policies whose effects accumulate.</p>
-<p>Diagnostics that apply to any TWFE estimate:</p>
+<p>Diagnostics:</p>
 <ul>
-<li><code>bacondecomp::bacon()</code>: the share of weight on forbidden comparisons, and how their estimates differ from the clean ones.</li>
-<li><code>TwoWayFEWeights::twowayfeweights()</code>: the number and total mass of negative weights, and the degree of heterogeneity needed to reverse the sign.</li>
+<li><code>bacondecomp::bacon()</code>: weight on forbidden comparisons.</li>
+<li><code>TwoWayFEWeights::twowayfeweights()</code>: number and mass of negative weights.</li>
 </ul>
-<p>Chiu, Lan, Liu, and Xu (2023) apply these diagnostics to a large set of published political science panel studies and find that reported TWFE estimates often change once heterogeneity-robust estimators are used.</p>
+<p>Chiu, Lan, Liu, and Xu (2023): many published political science TWFE estimates change under robust estimators.</p>
 </section></section>
 <section>
 <section id="part-iv-modern-estimators" class="title-slide slide level1 center">
@@ -606,28 +714,27 @@ E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qqu
 </section>
 <section id="the-common-principle" class="slide level2">
 <h2>The common principle</h2>
-<p>Every modern estimator follows the same two steps.</p>
 <ol type="1">
-<li><strong>Identification.</strong> Estimate each <span class="math inline">\(\text{ATT}(g,t)\)</span>, or the corresponding unit-period effect, using only <strong>clean comparisons</strong>: comparison units that are untreated in both periods being differenced. Already-treated units never serve as controls.</li>
-<li><strong>Aggregation.</strong> Combine the cell-level estimates into the summary the researcher wants, using <strong>explicit, nonnegative weights</strong>.</li>
+<li><strong>Identification.</strong> Estimate each <span class="math inline">\(\text{ATT}(g,t)\)</span> from <strong>clean comparisons</strong> only: units untreated in both periods. Already-treated units are never controls.</li>
+<li><strong>Aggregation.</strong> Combine with <strong>explicit, nonnegative weights</strong>.</li>
 </ol>
 <p><span class="math display">\[
 \theta = \sum_{g,t} \omega(g,t)\, \text{ATT}(g,t), \qquad \omega(g,t) \geq 0 .
 \]</span></p>
-<p>The estimators differ in which comparison units they use, how many pre-periods they rely on, and how they handle covariates. These are choices about <strong>identifying assumptions</strong> as much as about efficiency.</p>
+<p>They differ in comparison group, pre-periods used, and covariates. These are choices of <strong>identifying assumption</strong>, not just efficiency.</p>
 </section>
 <section id="callaway-and-santanna-2021" class="slide level2">
 <h2>Callaway and Sant’Anna (2021)</h2>
-<p>Each <span class="math inline">\(\text{ATT}(g,t)\)</span> is a 2×2 DiD between cohort <span class="math inline">\(g\)</span> and a clean comparison group, using period <span class="math inline">\(g-1\)</span> as the base:</p>
+<p>Each <span class="math inline">\(\text{ATT}(g,t)\)</span> is a 2×2 against a clean group, with base period <span class="math inline">\(g-1\)</span>:</p>
 <p><span class="math display">\[
 \text{ATT}(g,t) = E[Y_t - Y_{g-1} \mid G = g] - E[Y_t - Y_{g-1} \mid C],
 \]</span></p>
-<p>where <span class="math inline">\(C\)</span> is either the <strong>never-treated</strong> (<span class="math inline">\(G = \infty\)</span>) or the <strong>not-yet-treated</strong> (<span class="math inline">\(G &gt; t\)</span>).</p>
+<p><span class="math inline">\(C\)</span>: <strong>never-treated</strong> (<span class="math inline">\(G = \infty\)</span>) or <strong>not-yet-treated</strong> (<span class="math inline">\(G &gt; t\)</span>).</p>
 <ul>
-<li><strong>Covariates.</strong> Conditional parallel trends is handled by outcome regression, inverse probability weighting, or the doubly robust combination (Sant’Anna and Zhao 2020). This connects directly to Lectures 3–4.</li>
-<li><strong>Aggregation.</strong> It reports overall (<code>simple</code>), by cohort (<code>group</code>), by calendar time (<code>calendar</code>), or by event time (<code>dynamic</code>).</li>
-<li><strong>Assumptions used.</strong> Parallel trends is needed only between <span class="math inline">\(g-1\)</span> and <span class="math inline">\(t\)</span>. Other pre-periods are not used to identify post-treatment effects.</li>
-<li><strong>Inference.</strong> It uses a multiplier bootstrap with simultaneous confidence bands across <span class="math inline">\((g,t)\)</span>.</li>
+<li><strong>Covariates</strong>: outcome regression, IPW, or doubly robust (Sant’Anna and Zhao 2020). See Lectures 3–4.</li>
+<li><strong>Aggregation</strong>: <code>simple</code>, <code>group</code>, <code>calendar</code>, <code>dynamic</code>.</li>
+<li><strong>Assumption</strong>: parallel trends only from <span class="math inline">\(g-1\)</span> to <span class="math inline">\(t\)</span>.</li>
+<li><strong>Inference</strong>: multiplier bootstrap, simultaneous bands.</li>
 </ul>
 </section>
 <section id="callawaysantanna-in-r" class="slide level2">
@@ -644,23 +751,22 @@ E[\hat\beta^{\text{TWFE}}] = \sum_{(i,t):\, D_{it} = 1} w_{it}\, \tau_{it}, \qqu
 1.85380012 0.07732048 </code></pre>
 </div>
 </div>
-<p>Two practical notes:</p>
 <ul>
-<li>The <code>did</code> package codes never-treated units as <code>G = 0</code>.</li>
-<li><code>base_period = "universal"</code> compares every period to <span class="math inline">\(g - 1\)</span>, which makes pre-period estimates comparable to TWFE event-study leads. The default (<code>"varying"</code>) uses <span class="math inline">\(t-1\)</span> for pre-periods, so pre-period and post-period estimates are short and long differences, respectively (Roth 2024).</li>
+<li><code>did</code> codes never-treated as <code>G = 0</code>.</li>
+<li><code>base_period = "universal"</code> uses <span class="math inline">\(g - 1\)</span> throughout, so leads match TWFE leads. The default (<code>"varying"</code>) uses <span class="math inline">\(t-1\)</span> pre-treatment: short differences before, long differences after (Roth 2024).</li>
 </ul>
 </section>
 <section id="sun-and-abraham-2021" class="slide level2">
 <h2>Sun and Abraham (2021)</h2>
-<p>Sun and Abraham propose an <strong>interaction-weighted</strong> estimator: a TWFE regression saturated in cohort × relative-time indicators, with a clean comparison group.</p>
+<p><strong>Interaction-weighted</strong> estimator: TWFE saturated in cohort × relative time, with a clean comparison group.</p>
 <p><span class="math display">\[
 Y_{it} = \alpha_i + \lambda_t + \sum_{g \notin C} \sum_{\ell \neq -1} \delta_{g\ell}\, \mathbb{1}[G_i = g]\, \mathbb{1}[t - g = \ell] + \varepsilon_{it}
 \]</span></p>
 <ul>
-<li>Each <span class="math inline">\(\hat\delta_{g\ell}\)</span> estimates <span class="math inline">\(\text{CATT}_{g,\ell}\)</span> without contamination, because the regression no longer forces cohorts to share coefficients.</li>
-<li>Event-time effects are averages of <span class="math inline">\(\hat\delta_{g\ell}\)</span> weighted by each cohort’s share among units observed at <span class="math inline">\(\ell\)</span>.</li>
-<li>The comparison group is the never-treated or, if none exist, the <strong>last-treated</strong> cohort, whose post-adoption periods are dropped.</li>
-<li>With a never-treated control and a universal base period, the estimates coincide with Callaway–Sant’Anna without covariates.</li>
+<li><span class="math inline">\(\hat\delta_{g\ell}\)</span> estimates <span class="math inline">\(\text{CATT}_{g,\ell}\)</span> without contamination: cohorts no longer share coefficients.</li>
+<li>Event-time effects: <span class="math inline">\(\hat\delta_{g\ell}\)</span> averaged by cohort share at <span class="math inline">\(\ell\)</span>.</li>
+<li>Control: never-treated, or the <strong>last-treated</strong> cohort with its post-adoption periods dropped.</li>
+<li>With never-treated controls and a universal base period, equals Callaway–Sant’Anna without covariates.</li>
 </ul>
 </section>
 <section id="sunabraham-in-r" class="slide level2">
@@ -676,21 +782,21 @@ attr(,"type")
 [1] "Clustered (unit)"</code></pre>
 </div>
 </div>
-<p><code>fixest::sunab()</code> runs the saturated regression and returns event-time aggregates by default. <code>agg = "ATT"</code> averages all post-treatment cells, weighted by the number of observations in each.</p>
+<p><code>sunab()</code> returns event-time aggregates; <code>agg = "ATT"</code> averages post-treatment cells by observation count.</p>
 </section>
 <section id="imputation-borusyak-jaravel-and-spiess-2024" class="slide level2">
 <h2>Imputation: Borusyak, Jaravel, and Spiess (2024)</h2>
-<p>The imputation estimator takes the missing-data framing of Part I literally.</p>
+<p>Part I’s missing-data framing, taken literally.</p>
 <ol type="1">
-<li>Fit <span class="math inline">\(Y_{it} = \alpha_i + \lambda_t + \varepsilon_{it}\)</span> using <strong>only untreated observations</strong> (<span class="math inline">\(D_{it} = 0\)</span>).</li>
-<li>Impute <span class="math inline">\(\hat Y_{it}(0) = \hat\alpha_i + \hat\lambda_t\)</span> for every treated observation.</li>
-<li>Estimate <span class="math inline">\(\hat\tau_{it} = Y_{it} - \hat Y_{it}(0)\)</span> and average with any chosen weights.</li>
+<li>Fit <span class="math inline">\(Y_{it} = \alpha_i + \lambda_t + \varepsilon_{it}\)</span> on <strong>untreated observations only</strong> (<span class="math inline">\(D_{it} = 0\)</span>).</li>
+<li>Impute <span class="math inline">\(\hat Y_{it}(0) = \hat\alpha_i + \hat\lambda_t\)</span> for treated observations.</li>
+<li><span class="math inline">\(\hat\tau_{it} = Y_{it} - \hat Y_{it}(0)\)</span>; average with any weights.</li>
 </ol>
 <ul>
-<li>Gardner (2021, “two-stage DiD”) and Liu, Wang, and Xu (2024, “FEct”) propose closely related estimators. Wooldridge (2021) reaches the same estimator through a fully saturated TWFE regression.</li>
-<li>Under homoskedastic, serially uncorrelated errors, imputation is the efficient estimator.</li>
-<li>The cost is a stronger assumption. Imputation uses <strong>all</strong> pre-periods to estimate <span class="math inline">\(\alpha_i\)</span>, so it requires parallel trends over the entire panel, not only from <span class="math inline">\(g-1\)</span> onward.</li>
-<li>Liu, Wang, and Xu extend it to interactive fixed effects and matrix completion (relaxing parallel trends to a factor structure) and allow treatment to switch off.</li>
+<li>Relatives: Gardner (2021, two-stage DiD), Liu, Wang, and Xu (2024, FEct), Wooldridge (2021, saturated TWFE).</li>
+<li>Efficient under homoskedastic, serially uncorrelated errors.</li>
+<li>Uses <strong>all</strong> pre-periods to estimate <span class="math inline">\(\alpha_i\)</span>, so needs parallel trends over the whole panel.</li>
+<li>FEct adds interactive FEs and matrix completion, and allows treatment to switch off.</li>
 </ul>
 </section>
 <section id="imputation-by-hand" class="slide level2">
@@ -711,16 +817,16 @@ attr(,"type")
 0.22 0.45 0.72 0.84 1.18 1.32 1.53 1.78 2.01 </code></pre>
 </div>
 </div>
-<p>The point estimate requires only two lines of code. Valid standard errors do not: the imputed <span class="math inline">\(\hat Y(0)\)</span> carries estimation error, and <code>didimputation</code> (BJS) and <code>did2s</code> (Gardner) implement the appropriate variance estimators.</p>
+<p>Two lines for the point estimate. Standard errors must account for estimating <span class="math inline">\(\hat Y(0)\)</span>: use <code>didimputation</code> (BJS) or <code>did2s</code> (Gardner).</p>
 </section>
 <section id="other-estimators-you-will-encounter" class="slide level2">
 <h2>Other estimators you will encounter</h2>
 <ul>
-<li><strong>Stacked regressions</strong> (Cengiz, Dube, Lindner, and Zipperer 2019). Build a separate dataset for each adoption event, containing the treated cohort and clean controls within a fixed window, then stack and estimate with event-specific fixed effects. This approach is transparent, but the implicit weights across events require care.</li>
-<li><strong>de Chaisemartin and D’Haultfœuille</strong> (<span class="math inline">\(\text{DID}_M\)</span>, <code>DIDmultiplegtDYN</code>). It compares switchers to stayers in adjacent periods. It accommodates treatments that switch on <strong>and off</strong>, as well as non-binary treatments.</li>
-<li><strong>Local projections DiD</strong> (Dube, Girardi, Jordà, and Taylor 2023). Each horizon is a separate regression of <span class="math inline">\(Y_{i,t+h} - Y_{i,t-1}\)</span> on adoption, with the sample restricted to clean controls.</li>
-<li><strong>Continuous or multivalued treatments</strong> (Callaway, Goodman-Bacon, and Sant’Anna 2024). The negative-weighting problems reappear in dose comparisons, and dose-response interpretations require stronger parallel-trends conditions.</li>
-<li><strong>Factorial DiD</strong> (Xu, Zhao, and Ding 2024). This applies when a second factor, rather than treatment itself, varies across units.</li>
+<li><strong>Stacked</strong> (Cengiz, Dube, Lindner, and Zipperer 2019). One dataset per adoption event with clean controls in a window; stack with event-specific FEs. Watch the implicit cross-event weights.</li>
+<li><strong>de Chaisemartin–D’Haultfœuille</strong> (<span class="math inline">\(\text{DID}_M\)</span>, <code>DIDmultiplegtDYN</code>). Switchers vs.&nbsp;stayers in adjacent periods. Allows switching on <strong>and off</strong> and non-binary treatment.</li>
+<li><strong>Local projections DiD</strong> (Dube, Girardi, Jordà, and Taylor 2023). One regression of <span class="math inline">\(Y_{i,t+h} - Y_{i,t-1}\)</span> on adoption per horizon, clean controls only.</li>
+<li><strong>Continuous treatments</strong> (Callaway, Goodman-Bacon, and Sant’Anna 2024). Negative weighting reappears; dose-response needs stronger parallel trends.</li>
+<li><strong>Factorial DiD</strong> (Xu, Zhao, and Ding 2024). A second factor, not treatment, varies across units.</li>
 </ul>
 </section>
 <section id="comparison" class="slide level2">
@@ -846,7 +952,7 @@ Yes
 </td>
 </tr>
 </tbody></table>
-<p>In practice, these estimators usually agree closely with one another and disagree with TWFE. Disagreement among them is itself informative: it typically signals that parallel trends holds over some windows but not others.</p>
+<p>The robust estimators usually agree with each other and not with TWFE. When they disagree, parallel trends probably holds over some windows but not others.</p>
 </section>
 <section id="all-estimators-in-the-simulation-overall-att" class="slide level2">
 <h2>All estimators in the simulation: overall ATT</h2>
@@ -869,16 +975,18 @@ Yes
 <section id="all-estimators-in-the-simulation-event-study" class="slide level2">
 <h2>All estimators in the simulation: event study</h2>
 
-<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-16-1.png" width="1056" class="r-stretch"><p>The three robust estimators track the truth and one another. Standard errors are omitted for legibility.</p>
+<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-19-1.png" width="1248" class="r-stretch"><ul>
+<li><strong>Left.</strong> With clean controls, all agree except TWFE’s binned endpoints. Static TWFE (0.79 vs.&nbsp;1.78) is the bigger failure here.</li>
+<li><strong>Right.</strong> Without never-treated units, the robust estimators report only what is identified (early cohort, event times 0–5) and get it right. TWFE reports every horizon and misses all of them by assuming homogeneous effects. SEs omitted.</li>
+</ul>
 </section>
 <section id="choices-the-robust-estimators-still-require" class="slide level2">
 <h2>Choices the robust estimators still require</h2>
-<p>The modern estimators remove the mechanical bias. They do not remove the need for judgment.</p>
 <ul>
-<li><strong>Comparison group.</strong> Never-treated units may differ systematically from adopters (why did they never adopt?). Not-yet-treated units are more similar but may anticipate treatment. The choice changes the parallel-trends assumption, not merely the precision.</li>
-<li><strong>Aggregation.</strong> The overall ATT weights cohorts by size and periods by availability. Event-time effects at long horizons are identified only from early cohorts, so a rising event-study path may reflect <strong>composition</strong> rather than dynamics. A <strong>balanced</strong> event window (<code>balance_e</code> in <code>aggte</code>) removes the composition change.</li>
-<li><strong>Pre-periods.</strong> Imputation uses every pre-period, and Callaway–Sant’Anna uses one. When the two disagree, the difference is evidence about where parallel trends holds.</li>
-<li><strong>Event-study plots are not interchangeable</strong> (Roth 2024). Pre-period estimates from Callaway–Sant’Anna (default), Sun–Abraham, and imputation answer different questions. Compare plots only with a common base period.</li>
+<li><strong>Comparison group.</strong> Never-treated units may differ from adopters (why did they never adopt?). Not-yet-treated units may anticipate. The choice changes the assumption, not just precision.</li>
+<li><strong>Aggregation.</strong> Long horizons come only from early cohorts, so a rising path may be <strong>composition</strong>, not dynamics. Use a <strong>balanced</strong> window (<code>balance_e</code> in <code>aggte</code>).</li>
+<li><strong>Pre-periods.</strong> Imputation uses all; Callaway–Sant’Anna uses one. Disagreement tells you where parallel trends fails.</li>
+<li><strong>Event-study plots aren’t interchangeable</strong> (Roth 2024). Compare only with a common base period.</li>
 </ul>
 </section></section>
 <section>
@@ -886,142 +994,31 @@ Yes
 <h1>Part V: Sensitivity analysis</h1>
 
 </section>
-<section id="the-conventional-check-and-its-limits" class="slide level2">
-<h2>The conventional check, and its limits</h2>
-<p>Standard practice: estimate leads, find them individually or jointly insignificant, and conclude that parallel trends holds.</p>
-<p>Roth (2022) identifies two problems with this practice.</p>
-<ol type="1">
-<li><strong>Low power.</strong> Pre-tests often fail to detect violations large enough to produce bias comparable in size to the estimated effect.</li>
-<li><strong>Pre-test bias.</strong> Conditioning on passing selects samples in which the pre-period noise happened to offset the trend. Because event-study coefficients share a reference period, that selection <strong>amplifies</strong> the bias in post-period estimates.</li>
-</ol>
-<p>Parallel trends after treatment is fundamentally untestable. Pre-period data constrain it only through an assumption about how pre- and post-period violations relate.</p>
-</section>
-<section id="pre-test-bias-in-a-simulation" class="slide level2">
-<h2>Pre-test bias in a simulation</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">3</span>)</span>
-<span id="cb24-2"><a href=""></a>sims <span class="ot">&lt;-</span> <span class="dv">20000</span>; sig <span class="ot">&lt;-</span> <span class="fl">0.05</span>; trend <span class="ot">&lt;-</span> <span class="fl">0.03</span>          <span class="co"># true differential trend; true effect = 0</span></span>
-<span id="cb24-3"><a href=""></a>per <span class="ot">&lt;-</span> <span class="sc">-</span><span class="dv">4</span><span class="sc">:</span><span class="dv">3</span></span>
-<span id="cb24-4"><a href=""></a>d <span class="ot">&lt;-</span> <span class="fu">matrix</span>(trend <span class="sc">*</span> per, sims, <span class="fu">length</span>(per), <span class="at">byrow =</span> <span class="cn">TRUE</span>) <span class="sc">+</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(sims <span class="sc">*</span> <span class="dv">8</span>, <span class="dv">0</span>, sig), sims)</span>
-<span id="cb24-5"><a href=""></a><span class="fu">colnames</span>(d) <span class="ot">&lt;-</span> per</span>
-<span id="cb24-6"><a href=""></a>beta <span class="ot">&lt;-</span> d <span class="sc">-</span> d[, <span class="st">"-1"</span>]                                <span class="co"># event-study coefficients, ref = -1</span></span>
-<span id="cb24-7"><a href=""></a>pass <span class="ot">&lt;-</span> <span class="fu">apply</span>(<span class="fu">abs</span>(beta[, <span class="fu">c</span>(<span class="st">"-4"</span>, <span class="st">"-3"</span>, <span class="st">"-2"</span>)]) <span class="sc">/</span> (sig <span class="sc">*</span> <span class="fu">sqrt</span>(<span class="dv">2</span>)) <span class="sc">&lt;</span> <span class="fl">1.96</span>, <span class="dv">1</span>, all)</span>
-<span id="cb24-8"><a href=""></a><span class="fu">c</span>(<span class="at">pass_rate =</span> <span class="fu">mean</span>(pass), <span class="at">bias_all =</span> <span class="fu">mean</span>(beta[, <span class="st">"0"</span>]), <span class="at">bias_if_passed =</span> <span class="fu">mean</span>(beta[, <span class="st">"0"</span>][pass]))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>     pass_rate       bias_all bias_if_passed 
-    0.66570000     0.03061725     0.05058653 </code></pre>
-</div>
-</div>
-<p>A violation that produces bias of 0.03 in the first post-period passes the pre-test in about 67% of samples. Among those samples, the bias is larger than in the full set of samples.</p>
-</section>
-<section id="flipping-the-null-equivalence-tests" class="slide level2">
-<h2>Flipping the null: equivalence tests</h2>
-<p>The pre-test above treats “no difference” as the null, so a noisy design passes easily. Hartman and Hidalgo (2018) propose reversing the burden of proof.</p>
+<section id="pre-trends-and-sensitivity-revisited" class="slide level2">
+<h2>Pre-trends and sensitivity, revisited</h2>
+<p>From Lecture 8:</p>
 <ul>
-<li><strong>Null:</strong> the pre-period differences are large, <span class="math inline">\(|\delta_{\text{pre}}| \geq \epsilon\)</span>.</li>
-<li><strong>Alternative:</strong> they are small, <span class="math inline">\(|\delta_{\text{pre}}| &lt; \epsilon\)</span>.</li>
-<li>Two one-sided tests (TOST) reject only when the confidence interval lies inside <span class="math inline">\((-\epsilon, \epsilon)\)</span>.</li>
+<li><strong>Pre-tests are weak.</strong> Low power, and conditioning on passing them worsens bias (Roth 2022). Equivalence tests flip the burden (Hartman and Hidalgo 2018).</li>
+<li><strong>Rambachan and Roth (2023).</strong> Bound the post-period violation by <span class="math inline">\(\bar M\)</span> × the largest pre-period violation (relative magnitudes), or by <span class="math inline">\(M\)</span> on changes in slope (smoothness). Report confidence sets over <span class="math inline">\(\bar M\)</span> or <span class="math inline">\(M\)</span> and the <strong>breakdown value</strong>.</li>
+<li><strong>Choose the restriction substantively.</strong> Shocks: relative magnitudes. Secular trends: smoothness.</li>
 </ul>
-<p>An imprecise design now <strong>fails</strong> to establish parallel pre-trends instead of passing by default. The researcher must state <span class="math inline">\(\epsilon\)</span>, the largest violation considered substantively negligible, which makes the assumption explicit. Liu, Wang, and Xu (2024) implement equivalence tests for pre-treatment fit in <code>fect</code>.</p>
-<p>The limit is the same as before: even a successful equivalence test speaks to the pre-period, not to the post-period.</p>
 </section>
-<section id="rambachan-and-roth-2023-the-idea" class="slide level2">
-<h2>Rambachan and Roth (2023): the idea</h2>
-<p>Write each event-study coefficient as effect plus bias:</p>
-<p><span class="math display">\[
-\beta_\ell = \tau_\ell + \delta_\ell, \qquad \delta_\ell = \text{differential trend in } Y(0) \text{ at } \ell .
-\]</span></p>
-<p>For <span class="math inline">\(\ell &lt; 0\)</span>, <span class="math inline">\(\tau_\ell = 0\)</span>, so <span class="math inline">\(\beta_{\text{pre}}\)</span> estimates <span class="math inline">\(\delta_{\text{pre}}\)</span>. For <span class="math inline">\(\ell \geq 0\)</span>, <span class="math inline">\(\delta_{\text{post}}\)</span> is unobserved.</p>
-<p>Rather than assume <span class="math inline">\(\delta_{\text{post}} = 0\)</span>, assume <span class="math inline">\(\delta \in \Delta\)</span>, a set of restrictions that <strong>link post-period violations to pre-period violations</strong>. The result is an identified set for <span class="math inline">\(\tau_{\text{post}}\)</span>, in the sense of Lecture 7, together with a confidence set that is valid uniformly over <span class="math inline">\(\Delta\)</span>.</p>
-<p>Reporting proceeds by varying the size of <span class="math inline">\(\Delta\)</span> and finding the <strong>breakdown value</strong>: the smallest violation at which the conclusion no longer holds.</p>
-</section>
-<section id="two-families-of-restrictions" class="slide level2">
-<h2>Two families of restrictions</h2>
-<p><strong>Relative magnitudes</strong>, <span class="math inline">\(\Delta^{RM}(\bar M)\)</span>. Post-treatment violations between consecutive periods are no larger than <span class="math inline">\(\bar M\)</span> times the largest pre-treatment violation:</p>
-<p><span class="math display">\[
-|\delta_{\ell+1} - \delta_\ell| \leq \bar M \cdot \max_{s &lt; 0} |\delta_{s+1} - \delta_s| \quad \text{for } \ell \geq 0.
-\]</span></p>
-<p><span class="math inline">\(\bar M = 1\)</span>: post-treatment shocks are no worse than the worst pre-treatment shock. This restriction suits confounding by <strong>shocks</strong>.</p>
-<p><strong>Smoothness</strong>, <span class="math inline">\(\Delta^{SD}(M)\)</span>. The slope of the differential trend changes by at most <span class="math inline">\(M\)</span> per period:</p>
-<p><span class="math display">\[
-|(\delta_{\ell+1} - \delta_\ell) - (\delta_\ell - \delta_{\ell-1})| \leq M .
-\]</span></p>
-<p><span class="math inline">\(M = 0\)</span>: the pre-trend continues linearly. This restriction suits confounding by <strong>secular trends</strong>, such as differential growth.</p>
-<p>The choice is substantive: it should follow from what could plausibly violate parallel trends.</p>
-</section>
-<section id="an-example-with-a-pre-trend" class="slide level2">
-<h2>An example with a pre-trend</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href=""></a><span class="fu">set.seed</span>(<span class="dv">21</span>)</span>
-<span id="cb26-2"><a href=""></a>N3 <span class="ot">&lt;-</span> <span class="dv">600</span>; T3 <span class="ot">&lt;-</span> <span class="dv">15</span>; g3 <span class="ot">&lt;-</span> <span class="dv">11</span></span>
-<span id="cb26-3"><a href=""></a>s3 <span class="ot">&lt;-</span> <span class="fu">expand.grid</span>(<span class="at">unit =</span> <span class="dv">1</span><span class="sc">:</span>N3, <span class="at">year =</span> <span class="dv">1</span><span class="sc">:</span>T3)</span>
-<span id="cb26-4"><a href=""></a>s3<span class="sc">$</span>tr  <span class="ot">&lt;-</span> <span class="fu">as.integer</span>(s3<span class="sc">$</span>unit <span class="sc">&lt;=</span> N3 <span class="sc">/</span> <span class="dv">2</span>)</span>
-<span id="cb26-5"><a href=""></a>s3<span class="sc">$</span>rel <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(s3<span class="sc">$</span>tr <span class="sc">==</span> <span class="dv">1</span>, s3<span class="sc">$</span>year <span class="sc">-</span> g3, <span class="sc">-</span><span class="dv">1</span>)</span>
-<span id="cb26-6"><a href=""></a>s3<span class="sc">$</span>Y   <span class="ot">&lt;-</span> <span class="fu">rnorm</span>(N3)[s3<span class="sc">$</span>unit] <span class="sc">+</span> <span class="fl">0.1</span> <span class="sc">*</span> s3<span class="sc">$</span>year <span class="sc">+</span></span>
-<span id="cb26-7"><a href=""></a>          <span class="fl">0.03</span> <span class="sc">*</span> s3<span class="sc">$</span>tr <span class="sc">*</span> s3<span class="sc">$</span>year <span class="sc">+</span>                       <span class="co"># violation: differential trend</span></span>
-<span id="cb26-8"><a href=""></a>          <span class="fl">0.25</span> <span class="sc">*</span> s3<span class="sc">$</span>tr <span class="sc">*</span> (s3<span class="sc">$</span>year <span class="sc">&gt;=</span> g3) <span class="sc">+</span> <span class="fu">rnorm</span>(<span class="fu">nrow</span>(s3), <span class="dv">0</span>, <span class="fl">0.5</span>)   <span class="co"># true effect 0.25</span></span>
-<span id="cb26-9"><a href=""></a>es3 <span class="ot">&lt;-</span> <span class="fu">feols</span>(Y <span class="sc">~</span> <span class="fu">i</span>(rel, <span class="at">ref =</span> <span class="sc">-</span><span class="dv">1</span>) <span class="sc">|</span> unit <span class="sc">+</span> year, <span class="at">data =</span> s3, <span class="at">cluster =</span> <span class="sc">~</span>unit)</span>
-<span id="cb26-10"><a href=""></a>b3  <span class="ot">&lt;-</span> <span class="fu">coef</span>(es3); <span class="fu">names</span>(b3) <span class="ot">&lt;-</span> <span class="fu">sub</span>(<span class="st">"rel::"</span>, <span class="st">""</span>, <span class="fu">names</span>(b3))</span>
-<span id="cb26-11"><a href=""></a><span class="fu">round</span>(b3, <span class="dv">3</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stdout">
-<pre><code>   -10     -9     -8     -7     -6     -5     -4     -3     -2      0      1 
--0.230 -0.266 -0.291 -0.211 -0.106 -0.149 -0.135 -0.087 -0.035  0.267  0.328 
-     2      3      4 
- 0.286  0.418  0.382 </code></pre>
-</div>
-</div>
-<p>The leads drift upward, and the first post-period coefficient combines the true effect, <span class="math inline">\(0.25\)</span>, with a bias of <span class="math inline">\(0.03\)</span>.</p>
-</section>
-<section id="sensitivity-sets-in-the-example" class="slide level2">
-<h2>Sensitivity sets in the example</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href=""></a>pre  <span class="ot">&lt;-</span> <span class="fu">c</span>(b3[<span class="fu">as.character</span>(<span class="sc">-</span><span class="dv">10</span><span class="sc">:-</span><span class="dv">2</span>)], <span class="st">`</span><span class="at">-1</span><span class="st">`</span> <span class="ot">=</span> <span class="dv">0</span>)</span>
-<span id="cb28-2"><a href=""></a>m    <span class="ot">&lt;-</span> <span class="fu">max</span>(<span class="fu">abs</span>(<span class="fu">diff</span>(pre)))                     <span class="co"># largest pre-period jump</span></span>
-<span id="cb28-3"><a href=""></a>s    <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(pre <span class="sc">~</span> <span class="fu">as.numeric</span>(<span class="fu">names</span>(pre))))[<span class="dv">2</span>]   <span class="co"># linear pre-trend slope</span></span>
-<span id="cb28-4"><a href=""></a>b0   <span class="ot">&lt;-</span> b3[<span class="st">"0"</span>]; se0 <span class="ot">&lt;-</span> <span class="fu">se</span>(es3)[<span class="st">"rel::0"</span>]</span>
-<span id="cb28-5"><a href=""></a>Mbar <span class="ot">&lt;-</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span>, <span class="at">by =</span> <span class="fl">0.25</span>)</span>
-<span id="cb28-6"><a href=""></a>rm_set <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">lo =</span> b0 <span class="sc">-</span> Mbar <span class="sc">*</span> m <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se0, <span class="at">hi =</span> b0 <span class="sc">+</span> Mbar <span class="sc">*</span> m <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se0)</span>
-<span id="cb28-7"><a href=""></a>M <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.04</span>)</span>
-<span id="cb28-8"><a href=""></a>sd_set <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="at">lo =</span> b0 <span class="sc">-</span> s <span class="sc">-</span> M <span class="sc">-</span> <span class="fl">1.96</span> <span class="sc">*</span> se0, <span class="at">hi =</span> b0 <span class="sc">-</span> s <span class="sc">+</span> M <span class="sc">+</span> <span class="fl">1.96</span> <span class="sc">*</span> se0)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>These are schematic versions that treat the pre-period coefficients as known. They are intended for intuition. <code>HonestDiD</code> accounts for estimation error in <span class="math inline">\(\hat\delta_{\text{pre}}\)</span> and gives confidence sets with correct coverage.</p>
-</section>
-<section id="sensitivity-plots" class="slide level2">
-<h2>Sensitivity plots</h2>
-
-<img data-src="lecture09_staggered_did_files/figure-revealjs/unnamed-chunk-20-1.png" width="1152" class="r-stretch"><p>Relative magnitudes treat the pre-trend as noise of bounded size. The set includes zero once <span class="math inline">\(\bar M \gtrsim\)</span> 1.5. Smoothness extrapolates the trend, so at <span class="math inline">\(M = 0\)</span> it removes the bias and centers on the truth. The same data support different conclusions under different restrictions, which is why the restriction must be justified substantively.</p>
-</section>
-<section id="honestdid-in-practice" class="slide level2">
-<h2>HonestDiD in practice</h2>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode numberSource r number-lines code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href=""></a><span class="fu">library</span>(HonestDiD)</span>
-<span id="cb29-2"><a href=""></a>betahat <span class="ot">&lt;-</span> <span class="fu">coef</span>(es3); sigma <span class="ot">&lt;-</span> <span class="fu">vcov</span>(es3)            <span class="co"># event-study coefs and vcov</span></span>
-<span id="cb29-3"><a href=""></a>res_rm <span class="ot">&lt;-</span> <span class="fu">createSensitivityResults_relativeMagnitudes</span>(</span>
-<span id="cb29-4"><a href=""></a>  <span class="at">betahat =</span> betahat, <span class="at">sigma =</span> sigma,</span>
-<span id="cb29-5"><a href=""></a>  <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>,</span>
-<span id="cb29-6"><a href=""></a>  <span class="at">Mbarvec =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="dv">2</span>, <span class="at">by =</span> <span class="fl">0.25</span>))</span>
-<span id="cb29-7"><a href=""></a>res_sd <span class="ot">&lt;-</span> <span class="fu">createSensitivityResults</span>(</span>
-<span id="cb29-8"><a href=""></a>  <span class="at">betahat =</span> betahat, <span class="at">sigma =</span> sigma,</span>
-<span id="cb29-9"><a href=""></a>  <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>,</span>
-<span id="cb29-10"><a href=""></a>  <span class="at">Mvec =</span> <span class="fu">seq</span>(<span class="dv">0</span>, <span class="fl">0.04</span>, <span class="at">by =</span> <span class="fl">0.01</span>))</span>
-<span id="cb29-11"><a href=""></a>orig <span class="ot">&lt;-</span> <span class="fu">constructOriginalCS</span>(betahat, sigma, <span class="at">numPrePeriods =</span> <span class="dv">9</span>, <span class="at">numPostPeriods =</span> <span class="dv">5</span>)</span>
-<span id="cb29-12"><a href=""></a><span class="fu">createSensitivityPlot_relativeMagnitudes</span>(res_rm, orig)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
+<section id="applying-honestdid-to-a-modern-event-study" class="slide level2">
+<h2>Applying HonestDiD to a modern event study</h2>
+<p>Inputs: event-study coefficients and their covariance matrix, pre then post, reference period omitted.</p>
 <ul>
-<li>Coefficients must be ordered pre then post, with the reference period omitted.</li>
-<li>Use <code>l_vec</code> to target an average of post-period effects instead of the first one.</li>
-<li>The procedure works with any event-study estimator that supplies a coefficient vector and covariance matrix, including Callaway–Sant’Anna and Sun–Abraham.</li>
+<li><strong>Not</strong> a staggered TWFE event study: its coefficients are contaminated.</li>
+<li>Use Callaway–Sant’Anna (dynamic), Sun–Abraham, or imputation. The vignette shows extraction from <code>did</code>.</li>
+<li>With Callaway–Sant’Anna, set <code>base_period = "universal"</code> (Roth 2024).</li>
+<li>Report the breakdown value for the average post-period effect, not just <span class="math inline">\(\ell = 0\)</span>.</li>
 </ul>
 </section>
 <section id="other-robustness-checks" class="slide level2">
 <h2>Other robustness checks</h2>
 <ul>
-<li><strong>Placebo-in-time tests.</strong> Assign a fake adoption date before the true one and re-estimate. <code>fect</code> automates this for imputation estimators.</li>
-<li><strong>Leave-one-cohort-out.</strong> Check whether a single adoption cohort drives the aggregate.</li>
-<li><strong>Alternative comparison groups.</strong> Report never-treated and not-yet-treated estimates. Divergence points to anticipation or to selection into never adopting.</li>
-<li><strong>Functional form.</strong> Parallel trends in levels and in logs are different assumptions (Roth and Sant’Anna 2023). Report both when the outcome is skewed.</li>
-<li><strong>Inference with few treated clusters.</strong> Clustered standard errors over-reject when few clusters are treated. Wild cluster bootstrap and randomization inference perform better (MacKinnon and Webb 2016; Ferman and Pinto 2019).</li>
-<li><strong>Conditional parallel trends.</strong> If adoption is predicted by pre-treatment covariates, condition on them using Callaway–Sant’Anna’s doubly robust estimator, and show how much the estimate moves.</li>
+<li><strong>Leave-one-cohort-out.</strong> Does one cohort drive the result?</li>
+<li><strong>Never- vs.&nbsp;not-yet-treated controls.</strong> Divergence suggests anticipation or selection into never adopting.</li>
+<li><strong>Placebos, functional form, covariates, inference.</strong> Lecture 8. Few treated clusters is a concern with few cohorts.</li>
 </ul>
 </section></section>
 <section>
@@ -1032,24 +1029,24 @@ Yes
 <section id="a-workflow-for-staggered-did" class="slide level2">
 <h2>A workflow for staggered DiD</h2>
 <ol type="1">
-<li><strong>State the estimand.</strong> Specify which ATT and which aggregation: overall, by cohort, or by event time over a balanced window.</li>
-<li><strong>Describe treatment timing.</strong> Are there never-treated units? Does treatment switch off?</li>
-<li><strong>Diagnose TWFE</strong> if it is the published estimate: Bacon decomposition and negative weights.</li>
-<li><strong>Re-estimate</strong> with at least two heterogeneity-robust estimators that use different comparison groups or pre-periods.</li>
-<li><strong>Plot event studies</strong> with a common base period. Read the leads as diagnostics, not as tests that certify the design.</li>
-<li><strong>Conduct sensitivity analysis</strong> with <code>HonestDiD</code>, choosing the restriction that matches the threat, and report the breakdown value.</li>
-<li><strong>Use appropriate inference.</strong> Cluster at the level of treatment assignment, and use the bootstrap when few clusters are treated.</li>
+<li><strong>Estimand.</strong> Which ATT, which aggregation (overall, cohort, balanced event time)?</li>
+<li><strong>Timing.</strong> Never-treated units? Does treatment switch off?</li>
+<li><strong>Diagnose TWFE</strong>: Bacon decomposition, negative weights.</li>
+<li><strong>Re-estimate</strong> with two or more robust estimators using different comparison groups or pre-periods.</li>
+<li><strong>Event studies</strong> with a common base period. Leads are diagnostics, not certification.</li>
+<li><strong>Sensitivity</strong> with <code>HonestDiD</code>; report the breakdown value.</li>
+<li><strong>Inference.</strong> Cluster at the assignment level; bootstrap with few treated clusters.</li>
 </ol>
-<p>Problem Set 3 asks you to carry out steps 1–6 on a published TWFE study.</p>
+<p>Problem Set 3: steps 1–6 on a published TWFE study.</p>
 </section>
 <section id="summary" class="slide level2">
 <h2>Summary</h2>
 <ul>
-<li>DiD identifies the ATT by imputing the treated group’s untreated trend from a comparison group. Parallel trends and no anticipation do the identifying work.</li>
-<li>TWFE equals DiD in the 2×2 case. Under staggered adoption with heterogeneous effects, it averages comparisons that include already-treated controls, and its implicit weights on unit-period effects can be negative.</li>
-<li>The failure is not a matter of confounding. It occurs even when parallel trends holds exactly, and it can reverse the sign of the estimate.</li>
-<li>Modern estimators separate identification from aggregation. They estimate <span class="math inline">\(\text{ATT}(g,t)\)</span> from clean comparisons and aggregate with explicit, nonnegative weights. They differ in their comparison groups and in how much of the pre-period they rely on.</li>
-<li>Passing a pre-trend test is weak evidence. Equivalence tests and Rambachan–Roth sensitivity analysis replace a binary verdict with a statement of how large a violation the conclusion can withstand.</li>
+<li>DiD imputes the treated group’s untreated trend from a comparison group, under parallel trends and no anticipation.</li>
+<li>TWFE = DiD in the 2×2 case. With staggered adoption and heterogeneous effects, it uses already-treated controls and can put negative weight on unit-period effects.</li>
+<li>This is not confounding. It happens under exact parallel trends and can flip the sign.</li>
+<li>Modern estimators: <span class="math inline">\(\text{ATT}(g,t)\)</span> from clean comparisons, aggregated with nonnegative weights. They differ in comparison group and pre-periods used.</li>
+<li>Passing a pre-test is weak evidence. Rambachan–Roth tells you how large a violation the result survives.</li>
 </ul>
 </section>
 <section id="references" class="slide level2">

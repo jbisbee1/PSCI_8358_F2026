@@ -1,0 +1,851 @@
+---
+title: "Synthetic Control and Panel Imputation"
+subtitle: "One Treated Unit, Then Many"
+author: "Jim Bisbee"
+format:
+  revealjs:
+    theme: simple
+    smaller: true
+    slide-number: true
+    incremental: false
+    transition: none
+    center: false
+    width: 1280
+    height: 720
+    margin: 0.08
+    preview-links: false
+    html-math-method: mathjax
+    include-in-header:
+      text: |
+        <style>
+        .reveal table { font-size: 0.8em; margin: 0.6em auto; }
+        </style>
+execute:
+  enabled: true
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| include: false
+blue <- "#4a7fb5"; amber <- "#e0902b"; red <- "#b2182b"; green <- "#1b7837"; grey <- "grey40"
+
+# Synthetic control weights: min ||y1 - Y0 w||^2 on the simplex (accelerated projected gradient)
+sc_weights <- function(y1, Y0, iters = 20000) {
+  J <- ncol(Y0); A <- crossprod(Y0); b <- crossprod(Y0, y1)
+  L <- max(eigen(A, symmetric = TRUE, only.values = TRUE)$values)
+  proj <- function(v) {
+    u <- sort(v, TRUE); s <- cumsum(u); r <- max(which(u * seq_along(u) > s - 1))
+    pmax(v - (s[r] - 1) / r, 0)
+  }
+  w <- z <- rep(1 / J, J); k <- 1
+  for (i in 1:iters) {
+    wn <- proj(z - (A %*% z - b) / L); kn <- (1 + sqrt(1 + 4 * k^2)) / 2
+    z <- wn + (k - 1) / kn * (wn - w); w <- wn; k <- kn
+  }
+  drop(w)
+}
+
+# Ridge ASCM weights (Ben-Michael, Feller, Rothstein 2021, Lemma 1), pre-period columns centered
+ascm_w <- function(y1, Y0, w, kappa) {
+  X <- t(Y0 - rowMeans(Y0))
+  drop(w + X %*% solve(crossprod(X) + kappa * diag(nrow(Y0)), y1 - Y0 %*% w))
+}
+
+# Simulated panel: 30 donors, 40 periods, two factors, effect ramps up after T0 = 28
+J <- 30; TT <- 40; T0 <- 28
+pre <- 1:T0; post <- (T0 + 1):TT
+tau <- c(rep(0, T0), 0.25 * (1:(TT - T0)))
+make_f <- function() {
+  set.seed(8358)
+  f1 <- 0.12 * (1:TT) + as.numeric(arima.sim(list(ar = .6), TT, sd = .25))
+  f2 <- 1.5 * sin((1:TT) / 3.5) + as.numeric(arima.sim(list(ar = .6), TT, sd = .25))
+  cbind(f1, f2)
+}
+sim <- function(mu1, F = make_f(), seed = 11, sd_e = .2) {
+  set.seed(seed)
+  mu <- rbind(mu1, cbind(runif(J, -1, 1), runif(J, -1, 1)))
+  delta <- 0.5 + 0.03 * (1:TT)
+  Y0 <- matrix(delta, TT, J + 1) + F %*% t(mu) + matrix(rnorm(TT * (J + 1), sd = sd_e), TT)
+  Y <- Y0; Y[, 1] <- Y0[, 1] + tau
+  list(Y = Y, Y0 = Y0, mu = mu, F = F)
+}
+est <- function(s) {
+  y1 <- s$Y[pre, 1]; D <- s$Y[, -1]; w <- sc_weights(y1, D[pre, ])
+  sc <- drop(D %*% w); did <- rowMeans(D) + mean(y1) - mean(rowMeans(D)[pre])
+  att <- function(a) mean(s$Y[post, 1] - a[post])
+  rmse <- function(a) sqrt(mean((y1 - a[pre])^2))
+  list(w = w, sc = sc, did = did, att_sc = att(sc), att_did = att(did),
+       rmse_sc = rmse(sc), rmse_did = rmse(did))
+}
+att_true <- mean(tau[post])
+
+inside <- sim(c(.55, .5));  e_in <- est(inside)   # treated unit inside the donors' hull
+outside <- sim(c(1.9, 1.7)); e_out <- est(outside) # treated unit outside the hull
+
+# Dormant factor: f2 tracks f1 before T0, then falls away
+F_dorm <- make_f()
+F_dorm[pre, 2] <- F_dorm[pre, 1]
+F_dorm[post, 2] <- F_dorm[T0, 1] + cumsum(rep(-.6, TT - T0))
+dormant <- sim(c(1, 0), F = F_dorm, sd_e = .1); e_dorm <- est(dormant)
+mu_dorm <- colSums(e_dorm$w * dormant$mu[-1, ])
+
+# Ridge ASCM on the outside-hull case; penalty by holding out the last 8 pre-periods
+y1_out <- outside$Y[pre, 1]; D_out <- outside$Y[, -1]
+tr_p <- 1:20; ho_p <- 21:T0; kgrid <- 10^seq(-1, 4, .25)
+cv_k <- sapply(kgrid, function(k) {
+  w <- sc_weights(y1_out[tr_p], D_out[tr_p, ], 5000)
+  wa <- ascm_w(y1_out[tr_p], D_out[tr_p, ], w, k)
+  mean((y1_out[ho_p] - D_out[ho_p, ] %*% wa)^2)
+})
+kappa_hat <- kgrid[which.min(cv_k)]
+w_asc <- ascm_w(y1_out, D_out[pre, ], e_out$w, kappa_hat)
+asc <- drop(D_out %*% w_asc)
+att_asc <- mean(outside$Y[post, 1] - asc[post])
+rmse_asc <- sqrt(mean((y1_out - asc[pre])^2))
+
+# Backdating: pretend treatment at t = 20 in the inside-hull case
+fake <- 20
+w_bd <- sc_weights(inside$Y[1:fake, 1], inside$Y[1:fake, -1])
+gap_bd <- inside$Y[, 1] - drop(inside$Y[, -1] %*% w_bd)
+
+# Plot helpers
+yrange <- function(...) range(c(...))
+traj_panel <- function(s, cf, cf_col = blue, cf_lab = "Synthetic control", main = "", leg = "topleft") {
+  matplot(s$Y[, -1], type = "l", lty = 1, col = adjustcolor(grey, 0.2), las = 1, main = main,
+          ylim = yrange(s$Y[, -1], s$Y[, 1], cf, s$Y0[, 1]), xlab = "Period", ylab = "Y")
+  abline(v = T0 + .5, lty = 3)
+  lines(s$Y0[, 1], col = amber, lwd = 2.5, lty = 3)
+  lines(cf, col = cf_col, lwd = 2.5, lty = 2)
+  lines(s$Y[, 1], col = red, lwd = 3)
+  legend(leg, c("Treated", "True Y(0)", cf_lab, "Donors"),
+         col = c(red, amber, cf_col, adjustcolor(grey, 0.5)), lty = c(1, 3, 2, 1), lwd = c(3, 2.5, 2.5, 1), bty = "n")
+}
+hull_panel <- function(s, w, main = "Loadings") {
+  m <- s$mu[-1, ]; lim <- range(s$mu) + c(-.1, .1)
+  plot(m, pch = 16, col = adjustcolor(grey, 0.5), las = 1, xlim = lim, ylim = lim, main = main,
+       xlab = expression(mu[1]), ylab = expression(mu[2]), cex = 1)
+  h <- chull(m); polygon(m[h, ], border = grey, lty = 2)
+  points(m, pch = 1, col = blue, cex = 7 * sqrt(w), lwd = 2)
+  points(s$mu[1, 1], s$mu[1, 2], pch = 8, col = red, cex = 1.8, lwd = 2.5)
+}
+```
+
+```{r}
+#| include: false
+#| cache: true
+# Basque Country: Abadie and Gardeazabal (2003) specification via Synth
+library(Synth)
+data(basque)
+fit_b <- function(tr, ctl) {
+  dp <- dataprep(
+    foo = basque,
+    predictors = c("school.illit", "school.prim", "school.med", "school.high", "school.post.high", "invest"),
+    predictors.op = "mean", time.predictors.prior = 1964:1969,
+    special.predictors = list(
+      list("gdpcap", 1960:1969, "mean"),
+      list("sec.agriculture", seq(1961, 1969, 2), "mean"),
+      list("sec.energy", seq(1961, 1969, 2), "mean"),
+      list("sec.industry", seq(1961, 1969, 2), "mean"),
+      list("sec.construction", seq(1961, 1969, 2), "mean"),
+      list("sec.services.venta", seq(1961, 1969, 2), "mean"),
+      list("sec.services.nonventa", seq(1961, 1969, 2), "mean"),
+      list("popdens", 1969, "mean")),
+    dependent = "gdpcap", unit.variable = "regionno", unit.names.variable = "regionname",
+    time.variable = "year", treatment.identifier = tr, controls.identifier = ctl,
+    time.optimize.ssr = 1960:1969, time.plot = 1955:1997)
+  invisible(capture.output(so <- synth(data.prep.obj = dp, method = "BFGS")))
+  list(dp = dp, so = so)
+}
+gap_of <- function(f) drop(f$dp$Y1plot - f$dp$Y0plot %*% f$so$solution.w)
+yr <- 1955:1997
+rmspe_ratio <- function(g) sqrt(mean(g[yr > 1969]^2)) / sqrt(mean(g[yr <= 1969]^2))
+
+donors <- c(2:16, 18)
+bq <- fit_b(17, donors)
+bq_gap <- gap_of(bq)
+
+# Placebos: every donor treated in turn, Basque Country kept in the pool (as in ADH 2010)
+pl <- lapply(donors, function(d) fit_b(d, setdiff(c(17, donors), d)))
+pl_gap <- sapply(pl, gap_of)
+
+# Leave-one-out for the two positive-weight donors
+loo_cat <- gap_of(fit_b(17, setdiff(donors, 10)))
+loo_mad <- gap_of(fit_b(17, setdiff(donors, 14)))
+```
+
+```{r}
+#| include: false
+reg_names <- basque$regionname[match(donors, basque$regionno)]
+short <- function(x) sub(" \\(.*", "", x)
+bq_w <- setNames(drop(bq$so$solution.w), short(reg_names))
+bq_syn <- drop(bq$dp$Y0plot %*% bq$so$solution.w); bq_y <- drop(bq$dp$Y1plot)
+ratios <- c("Basque" = rmspe_ratio(bq_gap), setNames(apply(pl_gap, 2, rmspe_ratio), short(reg_names)))
+p_bq <- mean(ratios >= ratios["Basque"])
+spain <- basque$gdpcap[basque$regionno == 1]
+gdp60 <- c(basque = mean(bq_y[yr %in% 1960:1969]), spain = mean(spain[yr %in% 1960:1969]))
+```
+
+## Plan for today
+
+When can a weighted combination of untreated units stand in for the counterfactual?
+
+1. Identification: the factor model
+2. Estimation: weights, the convex hull, comparison to DiD
+3. Inference with one treated unit
+4. Failure modes and practice
+5. Many treated units: interactive FEs, matrix completion, SDID
+
+## From DiD
+
+- DiD imputes $Y_{1t}(0)$ from the average donor change
+- Requires parallel trends
+- Imputation (L9): fit $Y(0)$ on untreated cells, predict the rest
+
+. . .
+
+Today: same imputation, weaker restriction on $Y(0)$, one treated unit.
+
+# Block 1: Identification
+
+## One treated unit
+
+- One unit, treated at a known date
+- Several untreated units
+- Target: the **path** of effects for that unit
+
+. . .
+
+Abadie and Gardeazabal (2003): ETA terrorism and Basque GDP. Donors: 16 other Spanish regions.
+
+## Setup
+
+Abadie, Diamond, and Hainmueller (ADH 2010):
+
+- Units $j \in \{1, \dots, J+1\}$, periods $t \in \{1, \dots, T\}$
+- $Y_{jt} = Y_{jt}(0) + D_{jt}\tau_{jt}$
+- Unit 1 treated: $D_{1t} = \mathbf{1}\{t > T_0\}$
+- Donors: $D_{jt} = 0$ for all $t$, $j \geq 2$
+
+. . .
+
+Target, for $t > T_0$:
+
+$$
+\tau_{1t} = Y_{1t} - \underbrace{Y_{1t}(0)}_{\text{unobserved}}
+$$
+
+## Basque Country vs. Spain
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.4
+par(mar = c(4, 4.5, 1, 1), cex = 1.25)
+plot(yr, bq_y, type = "l", col = red, lwd = 3, las = 1, ylim = range(bq_y, spain),
+     xlab = "Year", ylab = "GDP per capita (1986 USD, 000s)")
+lines(yr, spain, col = grey, lwd = 3)
+abline(v = 1969.5, lty = 3)
+legend("topleft", c("Basque Country", "Spain"), col = c(red, grey), lwd = 3, bty = "n")
+```
+
+1960s GDP per capita: `r sprintf("%.2f", gdp60["basque"])` vs. `r sprintf("%.2f", gdp60["spain"])`. Different levels, different structure before ETA.
+
+## Factor model
+
+$$
+Y_{jt}(0) = \delta_t + \theta_t X_j + \lambda_t \mu_j + \varepsilon_{jt}
+$$
+
+- $\delta_t$: common shock
+- $X_j$: observed covariates, $\theta_t$ time-varying coefficients
+- $\lambda_t$: $R$ unobserved common factors
+- $\mu_j$: unobserved loadings
+- $\varepsilon_{jt}$: mean-zero shocks
+
+. . .
+
+$\lambda_t = \lambda$ and $\theta_t = \theta$: unit FE, parallel trends.
+
+Otherwise units load differently on common shocks. Requires $T_0 > R$.
+
+## Parallel trends fails in the simulation
+
+$J = 30$, $T = 40$, $T_0 = 28$, $R = 2$, effect ramps to 3. Treated loadings $(0.55, 0.50)$, not the donor mean.
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.3
+par(mar = c(4, 4.5, 1, 1), cex = 1.25)
+traj_panel(inside, e_in$did, cf_col = green, cf_lab = "DiD")
+```
+
+DiD pre-period RMSE `r sprintf("%.2f", e_in$rmse_did)`. ATT `r sprintf("%.2f", e_in$att_did)`; truth `r sprintf("%.2f", att_true)`.
+
+## Balancing weights
+
+$w = (w_2, \dots, w_{J+1})$, $w_j \geq 0$, $\sum_j w_j = 1$:
+
+$$
+\sum_j w_j Y_{jt} = \delta_t + \theta_t \sum_j w_j X_j + \lambda_t \sum_j w_j \mu_j + \sum_j w_j \varepsilon_{jt}
+$$
+
+. . .
+
+Suppose for all $t \leq T_0$: $\sum_j w_j Y_{jt} = Y_{1t}$ and $\sum_j w_j X_j = X_1$.
+
+- $\delta_t$, $X_j$ cancel
+- $\mu_j$ balance only approximately: the fit is on $Y$, which includes $\varepsilon$
+
+## Bias bound
+
+With exact fit and $T_0 > R$, for $t > T_0$:
+
+$$
+Y_{1t}(0) - \sum_j w_j Y_{jt} = \sum_j w_j \sum_{s=1}^{T_0} \psi_{st} (\varepsilon_{js} - \varepsilon_{1s}) - \sum_j w_j (\varepsilon_{jt} - \varepsilon_{1t})
+$$
+
+$$
+\psi_{st} = \lambda_t \Big( \sum_{n=1}^{T_0} \lambda_n' \lambda_n \Big)^{-1} \lambda_s'
+$$
+
+- First term: vanishes in $T_0$, relative to the scale of $\varepsilon$
+- Second term: mean zero
+- Bound grows with $J$ and $R$ (Abadie 2021)
+
+# Block 2: Estimation
+
+## The estimator
+
+For $t > T_0$:
+
+$$
+\hat\tau_{1t} = Y_{1t} - \sum_j \hat w_j Y_{jt}
+$$
+
+Exact balance requires $(Y_{11}, \dots, Y_{1T_0}, X_1)$ in the convex hull of the donors.
+
+Otherwise minimize imbalance.
+
+## Choosing $w$ and $V$
+
+$\mathbf{X}_1$, $\mathbf{X}_0$: predictors, including summaries of pre-period outcomes.
+
+$$
+\hat w(V) = \arg\min_{w \in \Delta} (\mathbf{X}_1 - \mathbf{X}_0 w)' V (\mathbf{X}_1 - \mathbf{X}_0 w)
+$$
+
+$V$ diagonal, non-negative. Data-driven choices:
+
+- Minimize pre-period outcome MSPE (ADH 2010)
+- Cross-validate on train and validation periods (ADH 2015)
+
+## Inside the hull
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.6
+layout(matrix(1:2, 1), widths = c(2.1, 1))
+par(mar = c(4, 4.5, 2, 1), cex = 1.15)
+traj_panel(inside, e_in$sc, main = "Outcomes")
+hull_panel(inside, e_in$w)
+```
+
+Pre-period RMSE `r sprintf("%.2f", e_in$rmse_sc)`. ATT `r sprintf("%.2f", e_in$att_sc)`; truth `r sprintf("%.2f", att_true)`. Circles: $\hat w_j$, sparse. Star: treated.
+
+## Outside the hull
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.6
+layout(matrix(1:2, 1), widths = c(2.1, 1))
+par(mar = c(4, 4.5, 2, 1), cex = 1.15)
+traj_panel(outside, e_out$sc, main = "Outcomes")
+hull_panel(outside, e_out$w)
+```
+
+Pre-period RMSE `r sprintf("%.2f", e_out$rmse_sc)`. ATT `r sprintf("%.2f", e_out$att_sc)`; truth `r sprintf("%.2f", att_true)`. All weight on `r sum(e_out$w > .01)` donor.
+
+## Synth vs. DiD
+
+| | DiD | Synth |
+|---|---|---|
+| $\hat Y_{1t}(0)$ | $\hat\alpha + \frac{1}{J} \sum_j Y_{jt}$ | $\sum_j \hat w_j Y_{jt}$ |
+| Weights | uniform | convex, data-driven |
+| Intercept | yes | no |
+| $Y(0)$ | parallel trends | interactive FE |
+| Beyond donors | extrapolates (level shift) | interpolates (convex hull) |
+
+Simulation, truth `r sprintf("%.2f", att_true)`:
+
+| | DiD | Synth |
+|---|---|---|
+| Inside the hull | `r sprintf("%.2f", e_in$att_did)` | `r sprintf("%.2f", e_in$att_sc)` |
+| Outside the hull | `r sprintf("%.2f", e_out$att_did)` | `r sprintf("%.2f", e_out$att_sc)` |
+
+## Exercise
+
+$j = 1$ treated at $T_0 = 4$; donors $j = 2, 3, 4$.
+
+| | $t=1$ | $t=2$ | $t=3$ | $t=4$ |
+|---|---|---|---|---|
+| $Y_{1t}$ | 5 | 7 | 6 | 8 |
+| $Y_{2t}$ | 4 | 6 | 5 | 7 |
+| $Y_{3t}$ | 6 | 8 | 7 | 9 |
+| $Y_{4t}$ | 3 | 5 | 8 | 6 |
+
+(a) Write the SC problem for $w$ with all pre-period outcomes as predictors, $V = I$.
+
+(b) If $Y_{1t} = (2, 2, 2, 2)$, does an exact $w$ exist?
+
+(c) Compute synth and DiD estimates of $Y_{1,5}(0)$ when $Y_{2,5} = 8$, $Y_{3,5} = 10$, $Y_{4,5} = 7$. Why do they differ?
+
+::: {.notes}
+(a) min over the simplex of sum_t (Y_1t - sum_j w_j Y_jt)^2.
+Exact solution, unique: w = (1/2, 1/2, 0).
+(b) No. Every donor is at least 3 in every period, so 2 is outside the hull.
+(c) Synth: 0.5(8) + 0.5(10) = 9. DiD: alpha-hat = 6.5 - 6.167 = 0.333; donor mean at t = 5 is 8.333; DiD = 8.667. DiD gives unit 4 weight 1/3 even though its pre-period path differs.
+:::
+
+## Basque Country: fit and gap
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.5
+par(mfrow = c(1, 2), mar = c(4, 4.5, 2, 1), cex = 1.15)
+plot(yr, bq_y, type = "l", col = red, lwd = 3, las = 1, main = "GDP per capita",
+     ylim = range(bq_y, bq_syn), xlab = "Year", ylab = "1986 USD, 000s")
+lines(yr, bq_syn, col = blue, lwd = 3, lty = 2); abline(v = 1969.5, lty = 3)
+legend("topleft", c("Basque Country", "Synthetic"), col = c(red, blue), lwd = 3, lty = 1:2, bty = "n")
+plot(yr, bq_gap, type = "l", col = red, lwd = 3, las = 1, main = "Gap", xlab = "Year", ylab = "Actual - synthetic")
+abline(h = 0, col = grey); abline(v = 1969.5, lty = 3)
+```
+
+Mean post-1969 gap: `r sprintf("%.2f", mean(bq_gap[yr > 1969]))`, `r sprintf("%.1f", 100 * mean(bq_gap[yr > 1969]) / mean(bq_syn[yr > 1969]))`% of synthetic GDP.
+
+## Basque Country: weights and balance
+
+::: {.columns}
+::: {.column width="35%"}
+```{r}
+nz <- bq_w[bq_w > .001]
+knitr::kable(data.frame(Region = names(nz), Weight = sprintf("%.4f", nz)), row.names = FALSE, align = "lr")
+```
+
+Other 14 regions: 0.
+:::
+::: {.column width="65%"}
+```{r}
+rn <- c(special.gdpcap.1960.1969 = "GDP per capita",
+        invest = "Investment ratio",
+        special.sec.agriculture.1961.1969 = "Agriculture",
+        special.sec.energy.1961.1969 = "Energy and water",
+        special.sec.industry.1961.1969 = "Industry",
+        special.sec.construction.1961.1969 = "Construction",
+        special.sec.services.venta.1961.1969 = "Marketable services",
+        special.sec.services.nonventa.1961.1969 = "Non-marketable services",
+        special.popdens.1969 = "Population density")
+X1 <- drop(bq$dp$X1)[names(rn)]
+Xs <- drop(bq$dp$X0 %*% bq$so$solution.w); names(Xs) <- rownames(bq$dp$X0); Xs <- Xs[names(rn)]
+Xm <- rowMeans(bq$dp$X0)[names(rn)]
+knitr::kable(data.frame(Predictor = rn, Basque = sprintf("%.2f", X1), Synthetic = sprintf("%.2f", Xs), `Donor mean` = sprintf("%.2f", Xm), check.names = FALSE),
+             row.names = FALSE, align = "lrrr")
+```
+:::
+:::
+
+Schooling predictors omitted from the table.
+
+# Block 3: Inference
+
+## The problem
+
+- Trends treated as fixed
+- Uncertainty: error in the approximation of $Y_{1t}(0)$
+- $N_1 = 1$: no averaging over treated units
+
+## Placebo test
+
+ADH (2010): apply SC to each donor as if treated.
+
+$$
+r_j = \frac{\text{RMSPE}_j(T_0 + 1, \dots, T)}{\text{RMSPE}_j(1, \dots, T_0)}, \qquad
+p = \frac{1}{J+1} \sum_{j=1}^{J+1} \mathbf{1}\{r_j \geq r_1\}
+$$
+
+- Exact under exchangeable assignment
+- Minimum $p$: $1/(J+1)$
+
+## Placebos: Basque Country
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.5
+layout(matrix(1:2, 1), widths = c(1.5, 1))
+par(mar = c(4, 4.5, 2, 1), cex = 1.1)
+matplot(yr, pl_gap, type = "l", lty = 1, col = adjustcolor(grey, 0.4), las = 1, main = "Gaps",
+        xlab = "Year", ylab = "Actual - synthetic", ylim = range(pl_gap, bq_gap))
+lines(yr, bq_gap, col = red, lwd = 3); abline(h = 0, col = grey); abline(v = 1969.5, lty = 3)
+o <- sort(ratios)
+par(mar = c(4, 9, 2, 1))
+plot(o, seq_along(o), pch = 19, col = ifelse(names(o) == "Basque", red, grey), yaxt = "n", ylab = "",
+     xlab = "Post/pre RMSPE", main = "Ratios", xlim = c(0, max(o)))
+axis(2, at = seq_along(o), labels = names(o), las = 1, cex.axis = 0.7)
+```
+
+$p =$ `r sprintf("%.2f", p_bq)`. Minimum possible: $1/17 \approx$ `r sprintf("%.3f", 1/17)`. Basque Country stays in each placebo pool, as in ADH.
+
+## Hahn and Shi (2017)
+
+- Permutation validity requires symmetry
+- Repeated-sampling view: symmetry generally fails; size distorted (Monte Carlo)
+- Randomization view (Abadie): symmetry built in by assumption
+
+. . .
+
+What is the $p$-value about: assignment, or sampling?
+
+## Firpo and Possebom (2018)
+
+- Placebo test: uniform assignment across units
+- Parametric family of assignment probabilities; uniform is a special case
+- Sensitivity of the decision to departures from uniform
+
+## Conformal: Chernozhukov, Wüthrich, and Zhu (2021)
+
+Under the sharp null $\tau_{1t} = 0$: fit on **all** periods, residuals $\hat u_t = Y_{1t} - \hat Y_{1t}(0)$.
+
+$$
+S_q(\hat u) = \Big( \frac{1}{\sqrt{T - T_0}} \sum_{t > T_0} |\hat u_t|^q \Big)^{1/q}
+$$
+
+- $q = \infty$: large transient effects; $q = 1, 2$: persistent effects
+- iid permutations: exact under exchangeability of $\{u_t\}$
+- Moving blocks: stationarity and weak dependence
+- Works with DiD, SC, constrained Lasso, factor models, matrix completion
+- CIs by test inversion
+- Ignores weight estimation error (Cattaneo et al. 2021)
+
+## Inference: summary
+
+All need the factor model (or similar) for the estimator itself.
+
+| Method | Additional assumption |
+|---|---|
+| Placebo (ADH 2010) | Exchangeable assignment |
+| Conformal (Chernozhukov et al. 2021) | Stationary/exchangeable shocks |
+| Prediction intervals (Cattaneo et al. 2021) | Moment conditions on estimation and shock errors |
+| Subsampling (Li 2020) | Long panel |
+
+# Block 4: Failure modes and practice
+
+## Dormant factors
+
+Hollingsworth and Wing (2022): factors collinear before $T_0$, distinct after. Treated $\mu = (1, 0)$.
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.3
+par(mfrow = c(1, 2), mar = c(4, 4.5, 2, 1), cex = 1.15)
+matplot(F_dorm, type = "l", lty = c(1, 2), lwd = 3, col = c(blue, amber), las = 1, main = "Factors",
+        xlab = "Period", ylab = expression(lambda[t]))
+abline(v = T0 + .5, lty = 3)
+legend("bottomleft", c(expression(lambda[1]), expression(lambda[2])), col = c(blue, amber), lty = 1:2, lwd = 3, bty = "n")
+traj_panel(dormant, e_dorm$sc, main = "Outcomes")
+```
+
+Pre-period RMSE `r sprintf("%.2f", e_dorm$rmse_sc)`. Weighted loadings $(`r sprintf("%.2f", mu_dorm[1])`, `r sprintf("%.2f", mu_dorm[2])`)$. ATT `r sprintf("%.2f", e_dorm$att_sc)`; truth `r sprintf("%.2f", att_true)`.
+
+## Imperfect fit
+
+Ferman and Pinto (2021). Without exact fit, $\hat w$ trades off:
+
+- Matching loadings
+- Minimizing variance of weighted shocks
+
+. . .
+
+- $\hat w$ does not recover the loadings, even as $T_0 \to \infty$
+- Biased if assignment is correlated with the factors
+
+. . .
+
+Demeaned SC (add an intercept):
+
+- Can improve on DiD in bias and variance
+- Still biased under selection on time-varying factors
+
+## Non-unique $W$
+
+Abadie and L'Hour (2021):
+
+- Inside the hull: many $w$ with the same fit
+- Different $w$, different post-period estimates
+- Near the boundary: corner solution, few donors
+
+## Unstable $V$
+
+Kuosmanen, Zhou, Eskelinen, and Malo (2021): Basque application, three algorithms.
+
+| | Synth | MSCMT | Global optimum |
+|---|---|---|---|
+| $w$: Catalonia | 0.851 | 0.633 | 0 |
+| $w$: Madrid | 0.149 | 0.148 | 0.441 |
+| $w$: Baleares | 0 | 0.219 | 0.370 |
+| $w$: La Rioja | 0 | 0 | 0.190 |
+| $v$: GDP per capita | 0.201 | 0.999 | 1 |
+| Pre-period $R^2$ | 0.969 | 0.985 | 0.985 |
+
+- Bilevel problem; `Synth` numerically unstable
+- Optimum typically a corner: all $V$ on one predictor
+- Other predictors then irrelevant
+
+## Donor pool and covariates
+
+Abadie (2021):
+
+- Exclude units with similar interventions or large idiosyncratic shocks
+- Small, curated pool over large, heterogeneous one
+
+Covariates:
+
+- Omitted $X_j$ go into $\mu_j$: more factors, larger bound
+
+Multiple outcomes:
+
+- Reduce overfitting (Sun, Ben-Michael, and Feller 2025)
+
+## Diagnostics
+
+```{r}
+#| fig-width: 11
+#| fig-height: 3.9
+par(mfrow = c(1, 2), mar = c(4, 4.5, 2, 1), cex = 1.15)
+plot(yr, bq_gap, type = "l", col = red, lwd = 3, las = 1, main = "Leave-one-out: Basque Country",
+     ylim = range(bq_gap, loo_cat, loo_mad), xlab = "Year", ylab = "Gap")
+lines(yr, loo_cat, col = blue, lwd = 2.5, lty = 2); lines(yr, loo_mad, col = amber, lwd = 2.5, lty = 3)
+abline(h = 0, col = grey); abline(v = 1969.5, lty = 3)
+legend("bottomleft", c("All donors", "Drop Catalonia", "Drop Madrid"), col = c(red, blue, amber), lty = 1:3, lwd = 2.5, bty = "n")
+plot(gap_bd, type = "l", col = red, lwd = 3, las = 1, main = "Backdating: simulation", xlab = "Period", ylab = "Gap")
+abline(h = 0, col = grey); abline(v = fake + .5, lty = 2, col = blue); abline(v = T0 + .5, lty = 3)
+text(fake + .5, max(gap_bd), "fake T0", col = blue, pos = 2)
+```
+
+- Report weights, predictor balance, pre-period gap
+- Vary $V$ and the donor pool
+- Effect large relative to outcome volatility (Abadie and Vives-i-Bastida 2022)
+
+Mean gap: `r sprintf("%.2f", mean(bq_gap[yr > 1969]))`; drop Catalonia `r sprintf("%.2f", mean(loo_cat[yr > 1969]))`; drop Madrid `r sprintf("%.2f", mean(loo_mad[yr > 1969]))`.
+
+## Augmented SCM
+
+Ben-Michael, Feller, and Rothstein (2021). Bias correction, as in matching (L3):
+
+$$
+\hat Y_{1T}^{\text{aug}}(0) = \sum_j \hat w_j Y_{jT} + \Big( \hat m_{1T} - \sum_j \hat w_j \hat m_{jT} \Big)
+$$
+
+$\hat m$: outcome model on pre-period outcomes. Ridge ASCM:
+
+$$
+\hat w_j^{\text{aug}} = \hat w_j + (X_1 - X_0' \hat w)' (X_0' X_0 + \kappa I)^{-1} X_j
+$$
+
+- $X_j$ centered; $\kappa$ sets the extrapolation
+- Negative weights allowed
+- Good fit: $\hat m$ correction small, ASCM $\approx$ SCM
+
+## Ridge ASCM outside the hull
+
+```{r}
+#| fig-width: 11
+#| fig-height: 4.5
+layout(matrix(1:2, 1), widths = c(2.1, 1))
+par(mar = c(4, 4.5, 2, 1), cex = 1.15)
+traj_panel(outside, asc, cf_col = green, cf_lab = "Ridge ASCM", main = "Outcomes")
+plot(sort(w_asc), pch = 19, col = ifelse(sort(w_asc) < 0, red, blue), las = 1, main = "ASCM weights",
+     xlab = "Donor (sorted)", ylab = "Weight")
+abline(h = 0, col = grey)
+```
+
+| | Pre-period RMSE | ATT |
+|---|---|---|
+| SCM | `r sprintf("%.2f", e_out$rmse_sc)` | `r sprintf("%.2f", e_out$att_sc)` |
+| Ridge ASCM | `r sprintf("%.2f", rmse_asc)` | `r sprintf("%.2f", att_asc)` |
+| Truth | | `r sprintf("%.2f", att_true)` |
+
+# Block 5: Many treated units
+
+## Matrix view
+
+$$
+Y(0) = \begin{pmatrix} Y_{co,pre}(0) & Y_{co,post}(0) \\ Y_{tr,pre}(0) & \textbf{?} \end{pmatrix}
+$$
+
+$$
+\text{ATT} = \frac{1}{N_1} \sum_{it: D_{it} = 1} \big( Y_{it} - \hat Y_{it}(0) \big)
+$$
+
+Fit on untreated cells, impute **?**, average (L9). Methods differ in the model for $\hat Y_{it}(0)$.
+
+## Interactive FE: Xu (2017)
+
+$$
+Y_{it}(0) = X_{it}' \beta + \alpha_i + \xi_t + \mu_i' \lambda_t + \varepsilon_{it}
+$$
+
+Generalized synthetic control:
+
+1. Estimate $\hat\beta, \hat\lambda_t, \hat\mu_{co}$ on controls (Bai 2009)
+2. Estimate $\hat\mu_i$ for treated units on pre-period outcomes
+3. Impute
+
+- $R$ by cross-validation
+- Consistent as $N_{co}, T_0 \to \infty$; suggested $N_{co} \geq 40$, $T_0 \geq 10$
+- Strict exogeneity of $X_{it}$
+
+## Matrix completion: Athey et al. (2021)
+
+Same factor structure, $L$ low rank:
+
+$$
+\hat L = \arg\min_L \frac{1}{|\mathcal{O}|} \| P_{\mathcal{O}}(Y - L) \|_F^2 + \kappa \|L\|_*
+$$
+
+- $\|L\|_*$: sum of singular values
+- Soft-thresholds rank, no fixed $R$; $\kappa$ by cross-validation
+
+. . .
+
+$$
+\begin{pmatrix} 1 & ? \\ 4 & 8 \\ 3 & 6 \end{pmatrix}
+\quad \Rightarrow \quad
+\begin{pmatrix} 1 & 2 \\ 4 & 8 \\ 3 & 6 \end{pmatrix}
+= (1, 4, 3)' (1, 2)
+$$
+
+## One objective
+
+Athey et al. (2021):
+
+$$
+\min \frac{1}{|\mathcal{O}|} \big\| P_{\mathcal{O}}\big( Y - AB' - \alpha 1_T' - 1_N \xi' \big) \big\|_F^2
+$$
+
+| Method | Restriction |
+|---|---|
+| DiD | $AB' = 0$ |
+| Synthetic control | $A$: non-negative columns summing to 1 |
+| Interactive FE | Fixed rank $R$ |
+| Matrix completion | Penalty $\kappa \| AB' \|_*$ |
+
+## Exercise
+
+Units 3 and 4 treated from $t = 3$:
+
+$$
+Y(0) = \begin{pmatrix} 1 & 2 & 4 \\ 2 & 4 & 8 \\ 3 & 6 & ? \\ 1 & 2 & ? \end{pmatrix}
+$$
+
+(a) Does $Y_{it}(0) = \alpha_i + \xi_t$ fit the observed cells?
+
+(b) Does $Y_{it}(0) = \mu_i \lambda_t$? If so, impute.
+
+(c) What does this imply for TWFE vs. interactive FE?
+
+::: {.notes}
+(a) No. Changes t=1 to t=2 are 1, 2, 3, 1: not parallel.
+(b) Yes. mu = (1, 2, 3, 1), lambda = (1, 2, 4). Missing entries: 12 and 4.
+(c) TWFE would impute from additive changes; the factor model fits exactly. Fit on the untreated cells can discriminate.
+:::
+
+## SCM with staggered adoption
+
+Ben-Michael, Feller, and Rothstein (2022). Treated unit $j$, imbalance $q_j$:
+
+- $q^{sep}$: root mean of $q_j^2$
+- $q^{pool}$: imbalance of the average pre-period gap
+
+$$
+\min_{\Gamma} \; \nu (\tilde q^{pool})^2 + (1 - \nu)(\tilde q^{sep})^2 + \kappa \|\Gamma\|_F^2
+$$
+
+- $\nu = 0$: separate; $\nu = 1$: pooled
+- With intercept: weighted DiD
+
+## Synthetic DiD: Arkhangelsky et al. (2021)
+
+$$
+\hat\tau^{sdid} = \arg\min_{\tau, \alpha, \xi, m} \sum_{i, t} (Y_{it} - m - \alpha_i - \xi_t - D_{it} \tau)^2 \, \hat\omega_i \hat\phi_t
+$$
+
+| | $\alpha_i$ | Unit weights | Time weights |
+|---|---|---|---|
+| DiD | yes | uniform | uniform |
+| SC | no | $\hat\omega_i$ | none |
+| SDID | yes | $\hat\omega_i$ | $\hat\phi_t$ |
+
+- $\hat\omega_i$: regularized toward uniform
+- $\hat\phi_t$: pre-periods that predict the post-period among controls
+- Either set removes bias: approximately unbiased
+- Inference: placebo, jackknife, block bootstrap
+
+## Which method
+
+| | Short $T_{pre}$ | Long $T_{pre}$ |
+|---|---|---|
+| **Many $N_{co}$** | TWFE imputation | Matrix completion, SDID |
+| **Few $N_{co}$** | SDID or TWFE imputation; hard for all | GSC, SCM-based |
+
+- Short $T_{pre}$ and interactive FE: incidental parameters
+- Hold-out test: hide untreated periods, predict them (Liu, Wang, and Xu 2024)
+- `fect`, `gsynth`, `augsynth`, `synthdid`
+
+## Summary
+
+- SC: weights balancing a factor model in pre-period outcomes
+- Good fit is necessary, not sufficient (dormant factors)
+- Outside the hull: SC fails; augmentation extrapolates
+- Inference: placebos, conformal, intervals. One treated unit, strong assumptions
+- Many units: same imputation, different $Y(0)$ models
+
+## References (1/2)
+
+::: {.columns}
+::: {.column width="50%"}
+- Abadie (2021), *JEL*
+- Abadie, Diamond, Hainmueller (2010), *JASA*
+- Abadie, Diamond, Hainmueller (2015), *AJPS*
+- Abadie and Gardeazabal (2003), *AER*
+- Abadie and L'Hour (2021), *JASA*
+- Abadie and Vives-i-Bastida (2022), "Synthetic Controls in Action," arXiv:2203.06279
+- Arkhangelsky, Athey, Hirshberg, Imbens, Wager (2021), *AER*
+- Athey, Bayati, Doudchenko, Imbens, Khosravi (2021), *JASA*
+:::
+::: {.column width="50%"}
+- Bai (2009), *Econometrica*
+- Becker and Klößner (2018), *Econometrics and Statistics*
+- Ben-Michael, Feller, Rothstein (2021), *JASA*
+- Ben-Michael, Feller, Rothstein (2022), *JRSS-B*
+- Cattaneo, Feng, Titiunik (2021), *JASA*
+- Chernozhukov, Wüthrich, Zhu (2021), *JASA*
+- Ferman and Pinto (2021), *Quantitative Economics*
+:::
+:::
+
+## References (2/2)
+
+::: {.columns}
+::: {.column width="50%"}
+- Firpo and Possebom (2018), *Journal of Causal Inference*
+- Hahn and Shi (2017), *Econometrics*
+- Hollingsworth and Wing (2022), "Tactics for Design and Inference in Synthetic Control Studies," working paper
+- Kuosmanen, Zhou, Eskelinen, Malo (2021), "Design Flaw of the Synthetic Control Method," MPRA 106390
+:::
+::: {.column width="50%"}
+- Li (2020), *JASA*
+- Liu, Wang, Xu (2024), *AJPS*
+- Sun, Ben-Michael, Feller (2025), "Using Multiple Outcomes to Improve the Synthetic Control Method," *REStat*
+- Xu (2017), *Political Analysis*
+:::
+:::
