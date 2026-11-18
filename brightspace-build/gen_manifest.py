@@ -116,6 +116,10 @@ WEEK_MATERIALS = {
          "Lectures/lecture3/lecture03_matching_weighting_overlap.html")],
     7: [("Problem Set 2B: Partial Identification (due Oct 21)",
          "Psets/PS2B/PS2B_partial_identification_AGG2010.html")],
+    13: [("Lecture 12: Causal Design Workshop",
+          "Lectures/lecture12/lecture12_design_workshop.html"),
+         ("Problem Set 3: Panel and Discontinuity Designs (due Dec 9)",
+          "Psets/PS3/PS3_panel_discontinuity_designs.html")],
 }
 
 

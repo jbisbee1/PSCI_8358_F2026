@@ -1,0 +1,243 @@
+---
+title: "Problem Set 3: Panel and Discontinuity Designs"
+author: "Advanced Observational Causal Inference"
+date: ""
+output:
+  html_document:
+    toc: false
+    number_sections: false
+header-includes:
+  - |
+    <style>
+    body { font-family: sans-serif; line-height: 1.5; }
+    h1, h2, h3 { margin-top: 1.4em; }
+    table { width: auto; }
+    </style>
+---
+
+# Problem Set 3: Panel and Discontinuity Designs
+
+**Assigned:** November 18. **Due:** December 9.
+
+## Purpose
+
+Since Problem Set 2B we have studied three designs that do not rely on measuring every confounder: difference-in-differences, synthetic control, and regression discontinuity. Each replaces "we observed everything that matters" with a different claim about the data-generating process. DiD claims that untreated trends would have been parallel. Synthetic control claims that a weighted combination of untreated units tracks the treated unit's counterfactual path. RD claims that potential outcomes are continuous at a threshold.
+
+This problem set is **dealer's choice**. It contains three parts, one for each design, each built on a published application. **Choose one part and complete it.** Each part follows the same structure: reproduce a central result, name the estimand, run the diagnostics that bear on that design's key assumption, carry out one reanalysis, and state what the evidence supports.
+
+The central methodological question is:
+
+> **What counterfactual does your design construct, and what would have to be true for that counterfactual to be right?**
+
+## Choosing a part
+
+Each part is worth 100 points and is graded on the same scale. No part is easier than the others. Pick the design you most want to learn, or the one closest to the study you plan to use for your causal audit.
+
+State at the top of your submission which part you chose. Answer only that part. You will not receive extra credit for answering more than one.
+
+## Applications
+
+| Part | Design | Application | Data |
+|---|---|---|---|
+| I | Staggered difference-in-differences | Cheng and Hoekstra (2013), castle-doctrine laws and homicide | `castle` in the `bacondecomp` package |
+| II | Synthetic control | Abadie, Diamond, and Hainmueller (2010), California's Proposition 99 and cigarette sales | `smoking` in the `tidysynth` package |
+| III | Regression discontinuity | Cattaneo, Frandsen, and Titiunik (2015), party incumbency advantage in the U.S. Senate | `rdrobust_RDsenate` in the `rdrobust` package |
+
+All three datasets ship with R packages on CRAN. No external downloads are required.
+
+## Data and software
+
+All empirical work should be conducted in **R** and submitted as a reproducible R Markdown or Quarto document.
+
+You will probably want the following packages. You may substitute others if you explain what they implement.
+
+- **Part I:** `fixest`, `bacondecomp`, `did` (Callaway–Sant'Anna). Optional: `HonestDiD`.
+- **Part II:** `tidysynth` or `Synth`. Optional: `augsynth` (installed from GitHub, not CRAN).
+- **Part III:** `rdrobust`, `rddensity`. Optional: `rdlocrand`.
+
+## General submission requirements
+
+Your submission should contain publication-quality tables and figures. Do not paste raw console output into the assignment.
+
+For each result, explain what the quantity represents and why it bears on the causal question. A correct numerical result without an explanation of its causal interpretation will receive limited credit.
+
+Keep each written answer short. Most questions can be answered well in one or two paragraphs. Length will not be rewarded; precision will.
+
+You may use AI tools for coding assistance, debugging, and consultation, but you remain responsible for every line of code, statistical result, and causal claim in your submission. Be prepared to explain your analysis without relying on the AI system that helped produce it. Disclose substantive AI use.
+
+---
+
+# Part I. Staggered difference-in-differences: castle-doctrine laws
+
+Between 2005 and 2009, more than twenty U.S. states adopted "castle doctrine" or "stand your ground" laws, which expanded the circumstances in which lethal force may be used in self-defense. Cheng and Hoekstra (2013) use the staggered timing of adoption to estimate the effect of these laws on homicide.
+
+The `castle` data are a state-by-year panel for 2000–2010. The outcome is `l_homicide`, the log homicide rate. The treatment indicator is `post`. The adoption year is `effyear`, which is missing for never-treated states. `population` is the state population.
+
+### I.1. Reproduce the headline estimate. [10 points]
+
+Estimate a two-way fixed-effects regression of `l_homicide` on `post` with state and year fixed effects, weighting by `population` and clustering standard errors by state.
+
+Report the coefficient and its standard error. Translate the coefficient into an approximate percentage change in the homicide rate, and state in one sentence what the authors conclude from it.
+
+### I.2. Name the estimand and the assumption. [15 points]
+
+Write down, in potential-outcomes notation, the causal quantity a researcher using this design would most plausibly want: an average effect of the law among adopting states in the years after adoption.
+
+State the parallel-trends assumption that would identify it. Be explicit about which potential outcome the assumption concerns, which units it compares, and over which periods. Then state the no-anticipation assumption and give one substantive reason it might fail in this application.
+
+### I.3. What comparisons does TWFE make? [20 points]
+
+Compute the Goodman-Bacon (2021) decomposition of the unweighted TWFE estimate. Report the weight and average estimate for each comparison type: treated versus never-treated, earlier- versus later-treated, and later- versus earlier-treated.
+
+Explain why the "later versus earlier" comparisons are a problem when treatment effects change over time since adoption. State how much of the weight falls on them in this application and whether that weight is large enough to worry about.
+
+### I.4. Re-estimate with a heterogeneity-robust estimator. [20 points]
+
+Estimate group-time average treatment effects using Callaway and Sant'Anna (2021), with never-treated states as the comparison group. (The `did` package expects never-treated units to have a group value of 0, not `NA`.)
+
+Report:
+
+- the overall aggregated ATT;
+- an event-study aggregation, shown as a figure with pre-treatment and post-treatment coefficients.
+
+Compare the overall ATT with your TWFE estimate from Question I.1. If they differ, use your answer to Question I.3 to explain why.
+
+### I.5. Assess parallel trends. [20 points]
+
+Interpret the pre-treatment coefficients in your event-study figure. What do they tell you about parallel trends, and what do they *not* tell you?
+
+Your answer should engage with Roth, Sant'Anna, Bilinski, and Poe (2023). In particular, explain why failing to reject zero pre-trends is weak evidence for parallel trends in a panel with only a few pre-periods for the late adopters.
+
+*Optional:* use `HonestDiD` (Rambachan and Roth 2023) to report how large a violation of parallel trends would have to be to overturn the conclusion.
+
+### I.6. Causal assessment. [15 points]
+
+In no more than three paragraphs, state the strongest causal conclusion about castle-doctrine laws and homicide that you believe this evidence supports. Your assessment should address:
+
+1. the estimand your conclusion applies to;
+2. the threat to identification your diagnostics could *not* address;
+3. what the reported standard errors are meant to capture, given that the 50 states are the whole population rather than a sample (Rambachan and Roth 2025).
+
+---
+
+# Part II. Synthetic control: California's Proposition 99
+
+In 1988 California passed Proposition 99, which raised the cigarette tax by 25 cents per pack and funded anti-smoking programs. Abadie, Diamond, and Hainmueller (2010) estimate its effect on per-capita cigarette sales by building a synthetic California from 38 states that did not adopt comparable programs.
+
+The `smoking` data are a state-by-year panel for 1970–2000. The outcome is `cigsale`, per-capita cigarette sales in packs. Treatment begins in 1989.
+
+### II.1. Reproduce the synthetic control. [20 points]
+
+Construct a synthetic California using the predictors in Abadie, Diamond, and Hainmueller (2010): average log income, retail price, share of the population aged 15–24, and beer consumption over the late pre-treatment period, plus lagged cigarette sales in 1975, 1980, and 1988.
+
+Report:
+
+- a figure of California and synthetic California from 1970 to 2000;
+- the donor weights, showing which states receive non-trivial weight;
+- the pre-treatment root mean squared prediction error;
+- the estimated gap in 2000.
+
+### II.2. Name the estimand and the assumption. [15 points]
+
+State the causal quantity the gap in year $t$ estimates. Note what is unusual about it compared with most designs in this course: it is an effect for a *single* treated unit, not an average over units.
+
+Then state the condition under which a good pre-treatment fit is informative about the post-treatment counterfactual. Your answer should explain why fit on pre-treatment outcomes is evidence against confounding from slow-moving unobservables, and why it is not proof.
+
+### II.3. Placebo inference. [25 points]
+
+Re-run the synthetic control treating each donor state as if it had been treated in 1989. Plot all placebo gaps alongside California's.
+
+Following the paper, report the rank of California's ratio of post- to pre-treatment RMSPE among all states, and the implied permutation p-value. Explain what the p-value is a probability *of*. Specifically, explain what is being treated as random, and whether that is a plausible description of how California came to adopt Proposition 99. Connect your answer to Rambachan and Roth (2025).
+
+### II.4. Reanalysis: sensitivity to the donor pool. [25 points]
+
+Choose **one** of the following and report how the estimated effect changes:
+
+1. **Leave-one-out.** Drop each state with positive weight from the donor pool in turn and re-estimate.
+2. **Augmented synthetic control.** Estimate the effect using Ben-Michael, Feller, and Rothstein (2021) and compare it with the original estimate. Explain what the outcome model corrects for.
+3. **Outcome-only predictors.** Re-estimate using only pre-treatment outcomes as predictors, and explain what changes in how the weights are chosen.
+
+State whether the substantive conclusion survives your reanalysis, and which choice in the original analysis you now think is doing the most work.
+
+### II.5. Causal assessment. [15 points]
+
+In no more than three paragraphs, state the strongest causal conclusion about Proposition 99 that you believe this evidence supports. Your assessment should address:
+
+1. the estimand your conclusion applies to, and whether it tells you anything about what a similar policy would do in another state;
+2. the threat to identification that neither pre-treatment fit nor placebo inference can address;
+3. what an effect estimated from a single treated unit can and cannot establish.
+
+---
+
+# Part III. Regression discontinuity: Senate incumbency advantage
+
+Does winning a U.S. Senate seat help a party hold that seat at the next election? Cattaneo, Frandsen, and Titiunik (2015) compare elections the Democratic candidate barely won with elections the Democratic candidate barely lost.
+
+In `rdrobust_RDsenate`, the running variable is `margin`, the Democratic margin of victory at election $t$. The outcome is `vote`, the Democratic vote share in the election for the same seat six years later. The cutoff is zero.
+
+### III.1. Reproduce the headline estimate. [15 points]
+
+Estimate the RD effect of a Democratic win on the Democratic vote share six years later using local-linear regression, a triangular kernel, an MSE-optimal bandwidth, and robust bias-corrected inference.
+
+Report the point estimate, the bandwidth, the effective number of observations on each side of the cutoff, and the robust 95 percent confidence interval. Present an RD plot with binned means and fitted polynomials on each side.
+
+### III.2. Name the estimand and the assumption. [15 points]
+
+State the estimand in potential-outcomes notation. Explain why it is a *local* effect, and describe the population of elections it applies to.
+
+State the continuity assumption that identifies it. Then explain in plain language why being just above versus just below a zero margin might approximate random assignment, and what would have to be true about close elections for that intuition to fail.
+
+### III.3. Diagnostics. [30 points]
+
+Conduct the following and present the results compactly, in one table and at most two figures:
+
+1. **Manipulation.** A density test of the running variable at the cutoff (Cattaneo, Jansson, and Ma's `rddensity`).
+2. **Covariate continuity.** RD estimates, using the same procedure as Question III.1, for pre-determined covariates. At minimum use the Democratic vote share in the previous election for the seat (`demvoteshlag1`), the Democratic presidential vote share (`presdemvoteshlag1`), and whether the seat was open (`dopen`).
+3. **Placebo cutoffs.** RD estimates at several false cutoffs on each side of zero, using only observations on one side of the true cutoff.
+4. **Bandwidth sensitivity.** Point estimates and robust confidence intervals across a range of bandwidths, from half to double the MSE-optimal bandwidth.
+
+For each diagnostic, state what a failure would indicate about the identifying assumption. Diagnostics 1 and 2 test implications of the design; 3 and 4 probe the estimation. Explain the difference.
+
+### III.4. Reanalysis. [20 points]
+
+Choose **one** of the following:
+
+1. **Donut RD.** Exclude elections within a small window around the cutoff (for example, $|\text{margin}| < 0.5$ and $< 1$) and re-estimate. Explain what concern a donut design addresses and why it is not obviously relevant in this application.
+2. **Local randomization.** Following Cattaneo, Frandsen, and Titiunik (2015), choose a small window in which treatment can be treated as if randomly assigned, justify the window using covariate balance, and estimate the effect by a difference in means with randomization inference. Compare the estimand and result with Question III.1.
+3. **Power and reliability.** Following Stommes, Aronow, and Sävje (2023), compute the minimum effect size this design could detect with 80 percent power at the effective sample size from Question III.1. Discuss what that implies for how a *null* result from this design should be read.
+
+### III.5. Causal assessment. [20 points]
+
+In no more than three paragraphs, state the strongest causal conclusion about party incumbency advantage in the Senate that you believe this evidence supports. Your assessment should address:
+
+1. the population of elections your conclusion applies to, and what additional assumption you would need to say anything about races decided by 10 points;
+2. the diagnostic result that most worries you, and why;
+3. what source of randomness the robust confidence interval is meant to capture, and whether that is plausible here (Rambachan and Roth 2025).
+
+---
+
+# References
+
+Abadie, Alberto, Alexis Diamond, and Jens Hainmueller. 2010. "Synthetic Control Methods for Comparative Case Studies: Estimating the Effect of California's Tobacco Control Program." *Journal of the American Statistical Association*.
+
+Ben-Michael, Eli, Avi Feller, and Jesse Rothstein. 2021. "The Augmented Synthetic Control Method." *Journal of the American Statistical Association*.
+
+Callaway, Brantly, and Pedro H. C. Sant'Anna. 2021. "Difference-in-Differences with Multiple Time Periods." *Journal of Econometrics*.
+
+Cattaneo, Matias D., Brigham R. Frandsen, and Rocío Titiunik. 2015. "Randomization Inference in the Regression Discontinuity Design: An Application to Party Advantages in the U.S. Senate." *Journal of Causal Inference*.
+
+Cattaneo, Matias D., Nicolás Idrobo, and Rocío Titiunik. 2019. *A Practical Introduction to Regression Discontinuity Designs: Foundations*. Cambridge University Press.
+
+Cattaneo, Matias D., Michael Jansson, and Xinwei Ma. 2020. "Simple Local Polynomial Density Estimators." *Journal of the American Statistical Association*.
+
+Cheng, Cheng, and Mark Hoekstra. 2013. "Does Strengthening Self-Defense Law Deter Crime or Escalate Violence? Evidence from Expansions to Castle Doctrine." *Journal of Human Resources*.
+
+Goodman-Bacon, Andrew. 2021. "Difference-in-Differences with Variation in Treatment Timing." *Journal of Econometrics*.
+
+Rambachan, Ashesh, and Jonathan Roth. 2023. "A More Credible Approach to Parallel Trends." *Review of Economic Studies*.
+
+Rambachan, Ashesh, and Jonathan Roth. 2025. "Design-Based Uncertainty for Quasi-Experiments." *Journal of the American Statistical Association*.
+
+Roth, Jonathan, Pedro H. C. Sant'Anna, Alyssa Bilinski, and John Poe. 2023. "What's Trending in Difference-in-Differences? A Synthesis of the Recent Econometrics Literature." *Journal of Econometrics*.
+
+Stommes, Drew, P. M. Aronow, and Fredrik Sävje. 2023. "On the Reliability of Published Findings Using the Regression Discontinuity Design in Political Science." *Research & Politics*.

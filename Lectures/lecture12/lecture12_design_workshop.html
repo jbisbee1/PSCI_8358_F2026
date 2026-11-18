@@ -1,0 +1,1305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Causal Design Workshop</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one column, a scrolling tab row, one scenario panel at a time.
+   Diagnostics are revealed one button at a time; jimbo's notes sit behind a switch. */
+:root {
+  --bg: #F5F6F8; --surface: #FFFFFF; --ink: #18202C; --muted: #566274; --line: #D9DEE6;
+  --accent: #1E5F74; --accent-ink: #FFFFFF;
+  --note-bg: #FBF3DC; --note-line: #E1C97A; --note-ink: #4A3A0A;
+  --c1: #1E6F8C; --c2: #C2571A; --c3: #8A94A3; --c4: #6B4FA0;
+  --f-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161D; --surface: #1A212B; --ink: #E7EBF1; --muted: #9AA6B5; --line: #2C3541;
+    --accent: #6FB7CC; --accent-ink: #0B1A20;
+    --note-bg: #2B2615; --note-line: #6B5A22; --note-ink: #EBDDAA;
+    --c1: #6FB7CC; --c2: #F0A36B; --c3: #7C8796; --c4: #B49CE6;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161D; --surface: #1A212B; --ink: #E7EBF1; --muted: #9AA6B5; --line: #2C3541;
+  --accent: #6FB7CC; --accent-ink: #0B1A20;
+  --note-bg: #2B2615; --note-line: #6B5A22; --note-ink: #EBDDAA;
+  --c1: #6FB7CC; --c2: #F0A36B; --c3: #7C8796; --c4: #B49CE6;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--f-body); font-size: 16px; line-height: 1.6; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 56px;
+}
+.wrap { max-width: 820px; margin: 0 auto; display: flex; flex-direction: column; gap: 24px; }
+header { display: flex; flex-direction: column; gap: 10px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--f-display); font-weight: 600; font-size: clamp(28px, 6vw, 40px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 64ch; }
+.bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 1px solid var(--line); scrollbar-width: thin; }
+.tab {
+  flex: 0 0 auto; background: none; border: 0; border-bottom: 2px solid transparent;
+  padding: 10px 14px; margin-bottom: -1px; font: 500 14px var(--f-body); color: var(--muted); cursor: pointer; white-space: nowrap;
+}
+.tab:hover { color: var(--ink); }
+.tab[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.switch {
+  display: inline-flex; align-items: center; gap: 8px; background: var(--surface); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 999px; padding: 6px 12px 6px 8px; font: 500 13px var(--f-body); cursor: pointer;
+}
+.switch .dot { width: 26px; height: 16px; border-radius: 999px; background: var(--line); position: relative; transition: background .15s; }
+.switch .dot::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); transition: transform .15s; }
+.switch[aria-pressed="true"] .dot { background: var(--accent); }
+.switch[aria-pressed="true"] .dot::after { transform: translateX(10px); }
+.panel { display: flex; flex-direction: column; gap: 22px; }
+h2 { font-family: var(--f-display); font-weight: 600; font-size: clamp(22px, 4.5vw, 28px); line-height: 1.2; margin: 0; text-wrap: balance; }
+h3 { font-family: var(--f-mono); font-weight: 500; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0 0 8px; }
+.panel p { margin: 0; max-width: 66ch; }
+.panel ul, .panel ol { margin: 0; padding-left: 1.25em; display: flex; flex-direction: column; gap: 6px; max-width: 66ch; }
+.have { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
+.have ul { padding-left: 1.1em; }
+.section { min-width: 0; }
+.own { color: var(--muted); font-style: italic; margin-top: 10px !important; }
+.foot { font-size: 13px; color: var(--muted); max-width: 52ch; }
+
+/* Diagnostics */
+.reveals { display: flex; flex-direction: column; gap: 12px; }
+.rhint { font-size: 14px; color: var(--muted); }
+.rgroup { font: 600 14px var(--f-body); margin: 6px 0 0; }
+.rbtns { display: flex; flex-direction: column; gap: 6px; }
+.rbtn {
+  display: flex; align-items: center; gap: 10px; width: 100%; text-align: left; cursor: pointer;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 12px; font: 500 14px var(--f-body);
+}
+.rbtn:hover { border-color: var(--accent); }
+.rbtn[aria-pressed="true"] { color: var(--muted); background: transparent; }
+.rbtn .lbl { flex: 1 1 auto; min-width: 0; }
+.rnum { flex: 0 0 auto; font: 500 12px var(--f-mono); width: 24px; height: 24px; border-radius: 50%; display: inline-grid; place-items: center; border: 1px solid var(--line); color: var(--muted); }
+.rbtn[aria-pressed="true"] .rnum { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.chip { flex: 0 0 auto; font: 500 11px var(--f-mono); letter-spacing: .03em; padding: 2px 8px; border-radius: 999px; border: 1px solid var(--accent); color: var(--accent); white-space: nowrap; }
+.sim { font: 500 11px var(--f-mono); padding: 2px 8px; border-radius: 999px; background: var(--line); color: var(--muted); white-space: nowrap; }
+.rtools { display: flex; gap: 8px; flex-wrap: wrap; }
+.tbtn { background: none; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; font: 500 13px var(--f-body); color: var(--muted); cursor: pointer; }
+.tbtn:hover { color: var(--ink); }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.chead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.chead b { font: 600 15px var(--f-body); }
+.cdesc { font-size: 14px; color: var(--muted); }
+.cap { font-size: 13px; color: var(--muted); }
+svg.plot { width: 100%; height: auto; display: block; overflow: visible; }
+svg.plot text { fill: var(--muted); font: 11px var(--f-body); }
+svg.plot text.lab { fill: var(--ink); font: 500 12px var(--f-body); }
+svg.plot text.val { fill: var(--ink); font: 500 11px var(--f-mono); }
+svg.plot .grid { stroke: var(--line); stroke-width: 1; }
+svg.plot .axis { stroke: var(--muted); stroke-width: 1; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .two { grid-template-columns: 1fr; } }
+table.xw { border-collapse: collapse; width: 100%; font-size: 13px; }
+table.xw th, table.xw td { border: 1px solid var(--line); padding: 6px 8px; text-align: center; }
+table.xw th { font: 500 12px var(--f-mono); color: var(--muted); }
+table.xw td.obs { background: color-mix(in srgb, var(--c1) 22%, transparent); }
+table.xw td.inp { background: color-mix(in srgb, var(--c3) 22%, transparent); }
+table.xw td.cw { background: color-mix(in srgb, var(--c2) 26%, transparent); font-weight: 600; }
+.xwrap { overflow-x: auto; }
+
+/* jimbo's notes */
+.note { background: var(--note-bg); border: 1px solid var(--note-line); color: var(--note-ink); border-radius: 8px; padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; }
+.note[hidden] { display: none; }
+.note > h3 { color: inherit; opacity: .8; margin: 0; text-transform: none; letter-spacing: .02em; font-size: 13px; }
+.note h4 { margin: 0 0 4px; font: 600 14px var(--f-body); }
+.note ul { gap: 4px !important; }
+@media (prefers-reduced-motion: reduce) { .switch .dot, .switch .dot::after { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">PSCI 8358 · Advanced Observational Causal Inference</div>
+    <h1>Causal Design Workshop</h1>
+    <p class="lede">Please look over the following seven short research scenarios (tabs). For each one, state your estimand, pick a design, and justify your choice. If none of the designs we've covered can support a causal claim, say so, and say what you can claim instead.</p>
+  </header>
+  <div class="bar">
+    <span class="foot">All scenarios and all data are hypothetical; the diagnostics use simulated data. My notes are how I'd think about each case, not the answer. Take your own shot first.</span>
+    <button class="switch" id="noteSwitch" aria-pressed="false"><span class="dot" aria-hidden="true"></span><span id="noteLabel">jimbo's notes: off</span></button>
+  </div>
+  <div class="tabs" role="tablist" id="tabs" aria-label="Scenarios"></div>
+  <main class="panel" id="panel" role="tabpanel" tabindex="-1"></main>
+</div>
+
+<script>
+/* ======================================================================
+   Utilities: seeded random numbers, small statistics, SVG charts
+   ====================================================================== */
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+function rng(seed) {
+  var a = seed >>> 0;
+  function u() { a = a + 0x6D2B79F5 | 0; var t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }
+  return {
+    u: u,
+    n: function (m, s) { var x = 0; while (x === 0) x = u(); var y = u(); return m + s * Math.sqrt(-2 * Math.log(x)) * Math.cos(2 * Math.PI * y); },
+    b: function (p) { return u() < p ? 1 : 0; }
+  };
+}
+function memo(f) { var v; return function () { return v || (v = f()); }; }
+function sum(a) { var s = 0; for (var i = 0; i < a.length; i++) s += a[i]; return s; }
+function mean(a) { return a.length ? sum(a) / a.length : NaN; }
+function vari(a) { var m = mean(a), s = 0; for (var i = 0; i < a.length; i++) s += (a[i] - m) * (a[i] - m); return s / (a.length - 1); }
+function seDiff(a, b) { return Math.sqrt(vari(a) / a.length + vari(b) / b.length); }
+function logistic(z) { return 1 / (1 + Math.exp(-z)); }
+function corr(x, y) { var mx = mean(x), my = mean(y), sxy = 0, sxx = 0, syy = 0; for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); syy += (y[i] - my) * (y[i] - my); } return sxy / Math.sqrt(sxx * syy); }
+function ols1(x, y) {
+  var mx = mean(x), my = mean(y), sxy = 0, sxx = 0, i;
+  for (i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+  var b = sxy / sxx, a = my - b * mx, meat = 0;
+  for (i = 0; i < x.length; i++) { var e = y[i] - a - b * x[i]; meat += (x[i] - mx) * (x[i] - mx) * e * e; }
+  return { a: a, b: b, se: Math.sqrt(meat) / sxx };
+}
+function invert(A) {
+  var n = A.length, M = A.map(function (r, i) { return r.concat(A.map(function (_, j) { return i === j ? 1 : 0; })); });
+  for (var c = 0; c < n; c++) {
+    var p = c; for (var r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+    var t = M[c]; M[c] = M[p]; M[p] = t;
+    var d = M[c][c]; if (Math.abs(d) < 1e-12) d = 1e-12;
+    for (var k = 0; k < 2 * n; k++) M[c][k] /= d;
+    for (r = 0; r < n; r++) if (r !== c) { var f = M[r][c]; for (k = 0; k < 2 * n; k++) M[r][k] -= f * M[c][k]; }
+  }
+  return M.map(function (r) { return r.slice(n); });
+}
+/* Weighted least squares with heteroskedasticity-robust (sandwich) variance */
+function wls(X, y, w) {
+  var k = X[0].length, n = X.length, A = [], bv = [], i, a, c;
+  for (a = 0; a < k; a++) { A.push(new Array(k).fill(0)); bv.push(0); }
+  for (i = 0; i < n; i++) { var wi = w ? w[i] : 1; for (a = 0; a < k; a++) { bv[a] += wi * X[i][a] * y[i]; for (c = 0; c < k; c++) A[a][c] += wi * X[i][a] * X[i][c]; } }
+  var Ai = invert(A), beta = Ai.map(function (r) { return sum(r.map(function (v, j) { return v * bv[j]; })); });
+  var meat = []; for (a = 0; a < k; a++) meat.push(new Array(k).fill(0));
+  for (i = 0; i < n; i++) {
+    var wi2 = w ? w[i] : 1, e = y[i]; for (a = 0; a < k; a++) e -= X[i][a] * beta[a];
+    for (a = 0; a < k; a++) for (c = 0; c < k; c++) meat[a][c] += wi2 * wi2 * e * e * X[i][a] * X[i][c];
+  }
+  var V = matmul(matmul(Ai, meat), Ai);
+  return { b: beta, V: V, se: V.map(function (r, j) { return Math.sqrt(r[j]); }) };
+}
+function matmul(A, B) { return A.map(function (r) { return B[0].map(function (_, j) { return sum(r.map(function (v, k) { return v * B[k][j]; })); }); }); }
+function logit(X, y) {
+  var k = X[0].length, b = new Array(k).fill(0);
+  for (var it = 0; it < 30; it++) {
+    var A = [], g = new Array(k).fill(0), a, c;
+    for (a = 0; a < k; a++) A.push(new Array(k).fill(0));
+    for (var i = 0; i < X.length; i++) {
+      var z = 0; for (a = 0; a < k; a++) z += X[i][a] * b[a];
+      var p = logistic(z), w = Math.max(p * (1 - p), 1e-6);
+      for (a = 0; a < k; a++) { g[a] += (y[i] - p) * X[i][a]; for (c = 0; c < k; c++) A[a][c] += w * X[i][a] * X[i][c]; }
+    }
+    var Ai = invert(A); for (a = 0; a < k; a++) b[a] += sum(Ai[a].map(function (v, j) { return v * g[j]; }));
+  }
+  return b;
+}
+function dot(x, b) { var s = 0; for (var i = 0; i < b.length; i++) s += x[i] * b[i]; return s; }
+/* Local polynomial on one side of a cutoff, triangular kernel */
+function llSide(xs, ys, c, h, right, p, donut) {
+  var X = [], Y = [], W = [];
+  for (var i = 0; i < xs.length; i++) {
+    var d = xs[i] - c, ad = Math.abs(d);
+    if ((right ? d >= 0 : d < 0) && ad <= h && ad >= (donut || 0)) {
+      var row = [1]; for (var q = 1; q <= p; q++) row.push(Math.pow(d, q));
+      X.push(row); Y.push(ys[i]); W.push(1 - ad / h);
+    }
+  }
+  if (X.length < p + 5) return null;
+  var r = wls(X, Y, W);
+  return { b: r.b, b0: r.b[0], v: r.V[0][0] };
+}
+function rd(xs, ys, c, h, p, donut) {
+  var R = llSide(xs, ys, c, h, true, p || 1, donut), L = llSide(xs, ys, c, h, false, p || 1, donut);
+  if (!R || !L) return null;
+  return { est: R.b0 - L.b0, se: Math.sqrt(R.v + L.v), R: R, L: L, c: c, h: h };
+}
+function rdCurves(fit, color) {
+  function side(s, a, b) { var pts = []; for (var j = 0; j <= 40; j++) { var x = a + (b - a) * j / 40, d = x - fit.c; pts.push([x, sum(s.b.map(function (v, q) { return v * Math.pow(d, q); }))]); } return pts; }
+  return [{ t: "line", d: side(fit.L, fit.c - fit.h, fit.c - 1e-9), c: color, w: 2.2 }, { t: "line", d: side(fit.R, fit.c, fit.c + fit.h), c: color, w: 2.2 }];
+}
+function bins(xs, ys, lo, hi, w) {
+  var nb = Math.round((hi - lo) / w), s = new Array(nb).fill(0), n = new Array(nb).fill(0);
+  for (var i = 0; i < xs.length; i++) { var k = Math.floor((xs[i] - lo) / w); if (k >= 0 && k < nb) { s[k] += ys[i]; n[k]++; } }
+  var out = []; for (var k2 = 0; k2 < nb; k2++) if (n[k2] > 0) out.push([lo + (k2 + 0.5) * w, s[k2] / n[k2], n[k2]]);
+  return out;
+}
+function histo(vals, lo, hi, w) {
+  var nb = Math.round((hi - lo) / w), n = new Array(nb).fill(0);
+  vals.forEach(function (v) { var k = Math.floor((v - lo) / w); if (k >= 0 && k < nb) n[k]++; });
+  return n.map(function (c, k) { return { x: lo + (k + 0.5) * w, y: c }; });
+}
+function quantileBins(z, ys, nb) {
+  var idx = z.map(function (_, i) { return i; }).sort(function (a, b) { return z[a] - z[b]; }), out = [], per = idx.length / nb;
+  for (var k = 0; k < nb; k++) { var sl = idx.slice(Math.round(k * per), Math.round((k + 1) * per)); out.push([mean(sl.map(function (i) { return z[i]; })), mean(sl.map(function (i) { return ys[i]; }))]); }
+  return out;
+}
+function ext(vals, pad, inc) {
+  var v = vals.filter(function (x) { return isFinite(x); }); if (inc != null) v.push(inc);
+  var lo = Math.min.apply(null, v), hi = Math.max.apply(null, v), sp = (hi - lo) || 1;
+  return [lo - sp * (pad == null ? 0.08 : pad), hi + sp * (pad == null ? 0.08 : pad)];
+}
+function nice(lo, hi, n) {
+  var span = hi - lo, step = Math.pow(10, Math.floor(Math.log10(span / n))), err = span / n / step;
+  if (err >= 7.5) step *= 10; else if (err >= 3.5) step *= 5; else if (err >= 1.5) step *= 2;
+  var t = []; for (var v = Math.ceil(lo / step) * step; v <= hi + 1e-9 * step; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+function fmt(v) { if (v === 0) return "0"; var s = Number.isInteger(v) ? String(v) : Number(v.toPrecision(3)).toString(); return s.replace("-", "−"); }
+function f2(v) { return (v < 0 ? "−" : "") + Math.abs(v).toFixed(2); }
+function f1(v) { return (v < 0 ? "−" : "") + Math.abs(v).toFixed(1); }
+function pct(v) { return Math.round(v * 100) + "%"; }
+
+var CLIP = 0;
+function chart(o) {
+  var W = o.w || 640, H = o.h || 340, m = { l: o.ml || 58, r: 18, t: o.legend ? 36 : 16, b: 48 };
+  var x0 = o.x[0], x1 = o.x[1], y0 = o.y[0], y1 = o.y[1], pw = W - m.l - m.r, ph = H - m.t - m.b;
+  var X = function (v) { return m.l + (v - x0) / (x1 - x0) * pw; }, Y = function (v) { return m.t + ph - (v - y0) / (y1 - y0) * ph; };
+  var id = "clip" + (++CLIP), s = [];
+  s.push('<svg class="plot" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(o.alt || o.ylab || "chart") + '">');
+  s.push('<defs><clipPath id="' + id + '"><rect x="' + m.l + '" y="' + (m.t - 2) + '" width="' + pw + '" height="' + (ph + 4) + '"/></clipPath></defs>');
+  var yt = o.yticks || nice(y0, y1, 5), xt = o.xticks || nice(x0, x1, 6), xf = o.xfmt || fmt, yf = o.yfmt || fmt;
+  yt.forEach(function (v) { if (v < y0 - 1e-9 || v > y1 + 1e-9) return; s.push('<line class="grid" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + Y(v) + '" y2="' + Y(v) + '"/><text x="' + (m.l - 6) + '" y="' + (Y(v) + 4) + '" text-anchor="end">' + esc(yf(v)) + "</text>"); });
+  xt.forEach(function (v) { if (v < x0 - 1e-9 || v > x1 + 1e-9) return; s.push('<text x="' + X(v) + '" y="' + (H - m.b + 16) + '" text-anchor="middle">' + esc(xf(v)) + "</text>"); });
+  s.push('<line class="axis" x1="' + m.l + '" x2="' + (W - m.r) + '" y1="' + (m.t + ph) + '" y2="' + (m.t + ph) + '"/>');
+  s.push('<g clip-path="url(#' + id + ')">');
+  (o.layers || []).forEach(function (L) { s.push(layer(L, X, Y, m, ph)); });
+  s.push("</g>");
+  (o.layers || []).forEach(function (L) { s.push(labels(L, X, Y, m, ph)); });
+  if (o.xlab) s.push('<text class="lab" x="' + (m.l + pw / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(o.xlab) + "</text>");
+  if (o.ylab) s.push('<text class="lab" transform="translate(14,' + (m.t + ph / 2) + ') rotate(-90)" text-anchor="middle">' + esc(o.ylab) + "</text>");
+  if (o.legend) s.push(legend(o.legend, m.l, 14));
+  s.push("</svg>");
+  return s.join("");
+}
+function legend(items, x, y) {
+  var s = "";
+  items.forEach(function (g) {
+    if (g.kind === "line") s += '<line x1="' + x + '" x2="' + (x + 16) + '" y1="' + y + '" y2="' + y + '" style="stroke:' + g.c + ';stroke-width:2.5' + (g.dash ? ";stroke-dasharray:5 4" : "") + '"/>';
+    else s += '<circle cx="' + (x + 8) + '" cy="' + y + '" r="5" style="fill:' + g.c + '"/>';
+    s += '<text x="' + (x + 22) + '" y="' + (y + 4) + '">' + esc(g.label) + "</text>";
+    x += 34 + g.label.length * 6.1;
+  });
+  return s;
+}
+function layer(L, X, Y, m, ph) {
+  var c = L.c || "var(--c1)", s = "", top = m.t, bot = m.t + ph;
+  switch (L.t) {
+    case "pts": L.d.forEach(function (p) { s += '<circle cx="' + X(p[0]) + '" cy="' + Y(p[1]) + '" r="' + (L.r || 3) + '" style="fill:' + c + ";fill-opacity:" + (L.o || 0.85) + '"/>'; }); break;
+    case "line": {
+      var d = "", pen = false;
+      L.d.forEach(function (p) { if (p[1] == null || !isFinite(p[1])) { pen = false; return; } d += (pen ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1); pen = true; });
+      s += '<path d="' + d + '" style="fill:none;stroke:' + c + ";stroke-width:" + (L.w || 2) + (L.dash ? ";stroke-dasharray:6 4" : "") + '"/>'; break;
+    }
+    case "err": L.d.forEach(function (p) {
+      var x = X(p.x + (L.dx || 0));
+      if (p.lo != null) s += '<line x1="' + x + '" x2="' + x + '" y1="' + Y(p.lo) + '" y2="' + Y(p.hi) + '" style="stroke:' + c + ';stroke-width:1.6"/>';
+      s += '<circle cx="' + x + '" cy="' + Y(p.y) + '" r="' + (L.r || 3.6) + '" style="fill:' + (p.c || c) + '"/>';
+    }); break;
+    case "bars": L.d.forEach(function (p) {
+      var b = L.base || 0, xa = X(p.x - L.w / 2), xb = X(p.x + L.w / 2), ya = Y(p.y), yb = Y(b);
+      s += '<rect x="' + Math.min(xa, xb) + '" y="' + Math.min(ya, yb) + '" width="' + Math.abs(xb - xa) + '" height="' + Math.abs(yb - ya) + '" style="fill:' + (p.c || c) + ";fill-opacity:" + (L.o || 0.85) + '"/>';
+    }); break;
+    case "hline": s += '<line x1="' + m.l + '" x2="2000" y1="' + Y(L.y) + '" y2="' + Y(L.y) + '" style="stroke:' + (L.c || "var(--muted)") + ";stroke-width:1.2" + (L.dash !== false ? ";stroke-dasharray:4 4" : "") + '"/>'; break;
+    case "vline": s += '<line x1="' + X(L.x) + '" x2="' + X(L.x) + '" y1="' + top + '" y2="' + bot + '" style="stroke:' + (L.c || "var(--muted)") + ';stroke-width:1.2;stroke-dasharray:4 4"/>'; break;
+    case "band": {
+      var up = L.d.map(function (p) { return X(p.x) + "," + Y(p.hi); }), lo = L.d.slice().reverse().map(function (p) { return X(p.x) + "," + Y(p.lo); });
+      s += '<polygon points="' + up.concat(lo).join(" ") + '" style="fill:' + c + ";fill-opacity:" + (L.o || 0.15) + '"/>'; break;
+    }
+    case "rect": (L.d || [L]).forEach(function (r) {
+      var xa = X(r.x0), xb = X(r.x1), ya = Y(r.y0), yb = Y(r.y1);
+      s += '<rect x="' + Math.min(xa, xb) + '" y="' + Math.min(ya, yb) + '" width="' + Math.abs(xb - xa) + '" height="' + Math.abs(yb - ya) + '" style="fill:' + (r.c || c) + ";fill-opacity:" + (L.o || 0.15) + '"/>';
+    }); break;
+  }
+  return s;
+}
+function labels(L, X, Y, m) {
+  if (L.t === "vline" && L.label) return '<text x="' + (X(L.x) + 5) + '" y="' + (m.t + 11) + '">' + esc(L.label) + "</text>";
+  if (L.t === "hline" && L.label) return '<text x="' + (X(L.lx) ) + '" y="' + (Y(L.y) - 5) + '" text-anchor="' + (L.anchor || "start") + '">' + esc(L.label) + "</text>";
+  if (L.t === "text") return L.d.map(function (p) { return '<text class="' + (L.cls || "") + '" x="' + X(p[0]) + '" y="' + Y(p[1]) + '" text-anchor="' + (L.anchor || "middle") + '">' + esc(p[2]) + "</text>"; }).join("");
+  return "";
+}
+/* Horizontal estimates with intervals */
+function dotplot(o) {
+  var rows = o.rows, lw = o.lw || 250, W = 640, rh = 36, top = 12, H = top + rows.length * rh + 46, pr = 26;
+  var vals = []; rows.forEach(function (r) { vals.push(r.lo != null ? r.lo : r.est, r.hi != null ? r.hi : r.est); });
+  var xr = o.x || ext(vals, 0.1, o.ref == null ? 0 : o.ref), x0 = xr[0], x1 = xr[1];
+  var X = function (v) { return lw + (v - x0) / (x1 - x0) * (W - lw - pr); }, s = [];
+  s.push('<svg class="plot" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(o.xlab || "estimates") + '">');
+  nice(x0, x1, 5).forEach(function (v) { if (v < x0 || v > x1) return; s.push('<line class="grid" x1="' + X(v) + '" x2="' + X(v) + '" y1="' + top + '" y2="' + (top + rows.length * rh) + '"/><text x="' + X(v) + '" y="' + (top + rows.length * rh + 16) + '" text-anchor="middle">' + esc((o.xfmt || fmt)(v)) + "</text>"); });
+  var ref = o.ref == null ? 0 : o.ref;
+  if (ref !== false && ref >= x0 && ref <= x1) s.push('<line x1="' + X(ref) + '" x2="' + X(ref) + '" y1="' + top + '" y2="' + (top + rows.length * rh) + '" style="stroke:var(--muted);stroke-dasharray:4 4"/>');
+  rows.forEach(function (r, i) {
+    var y = top + i * rh + rh / 2, c = r.c || "var(--c1)";
+    s.push('<text x="' + (lw - 12) + '" y="' + (y + 4) + '" text-anchor="end" style="font-size:12px;fill:var(--ink)">' + esc(r.label) + "</text>");
+    if (r.lo != null) s.push('<line x1="' + X(r.lo) + '" x2="' + X(r.hi) + '" y1="' + y + '" y2="' + y + '" style="stroke:' + c + ';stroke-width:2.2"/>');
+    s.push('<circle cx="' + X(r.est) + '" cy="' + y + '" r="5" style="fill:' + c + '"/>');
+    s.push('<text class="val" x="' + X(r.est) + '" y="' + (y - 9) + '" text-anchor="middle">' + esc(r.show || (o.vfmt || f2)(r.est)) + "</text>");
+  });
+  if (o.xlab) s.push('<text class="lab" x="' + ((lw + W - pr) / 2) + '" y="' + (H - 6) + '" text-anchor="middle">' + esc(o.xlab) + "</text>");
+  s.push("</svg>");
+  return s.join("");
+}
+/* Horizontal bars */
+function hbars(o) {
+  var rows = o.rows, lw = o.lw || 170, W = 640, rh = 26, top = 8, H = top + rows.length * rh + 40, pr = 56;
+  var vals = rows.map(function (r) { return r.v; }), lo = Math.min(0, Math.min.apply(null, vals)), hi = Math.max(0, Math.max.apply(null, vals));
+  if (o.max) hi = o.max;
+  var X = function (v) { return lw + (v - lo) / ((hi - lo) || 1) * (W - lw - pr); }, s = [];
+  s.push('<svg class="plot" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(o.xlab || "bars") + '">');
+  rows.forEach(function (r, i) {
+    var y = top + i * rh, xa = X(Math.min(0, r.v)), xb = X(Math.max(0, r.v));
+    s.push('<text x="' + (lw - 10) + '" y="' + (y + rh / 2 + 4) + '" text-anchor="end" style="font-size:12px;fill:var(--ink)">' + esc(r.label) + "</text>");
+    s.push('<rect x="' + xa + '" y="' + (y + 4) + '" width="' + Math.max(1, xb - xa) + '" height="' + (rh - 8) + '" rx="2" style="fill:' + (r.c || "var(--c1)") + '"/>');
+    s.push('<text class="val" x="' + (xb + 6) + '" y="' + (y + rh / 2 + 4) + '">' + esc((o.vfmt || fmt)(r.v)) + "</text>");
+  });
+  s.push('<line class="axis" x1="' + X(0) + '" x2="' + X(0) + '" y1="' + top + '" y2="' + (top + rows.length * rh) + '"/>');
+  if (o.xlab) s.push('<text class="lab" x="' + ((lw + W - pr) / 2) + '" y="' + (H - 8) + '" text-anchor="middle">' + esc(o.xlab) + "</text>");
+  s.push("</svg>");
+  return s.join("");
+}
+function two(a, b) { return '<div class="two"><div>' + a + "</div><div>" + b + "</div></div>"; }
+function cap(t) { return '<p class="cap">' + t + "</p>"; }
+var C1 = "var(--c1)", C2 = "var(--c2)", C3 = "var(--c3)", C4 = "var(--c4)";
+
+/* ======================================================================
+   Scenario 1: Medicaid (single treated state DiD)
+   ====================================================================== */
+var simMed = memo(function () {
+  var R = rng(11), Y0 = 2000, T = 21, yr = [], units = [];
+  for (var t = 0; t < T; t++) yr.push(-0.4 * t + R.n(0, 1.2));
+  for (var s = 0; s < 2; s++) for (var i = 0; i < 60; i++) {
+    var poor = i < 20, fe = R.n(poor ? 95 : 75, 10), path = [];
+    for (t = 0; t < T; t++) {
+      var year = Y0 + t, d = Math.max(0, year - 2008), v = fe + yr[t];
+      if (s === 1) { v += poor ? 2 * d : -1 * d; if (year >= 2014) v -= 6; }
+      path.push(v + R.n(0, 3));
+    }
+    units.push({ tr: s === 1, poor: poor, y: path });
+  }
+  return { units: units, Y0: Y0, T: T };
+});
+function esMed(filter) {
+  var d = simMed(), base = 2013 - d.Y0, us = d.units.filter(filter), out = [];
+  for (var t = 0; t < d.T; t++) {
+    var a = [], b = [];
+    us.forEach(function (u) { (u.tr ? a : b).push(u.y[t] - u.y[base]); });
+    var est = mean(a) - mean(b), se = t === base ? 0 : seDiff(a, b);
+    out.push({ x: d.Y0 + t, y: est, lo: est - 1.96 * se, hi: est + 1.96 * se });
+  }
+  return out;
+}
+function postMed() {
+  var d = simMed(), base = 2013 - d.Y0, a = [], b = [];
+  d.units.forEach(function (u) { var v = mean(u.y.slice(2014 - d.Y0)) - u.y[base]; (u.tr ? a : b).push(v); });
+  return { est: mean(a) - mean(b), se: seDiff(a, b) };
+}
+
+/* ======================================================================
+   Scenario 2: Investment treaties (staggered DiD)
+   ====================================================================== */
+var simTrade = memo(function () {
+  var R = rng(22), Y0 = 1990, T = 31, yr = [], units = [], cohorts = [1998, 2004, 2010, 2016, 0], sizes = [12, 12, 12, 12, 20];
+  for (var t = 0; t < T; t++) yr.push(0.06 * t + R.n(0, 0.25));
+  cohorts.forEach(function (g, k) {
+    for (var i = 0; i < sizes[k]; i++) {
+      var a = R.n(3, 1), y = [];
+      for (t = 0; t < T; t++) { var year = Y0 + t, eff = g && year >= g ? Math.min(0.4 * (year - g + 1), 6) : 0; y.push(a + yr[t] + eff + R.n(0, 0.6)); }
+      units.push({ g: g, y: y });
+    }
+  });
+  return { units: units, Y0: Y0, T: T, cohorts: cohorts.slice(0, 4), sizes: sizes };
+});
+function twfe(units, T, Y0) {
+  var N = units.length, D = units.map(function (u) { return u.y.map(function (_, t) { return u.g && Y0 + t >= u.g ? 1 : 0; }); });
+  function dm(M) {
+    var ri = M.map(function (r) { return mean(r); }), cj = [], all = mean(ri);
+    for (var t = 0; t < T; t++) cj.push(mean(M.map(function (r) { return r[t]; })));
+    return M.map(function (r, i) { return r.map(function (v, t) { return v - ri[i] - cj[t] + all; }); });
+  }
+  var Dt = dm(D), Yt = dm(units.map(function (u) { return u.y; })), sdd = 0, sdy = 0, i, t;
+  for (i = 0; i < N; i++) for (t = 0; t < T; t++) { sdd += Dt[i][t] * Dt[i][t]; sdy += Dt[i][t] * Yt[i][t]; }
+  var b = sdy / sdd, meat = 0;
+  for (i = 0; i < N; i++) { var s = 0; for (t = 0; t < T; t++) s += Dt[i][t] * (Yt[i][t] - b * Dt[i][t]); meat += s * s; }
+  return { est: b, se: Math.sqrt(meat) / sdd };
+}
+function cellMean(us, Y0, f) { var v = []; us.forEach(function (u) { u.y.forEach(function (y, t) { if (f(Y0 + t)) v.push(y); }); }); return mean(v); }
+function csAtt(units, Y0, T, g, year) {
+  var tr = units.filter(function (u) { return u.g === g; }), nv = units.filter(function (u) { return !u.g; }), b = g - 1 - Y0, t = year - Y0;
+  if (t < 0 || t >= T) return null;
+  return mean(tr.map(function (u) { return u.y[t] - u.y[b]; })) - mean(nv.map(function (u) { return u.y[t] - u.y[b]; }));
+}
+function csOverall(units, Y0, T, cohorts) {
+  var s = 0, w = 0;
+  cohorts.forEach(function (g) { var n = units.filter(function (u) { return u.g === g; }).length; for (var y = g; y < Y0 + T; y++) { s += n * csAtt(units, Y0, T, g, y); w += n; } });
+  return s / w;
+}
+
+/* ======================================================================
+   Scenario 3: Close elections and electoral boards (RD)
+   ====================================================================== */
+var simCE = memo(function () {
+  var R = rng(33), N = 6000, S = 26, d = [];
+  for (var i = 0; i < N; i++) {
+    var st = Math.floor(R.u() * S), B = st < 13 ? 1 : 0, m0 = R.n(0, 12), pls = 45 + 0.35 * m0 + 4 * B + R.n(0, 5), m = m0;
+    if (Math.abs(m0) < 2 && R.u() < 0.7) {
+      if (B && m0 < 0 && R.u() < 0.6) m = 0.05 + R.u() * 0.75;
+      else if (!B && m0 > 0 && R.u() < 0.08) m = -(0.05 + R.u() * 0.75);
+      else m = m0 + R.n(0, 0.08);
+    }
+    var W = m > 0 ? 1 : 0, y = 22 + 0.06 * m0 + 2 * W + 6 * B + 0.12 * (pls - 45) + R.n(0, 4);
+    d.push({ m0: m0, m: m, B: B, pls: pls, W: W, y: y });
+  }
+  return { d: d, m: d.map(function (r) { return r.m; }), m0: d.map(function (r) { return r.m0; }), y: d.map(function (r) { return r.y; }), B: d.map(function (r) { return r.B; }), pls: d.map(function (r) { return r.pls; }), W: d.map(function (r) { return r.W; }) };
+});
+function rdPlot(x, y, h, lo, hi, w, ylab, xlab, extra) {
+  var f = rd(x, y, 0, h, 1), bn = bins(x, y, lo, hi, w);
+  var layers = [{ t: "vline", x: 0 }, { t: "pts", d: bn, c: C3, r: 3.2 }].concat(rdCurves(f, C1)).concat(extra || []);
+  return { svg: chart({ x: [lo, hi], y: ext(bn.map(function (p) { return p[1]; }), 0.12), layers: layers, xlab: xlab, ylab: ylab }), fit: f };
+}
+
+/* ======================================================================
+   Scenario 4: Sanctions on an already-sliding economy
+   ====================================================================== */
+var simSan = memo(function () {
+  var R = rng(44), E0 = -10, E1 = 5, common = [], units = [];
+  for (var e = E0; e <= E1; e++) common.push(R.n(0, 0.3));
+  function mk(type) {
+    var fe = R.n(0, 0.8), dec = type !== "stable", y = [];
+    for (var e2 = E0; e2 <= E1; e2++) {
+      var v = 3 + fe + common[e2 - E0];
+      if (dec && e2 >= -6) v -= 0.45 * (e2 + 6);
+      if (type === "treated" && e2 >= 0) v -= 1.0;
+      y.push(v + R.n(0, 1.1));
+    }
+    var q = [];
+    for (var qq = -8; qq <= 8; qq++) { var ee = qq / 4, v2 = 3 + fe; if (dec) v2 -= 0.45 * (ee + 6); if (type === "treated" && qq >= 0) v2 -= 1.0; q.push(v2 + R.n(0, 1.4)); }
+    return { type: type, y: y, q: q, infl: 4 * dec + R.n(0, 3), demo: -1.5 * dec + R.n(0, 1.5), flight: 2 * dec + R.n(0, 2) };
+  }
+  for (var i = 0; i < 15; i++) units.push(mk("treated"));
+  for (i = 0; i < 20; i++) units.push(mk("declining"));
+  for (i = 0; i < 85; i++) units.push(mk("stable"));
+  units.forEach(function (u) { var xs = [], ys = []; for (var e3 = -6; e3 <= -1; e3++) { xs.push(e3); ys.push(u.y[e3 - E0]); } u.slope = ols1(xs, ys).b; });
+  return { units: units, E0: E0, E1: E1 };
+});
+function sanES(trType, ctType, lo, hi, base) {
+  var d = simSan(), tr = d.units.filter(function (u) { return u.type === trType; }), ct = d.units.filter(function (u) { return ctType.indexOf(u.type) >= 0; }), out = [];
+  for (var e = lo; e <= hi; e++) {
+    var t = e - d.E0, b = base - d.E0;
+    var a = tr.map(function (u) { return u.y[t] - u.y[b]; }), c = ct.map(function (u) { return u.y[t] - u.y[b]; }), est = mean(a) - mean(c), se = e === base ? 0 : seDiff(a, c);
+    out.push({ x: e, y: est, lo: est - 1.96 * se, hi: est + 1.96 * se });
+  }
+  return out;
+}
+function sanPost(trType, ctType, preLo, preHi, postLo, postHi) {
+  var d = simSan(), f = function (u) { var pre = [], post = []; for (var e = preLo; e <= preHi; e++) pre.push(u.y[e - d.E0]); for (e = postLo; e <= postHi; e++) post.push(u.y[e - d.E0]); return mean(post) - mean(pre); };
+  var a = d.units.filter(function (u) { return u.type === trType; }).map(f), c = d.units.filter(function (u) { return ctType.indexOf(u.type) >= 0; }).map(f);
+  return { est: mean(a) - mean(c), se: seDiff(a, c) };
+}
+
+/* ======================================================================
+   Scenario 5: Import shock and nationalist voting (shift-share)
+   ====================================================================== */
+var simSS = memo(function () {
+  var R = rng(55), Rg = 200, K = 50, names = ["Textiles", "Apparel", "Footwear", "Toys", "Furniture", "Electronics", "Ceramics", "Steel"];
+  var g = [4.0, 3.5, 3.0, 2.5, 2.2, 2.0, 1.2, 0.8], ls = [0.95, 0.93, 0.9, 0.88, 0.8, 0.6, 0.7, 0.5];
+  for (var k = 8; k < K; k++) { names.push("Industry " + (k + 1)); g.push(R.u() * 0.6); ls.push(R.u() * 0.8); }
+  var S = [], T = [], mfg = [];
+  for (var r = 0; r < Rg; r++) {
+    var Tr = R.u(), raw = [], tot = 0;
+    for (k = 0; k < K; k++) { var v = k < 6 ? Math.exp(R.n(0, 0.5)) * (0.15 + 2.5 * Tr * Tr) : Math.exp(R.n(-0.6, 0.9)); raw.push(v); tot += v; }
+    var mf = 0.15 + 0.15 * R.u();
+    S.push(raw.map(function (v) { return v / tot * mf; })); T.push(Tr); mfg.push(mf);
+  }
+  var B = S.map(function (row) { return dot(row, g); });
+  var x = B.map(function (b) { return 1.0 * b + R.n(0, 0.12); });
+  var edu = T.map(function (t) { return 0.35 - 0.15 * t + R.n(0, 0.04); }), old = T.map(function (t) { return 0.18 + 0.05 * t + R.n(0, 0.02); });
+  var unemp = T.map(function (t) { return 6 + 4 * t + R.n(0, 1.5); }), dens = T.map(function () { return Math.exp(R.n(5, 1)); });
+  var pre = T.map(function (t) { return 2.5 * t + R.n(0, 0.8); });
+  var eta = g.map(function () { return R.n(0, 1); });
+  var y = x.map(function (xv, i) { return 2.0 * xv + 3.0 * T[i] + 25 * dot(S[i], eta) + R.n(0, 1); });
+  return { S: S, g: g, ls: ls, names: names, B: B, x: x, y: y, pre: pre, edu: edu, old: old, unemp: unemp, dens: dens, K: K, Rg: Rg };
+});
+function ivSS(B, x, y) {
+  var mB = mean(B), mx = mean(x), my = mean(y), sxy = 0, sxx = 0;
+  for (var i = 0; i < B.length; i++) { sxy += (B[i] - mB) * (y[i] - my); sxx += (B[i] - mB) * (x[i] - mx); }
+  return sxy / sxx;
+}
+
+/* ======================================================================
+   Scenario 6: Peacekeeping (bad control, then DML)
+   ====================================================================== */
+var simPK = memo(function () {
+  var R = rng(67), N = 260, d = []; // seed chosen so the collider gap is close to its expected size
+  for (var i = 0; i < N; i++) {
+    var ld = R.n(9, 1.2), dur = Math.max(0.5, R.n(6, 4)), reb = 1 + Math.floor(R.u() * 4), gdp = R.n(7.5, 0.8), U = R.n(0, 1), V = R.n(0, 1);
+    var e = logistic(-0.6 + 1.7 * (ld - 9) + 0.3 * (reb - 2) - 0.3 * (gdp - 7.5) + 0.9 * V);
+    var PK = R.b(e);
+    var M = R.b(logistic(-1.0 + 3.0 * PK + 2.5 * U));
+    var Y = R.b(logistic(-0.2 - 0.4 * PK - 2.0 * M - 1.3 * U + 0.7 * (ld - 9) + 0.05 * (dur - 6) - 0.7 * V));
+    var Ypre = R.b(logistic(-0.2 + 0.6 * (ld - 9) - 0.9 * V));
+    d.push({ ld: ld, dur: dur, reb: reb, gdp: gdp, U: U, V: V, PK: PK, M: M, Y: Y, Ypre: Ypre });
+  }
+  return d;
+});
+function pkX(r, withM) { var x = [1, r.ld - 9, r.dur - 6, r.reb - 2, r.gdp - 7.5]; if (withM) x.push(r.M); return x; }
+function pkLPM(outcome, withM) {
+  var d = simPK(), X = d.map(function (r) { return [r.PK].concat(pkX(r, withM)); }), y = d.map(function (r) { return r[outcome]; });
+  var f = wls(X, y); return { est: f.b[0], se: f.se[0], fit: f };
+}
+/* AIPW with 2-fold cross-fitting: a small stand-in for DML */
+function pkAIPW(outcome, withM) {
+  var d = simPK(), n = d.length, psi = new Array(n), ps = new Array(n);
+  for (var fold = 0; fold < 2; fold++) {
+    var train = d.filter(function (_, i) { return i % 2 !== fold; });
+    var bp = logit(train.map(function (r) { return pkX(r, withM); }), train.map(function (r) { return r.PK; }));
+    var t1 = train.filter(function (r) { return r.PK; }), t0 = train.filter(function (r) { return !r.PK; });
+    var m1 = wls(t1.map(function (r) { return pkX(r, withM); }), t1.map(function (r) { return r[outcome]; })).b;
+    var m0 = wls(t0.map(function (r) { return pkX(r, withM); }), t0.map(function (r) { return r[outcome]; })).b;
+    d.forEach(function (r, i) {
+      if (i % 2 !== fold) return;
+      var x = pkX(r, withM), e = Math.min(0.995, Math.max(0.005, logistic(dot(x, bp)))), mu1 = dot(x, m1), mu0 = dot(x, m0);
+      ps[i] = e;
+      psi[i] = mu1 - mu0 + r.PK * (r[outcome] - mu1) / e - (1 - r.PK) * (r[outcome] - mu0) / (1 - e);
+    });
+  }
+  var est = mean(psi);
+  return { est: est, se: Math.sqrt(vari(psi) / n), ps: ps };
+}
+
+/* ======================================================================
+   Scenario 7: Judges and pretrial detention (judge IV)
+   ====================================================================== */
+var simJ = memo(function () {
+  var R = rng(77), J = [], D = [];
+  for (var c = 0; c < 4; c++) for (var k = 0; k < 60; k++) {
+    var idx = c * 60 + k, flip = (idx % 5 === 2) ? (R.u() < 0.5 ? 1 : -1) : 0;
+    J.push({ court: c, z: R.n(0, 0.35), dz: flip * 0.9, n: Math.max(5, Math.min(120, Math.round(Math.exp(R.n(2.8, 0.6))))) });
+  }
+  J.forEach(function (j, ji) {
+    for (var i = 0; i < j.n; i++) {
+      var u = R.u(), ch = u < 0.4 ? 0 : (u < 0.75 ? 1 : 2), pr = R.b(0.45), age = R.n(32, 9), eps = R.n(0, 1);
+      var st = j.z + (ch === 0 ? j.dz : ch === 2 ? -j.dz : 0);
+      var base = -0.4 + (ch === 2 ? 1.1 : ch === 0 ? -0.5 : 0) + 0.8 * pr + eps;
+      var Dv = base + st > 0 ? 1 : 0, comp = (base + 0.65 > 0) && !(base - 0.65 > 0);
+      var Y = R.b(0.30 + 0.18 * Dv + 0.20 * pr + 0.15 * (ch === 2) + 0.01 * j.z);
+      var bail = Math.exp(8.2 + 0.35 * j.z + 0.4 * (ch === 2) + 0.3 * pr + R.n(0, 0.4)) / 1000;
+      var plea = R.b(0.5 + 0.08 * j.z);
+      D.push({ j: ji, c: j.court, ch: ch, pr: pr, age: age, D: Dv, Y: Y, comp: comp, bail: bail, plea: plea });
+    }
+  });
+  var sumD = J.map(function () { return 0; });
+  D.forEach(function (r) { sumD[r.j] += r.D; });
+  D.forEach(function (r) { var n = J[r.j].n; r.full = sumD[r.j] / n; r.loo = (sumD[r.j] - r.D) / (n - 1); });
+  ["full", "loo", "Y", "D"].forEach(function (key) {
+    var cm = [0, 0, 0, 0], cn = [0, 0, 0, 0];
+    D.forEach(function (r) { cm[r.c] += r[key]; cn[r.c]++; });
+    D.forEach(function (r) { r[key + "_t"] = r[key] - cm[r.c] / cn[r.c]; });
+  });
+  J.forEach(function (j, ji) { j.rate = sumD[ji] / j.n; });
+  return { J: J, D: D };
+});
+function jIV(zkey, rows) {
+  rows = rows || simJ().D;
+  var szy = 0, szd = 0; rows.forEach(function (r) { szy += r[zkey + "_t"] * r.Y_t; szd += r[zkey + "_t"] * r.D_t; });
+  var b = szy / szd, meat = 0; rows.forEach(function (r) { var e = r.Y_t - b * r.D_t; meat += Math.pow(r[zkey + "_t"] * e, 2); });
+  return { est: b, se: Math.sqrt(meat) / Math.abs(szd) };
+}
+function jSlope(rows, ykey) { return ols1(rows.map(function (r) { return r.loo_t; }), rows.map(function (r) { return typeof ykey === "function" ? ykey(r) : r[ykey]; })); }
+
+/* ======================================================================
+   Content
+   ====================================================================== */
+var COMMON_STEPS = [
+  "On your own (3 minutes): write down the estimand, the design you'd use, and the assumption that worries you most. Get it on paper before you talk to anyone.",
+  "In pairs (4 minutes): compare answers. If you disagree, each of you argues for the other person's design.",
+  "As a class: one pair defends its design, and another pair goes after the identifying assumption. Then we ask for diagnostics, one at a time."
+];
+
+var S = [
+{ id: "format", tab: "Format", title: "How this works", setting: null,
+  body: [
+    ["", "<p>Each scenario describes a substantive setting, the data available, and a claim someone wants to make. Your job is to figure out how you'd learn about the causal effect, or explain why causal identification is impossible. To structure your thinking, be prepared to answer these four questions:</p><ul style=\"margin-top:10px\"><li>What is the estimand?</li><li>What variation is supposed to identify it?</li><li>Under what assumptions does that variation identify it?</li><li>How would you diagnose those assumptions?</li></ul>"],
+    ["Ground rules", "<ul><li>Write your answer down before you hear anyone else's.</li><li>Don't just reach for whichever design we covered most recently.</li><li>\"None of these designs supports a causal claim here\" is a fine answer, as long as you can say what you can claim.</li><li>Keep identification problems separate from estimation and inference problems.</li></ul>"],
+    ["Diagnostics", "<p>Each scenario comes with a set of diagnostics that we'll reveal one at a time, from the least to the most damning. Each one is labeled with the concern it speaks to. Before we reveal one, say what you expect it to show and what result would change your mind. All of the data are simulated.</p>"]
+  ],
+  notes: [
+    ["Pacing", ["All seven unlikely; fine", "Must-do: Sanctions (no canonical design)", "Debrief: last ten minutes"]],
+    ["Diagnostics", ["First reveal usually clean, by design", "Before each: expected result if the design holds?", "Label = assumption under test", "Simulated; not findings"]],
+    ["These notes", ["My take, not an answer key", "After committing, not before", "Omissions welcome"]]
+  ]
+},
+
+{ id: "medicaid", tab: "Medicaid", title: "A state expands Medicaid",
+  setting: "A state expanded Medicaid eligibility in 2014. Its neighbor did not. You have annual county-level age-adjusted mortality for both states from 2000 to 2020. Supporters campaigned for expansion by pointing to rising mortality in the state's poorest counties. The paper's event study, which pools all counties, shows flat coefficients before 2014.",
+  have: ["County-year panel, two states, 2000 to 2020", "One treated state and one comparison state", "Expansion date is the same for every treated county"],
+  claim: "A paper reports that mortality fell in expansion counties relative to neighbor counties after 2014 and attributes the drop to expansion.",
+  qs: ["What does parallel trends require here, stated in terms of these two states?", "The pooled event study shows flat pre-period coefficients. Does that settle it?", "The expansion was timed to a worsening trend. What does that do to the counterfactual?", "With one treated state, what can you say about inference?", "How large a trend violation would it take to erase the result?"],
+  reveals: [
+    { btn: "Request the event study", concern: "Parallel trends", title: "Pooled event study",
+      desc: "Treated minus comparison counties, all counties pooled, relative to 2013. Bars are 95% intervals with county-level standard errors.",
+      draw: function () {
+        var es = esMed(function () { return true; });
+        return chart({ x: [1999.5, 2020.5], y: ext(es.map(function (p) { return p.lo; }).concat(es.map(function (p) { return p.hi; })), 0.1, 0),
+          layers: [{ t: "hline", y: 0 }, { t: "vline", x: 2013.5, label: "Expansion" }, { t: "err", d: es, c: C1 }],
+          xlab: "Year", ylab: "Mortality gap (per 100k)" });
+      } },
+    { btn: "Split the event study by county poverty", concern: "Parallel trends: heterogeneity and power", title: "Event study, poorest third versus other counties",
+      desc: "The same event study, estimated separately for the poorest third of counties in each state and for all other counties.",
+      draw: function () {
+        var a = esMed(function (u) { return u.poor; }), b = esMed(function (u) { return !u.poor; });
+        var all = a.concat(b);
+        return chart({ x: [1999.5, 2020.5], y: ext(all.map(function (p) { return p.lo; }).concat(all.map(function (p) { return p.hi; })), 0.08, 0),
+          layers: [{ t: "hline", y: 0 }, { t: "vline", x: 2013.5, label: "Expansion" }, { t: "err", d: a, c: C2, dx: -0.15 }, { t: "err", d: b, c: C1, dx: 0.15 }],
+          legend: [{ label: "Poorest third of counties", c: C2 }, { label: "Other counties", c: C1 }],
+          xlab: "Year", ylab: "Mortality gap (per 100k)" });
+      } },
+    { btn: "Request a sensitivity analysis", concern: "Sensitivity to trend violations", title: "How big a violation erases the result?",
+      desc: "Average post-2014 effect with intervals that allow the trend to bend by up to M per year after 2013, in the spirit of Rambachan and Roth's smoothness restriction. M = 0 is the usual estimate.",
+      draw: function () {
+        var p = postMed(), k = 8, pts = [];
+        for (var M = 0; M <= 1.0001; M += 0.05) pts.push({ x: M, y: p.est, lo: p.est - 1.96 * p.se - k * M, hi: p.est + 1.96 * p.se + k * M });
+        var brk = (-p.est - 1.96 * p.se) / k;
+        return chart({ x: [-0.03, 1.03], y: ext(pts.map(function (q) { return q.lo; }).concat(pts.map(function (q) { return q.hi; })), 0.05, 0),
+          layers: [{ t: "hline", y: 0 }, { t: "band", d: pts, c: C1, o: 0.18 }, { t: "err", d: pts, c: C1, r: 2.5 }, { t: "vline", x: brk, label: "Breakdown at M ≈ " + brk.toFixed(2) }],
+          xlab: "M: allowed change in the trend's slope per year (deaths per 100k)", ylab: "Post-2014 effect (per 100k)" }) +
+          cap("Estimate at M = 0: " + f1(p.est) + " (SE " + p.se.toFixed(1) + "). For scale, the poorest-county gap was growing by about 2 per year before 2014.");
+      } },
+    { btn: "Request inference with one treated state", concern: "Inference with few clusters", title: "Same estimate, different intervals",
+      desc: "The average post-2014 effect with three ways of building a 95% interval. The county-clustered interval treats 120 counties as independent; the other two take seriously that treatment varies only at the state level. The last two intervals are illustrative.",
+      draw: function () {
+        var p = postMed(), a = Math.abs(p.est);
+        return dotplot({ rows: [
+          { label: "Clustered by county (120 clusters)", est: p.est, lo: p.est - 1.96 * p.se, hi: p.est + 1.96 * p.se },
+          { label: "Wild cluster bootstrap, by state", est: p.est, lo: p.est - 2.4 * a, hi: p.est + 1.9 * a, c: C2 },
+          { label: "Permutation over placebo state pairs", est: p.est, lo: p.est - 2.1 * a, hi: p.est + 2.2 * a, c: C2 }],
+          xlab: "Post-2014 effect on mortality (per 100k)", vfmt: f1 });
+      } }
+  ],
+  notes: [
+    ["Core concern: timing", ["Expansion timed to worsening trend: pre-trend as selection, not noise", "Parallel trends: untreated post-2014 counterfactual, unobserved", "Visible pre-trend: assumption likely false. Flat: no proof"]],
+    ["Factor-model framing", ["Y = unit FE + time FE + loading × factor", "DiD: equal loadings", "Differential loading (opioids, deindustrialization) → parallel trends fails", "Active factor: visible in leads", "Dormant factor, switched on after treatment: invisible (oil shock, synth lecture)"]],
+    ["Power and flat leads", ["One treated state: low-power pre-trend tests", "Pooling averages away poorest-county divergence (reveal 2)", "Flat and well powered everywhere: worry, not violation"]],
+    ["Remedies", ["Rambachan and Roth sensitivity: breakdown M", "Few-treated-clusters inference (MacKinnon and Webb)", "Estimand if the pre-trend had continued"]]
+  ]
+},
+
+{ id: "treaties", tab: "Treaties", title: "Investment treaties, signed in waves",
+  setting: "Between 1998 and 2016, 48 developing countries signed bilateral investment treaties with major capital exporters, in four waves. Another 20 never signed. You have annual foreign direct investment (FDI) inflows as a share of GDP for all 68 countries from 1990 to 2020. Investors may take several years to respond to a new treaty.",
+  have: ["Country-year panel, 68 countries, 1990 to 2020", "Signing year for each treaty country (cohorts in 1998, 2004, 2010, and 2016)", "20 countries that never sign"],
+  claim: "A paper regresses FDI on a post-signing indicator with country and year fixed effects. The coefficient is modest, and the authors conclude that investment treaties have at most a small effect on investment.",
+  qs: ["Which comparisons does the two-way fixed effects coefficient actually average over?", "When an early signer serves as a control for a later signer, what are you assuming about the early signer's treatment effect?", "If effects grow over time, which way does that push the two-way fixed effects estimate?", "What would you estimate instead, and against which comparison group?", "Countries choose when to sign. What would you need to believe about that timing?"],
+  reveals: [
+    { btn: "Request the treatment rollout", concern: "Treatment timing", title: "Who signs when",
+      desc: "Each row is a country, sorted by signing year. Shaded cells are country-years after signing.",
+      draw: function () {
+        var d = simTrade(), rects = [];
+        d.units.forEach(function (u, i) { if (u.g) rects.push({ x0: u.g - 0.5, x1: 2020.5, y0: i, y1: i + 0.85, c: C1 }); else rects.push({ x0: 1989.5, x1: 2020.5, y0: i, y1: i + 0.85, c: C3 }); });
+        return chart({ x: [1989.5, 2020.5], y: [0, d.units.length], yticks: [], ml: 24, layers: [{ t: "rect", d: rects, o: 0.55 }],
+          legend: [{ label: "Signed", c: C1 }, { label: "Never signs", c: C3 }], xlab: "Year", ylab: "Countries" });
+      } },
+    { btn: "Request the two-way fixed effects estimate", concern: "Baseline estimate", title: "The paper's specification",
+      desc: "FDI on a post-signing indicator with country and year fixed effects. 95% interval clustered by country.",
+      draw: function () {
+        var d = simTrade(), t = twfe(d.units, d.T, d.Y0);
+        return dotplot({ rows: [{ label: "Two-way fixed effects, static", est: t.est, lo: t.est - 1.96 * t.se, hi: t.est + 1.96 * t.se }], xlab: "Effect of signing on FDI (% of GDP)", x: [-0.5, 3] });
+      } },
+    { btn: "Request cohort-by-cohort event studies", concern: "Effect dynamics and heterogeneity", title: "Each signing wave against never-signers",
+      desc: "For each cohort, the change in FDI relative to the year before signing, minus the same change among never-signers.",
+      draw: function () {
+        var d = simTrade(), cols = [C1, C2, C4, C3], layers = [{ t: "hline", y: 0 }, { t: "vline", x: -0.5, label: "Signing" }], leg = [];
+        d.cohorts.forEach(function (g, k) {
+          var pts = []; for (var e = -8; e <= 15; e++) { var v = csAtt(d.units, d.Y0, d.T, g, g + e); if (v != null) pts.push([e, v]); }
+          layers.push({ t: "line", d: pts, c: cols[k] }); layers.push({ t: "pts", d: pts, c: cols[k], r: 2.6 });
+          leg.push({ label: String(g), c: cols[k], kind: "line" });
+        });
+        return chart({ x: [-8.5, 15.5], y: [-1.2, 4.2], layers: layers, legend: leg, xlab: "Years since signing", ylab: "Change in FDI (% of GDP)" });
+      } },
+    { btn: "Request a Goodman-Bacon decomposition", concern: "Forbidden comparisons", title: "What the two-way fixed effects estimate averages",
+      desc: "Every 2×2 difference-in-differences inside the regression, plotted by its weight. The dashed line is the two-way fixed effects estimate, which equals the weighted average of the points.",
+      draw: function () {
+        var d = simTrade(), N = d.units.length, T = d.T, Y0 = d.Y0, pts = [], tw = twfe(d.units, T, Y0);
+        var grp = function (g) { return d.units.filter(function (u) { return u.g === g; }); }, nv = grp(0), nU = nv.length / N;
+        var Dbar = function (g) { return (Y0 + T - g) / T; };
+        d.cohorts.forEach(function (gk) {
+          var tk = grp(gk), nk = tk.length / N, n = nk / (nk + nU), Dk = Dbar(gk);
+          var est = (cellMean(tk, Y0, function (y) { return y >= gk; }) - cellMean(tk, Y0, function (y) { return y < gk; })) - (cellMean(nv, Y0, function (y) { return y >= gk; }) - cellMean(nv, Y0, function (y) { return y < gk; }));
+          pts.push({ type: 0, est: est, w: Math.pow(nk + nU, 2) * n * (1 - n) * Dk * (1 - Dk) });
+        });
+        d.cohorts.forEach(function (gk) {
+          d.cohorts.forEach(function (gl) {
+            if (gl <= gk) return;
+            var tk = grp(gk), tl = grp(gl), nk = tk.length / N, nl = tl.length / N, n = nk / (nk + nl), Dk = Dbar(gk), Dl = Dbar(gl);
+            var e1 = (cellMean(tk, Y0, function (y) { return y >= gk && y < gl; }) - cellMean(tk, Y0, function (y) { return y < gk; })) - (cellMean(tl, Y0, function (y) { return y >= gk && y < gl; }) - cellMean(tl, Y0, function (y) { return y < gk; }));
+            pts.push({ type: 1, est: e1, w: Math.pow((nk + nl) * (1 - Dl), 2) * n * (1 - n) * ((Dk - Dl) / (1 - Dl)) * ((1 - Dk) / (1 - Dl)) });
+            var e2 = (cellMean(tl, Y0, function (y) { return y >= gl; }) - cellMean(tl, Y0, function (y) { return y >= gk && y < gl; })) - (cellMean(tk, Y0, function (y) { return y >= gl; }) - cellMean(tk, Y0, function (y) { return y >= gk && y < gl; }));
+            pts.push({ type: 2, est: e2, w: Math.pow((nk + nl) * Dk, 2) * n * (1 - n) * (Dl / Dk) * ((Dk - Dl) / Dk) });
+          });
+        });
+        var W = sum(pts.map(function (p) { return p.w; })); pts.forEach(function (p) { p.w /= W; });
+        var avg = sum(pts.map(function (p) { return p.w * p.est; })), cols = [C1, C3, C2];
+        var share2 = sum(pts.filter(function (p) { return p.type === 2; }).map(function (p) { return p.w; }));
+        var layers = [{ t: "hline", y: 0, dash: false, c: "var(--line)" }, { t: "hline", y: tw.est, c: "var(--ink)", label: "Two-way FE = " + f2(tw.est), lx: 0.005 }];
+        [0, 1, 2].forEach(function (k) { layers.push({ t: "pts", d: pts.filter(function (p) { return p.type === k; }).map(function (p) { return [p.w, p.est]; }), c: cols[k], r: 6, o: 0.9 }); });
+        return chart({ x: [0, Math.max.apply(null, pts.map(function (p) { return p.w; })) * 1.12], y: ext(pts.map(function (p) { return p.est; }), 0.15, 0), layers: layers,
+          legend: [{ label: "Signers vs. never-signers", c: C1 }, { label: "Early vs. later signers", c: C3 }, { label: "Later vs. already-signed", c: C2 }],
+          xlab: "Weight in the two-way fixed effects estimate", ylab: "2×2 DiD estimate" }) +
+          cap("Weighted average of the 2×2s: " + f2(avg) + ". Comparisons that use already-signed countries as controls carry " + pct(share2) + " of the weight.");
+      } },
+    { btn: "Request a heterogeneity-robust estimator", concern: "Estimator choice", title: "Two-way fixed effects versus Callaway and Sant'Anna",
+      desc: "Callaway and Sant'Anna compare each cohort only to never-signers, then average the cohort-by-year effects. 95% intervals; the second is from a country-level bootstrap.",
+      draw: function () {
+        var d = simTrade(), t = twfe(d.units, d.T, d.Y0), cs = csOverall(d.units, d.Y0, d.T, d.cohorts), R = rng(222), bs = [];
+        for (var b = 0; b < 150; b++) { var us = []; for (var i = 0; i < d.units.length; i++) us.push(d.units[Math.floor(R.u() * d.units.length)]); if (us.some(function (u) { return !u.g; })) bs.push(csOverall(us, d.Y0, d.T, d.cohorts.filter(function (g) { return us.some(function (u) { return u.g === g; }); }))); }
+        var se = Math.sqrt(vari(bs)), dyn = [];
+        for (var e = 0; e <= 10; e++) { var v = [], w = []; d.cohorts.forEach(function (g) { var a = csAtt(d.units, d.Y0, d.T, g, g + e); if (a != null) { v.push(a); } }); dyn.push(mean(v)); }
+        return dotplot({ rows: [
+          { label: "Two-way fixed effects, static", est: t.est, lo: t.est - 1.96 * t.se, hi: t.est + 1.96 * t.se, c: C3 },
+          { label: "Callaway and Sant'Anna, overall", est: cs, lo: cs - 1.96 * se, hi: cs + 1.96 * se },
+          { label: "Callaway and Sant'Anna, year of signing", est: dyn[0], show: f2(dyn[0]) },
+          { label: "Callaway and Sant'Anna, 10 years after", est: dyn[10], show: f2(dyn[10]) }],
+          xlab: "Effect of signing on FDI (% of GDP)" });
+      } }
+  ],
+  notes: [
+    ["TWFE under staggered adoption", ["Weighted average of all 2×2s (Goodman-Bacon)", "Already-signed as controls: forbidden comparisons", "Growing effects → downward bias, possible sign flip", "Small coefficient ≠ small effect"]],
+    ["Remedies", ["Callaway and Sant'Anna; Sun and Abraham", "Never- or not-yet-treated controls", "Event-time dynamics", "Weight on forbidden comparisons"]],
+    ["What the fix doesn't fix", ["Heterogeneity, not selection", "Endogenous signing; anticipation", "Parallel trends per cohort", "Never-signers comparable?"]],
+    ["vs. Medicaid", ["Medicaid: one unit, one date → trends, inference", "Here: many units, many dates → what the regression averages"]]
+  ]
+},
+
+{ id: "close-race", tab: "Close elections", title: "A party wins by a hair",
+  setting: "In a federal democracy, a left party contests thousands of municipal mayoral races across three election cycles. You want the effect of a left mayor on the share of the municipal budget spent on social programs in the following term. Close results can be challenged before state electoral boards, which can annul ballots and order recounts, and in some races the certified margin differs from the initial count. The governing party in each state appoints its board.",
+  have: ["Race-level data: initial and certified left-party margin, and the certified winner", "Municipal social spending share in the next term", "Which party controls each state's electoral board, plus prior vote shares"],
+  claim: "A researcher compares municipalities where the left party won by less than one point to those where it lost by less than one point, using the certified margin, and reports the difference as the effect of a left mayor on social spending.",
+  qs: ["What is the estimand, and for which municipalities?", "Which margin is the running variable: the initial count or the certified result?", "What would manipulation of the margin look like in the data, and what would you check?", "Does this identify the effect of the party, of the particular candidate, or both?", "What can this design tell you about municipalities where the left party wins comfortably?"],
+  reveals: [
+    { btn: "Request the RD plot", concern: "Baseline estimate", title: "Spending against the certified margin",
+      desc: "Binned means (0.5-point bins) with local linear fits on each side, bandwidth 6 points.",
+      draw: function () { var d = simCE(), p = rdPlot(d.m, d.y, 6, -10, 10, 0.5, "Social spending share (%)", "Certified left-party margin (points)"); return p.svg + cap("Jump at zero: " + f2(p.fit.est) + " points (SE " + p.fit.se.toFixed(2) + ")."); } },
+    { btn: "Request a density test", concern: "Manipulation", title: "How many races land on each side of zero?",
+      desc: "Histogram of the certified margin in 0.25-point bins.",
+      draw: function () { var d = simCE(), h = histo(d.m, -5, 5, 0.25); return chart({ x: [-5, 5], y: [0, Math.max.apply(null, h.map(function (p) { return p.y; })) * 1.12], layers: [{ t: "bars", d: h.map(function (p) { return { x: p.x, y: p.y, c: p.x > 0 ? C1 : C3 }; }), w: 0.23 }, { t: "vline", x: 0 }], xlab: "Certified left-party margin (points)", ylab: "Races" }); } },
+    { btn: "Request covariate balance at the cutoff", concern: "Covariate balance", title: "Things that shouldn't jump",
+      desc: "Two pre-determined characteristics against the certified margin: whether the left party controls the state's electoral board, and the left party's vote share in the previous election.",
+      draw: function () {
+        var d = simCE(), a = rdPlot(d.m, d.B, 6, -10, 10, 0.5, "Left party controls board (share)", "Certified margin"), b = rdPlot(d.m, d.pls, 6, -10, 10, 0.5, "Prior left vote share (%)", "Certified margin");
+        return two(a.svg, b.svg) + cap("Jumps at zero: board control " + f2(a.fit.est) + " (SE " + a.fit.se.toFixed(2) + "); prior vote share " + f2(b.fit.est) + " (SE " + b.fit.se.toFixed(2) + ").");
+      } },
+    { btn: "Request a donut specification", concern: "Manipulation", title: "Dropping the closest races",
+      desc: "The RD estimate after dropping races within r points of zero. Bandwidth 6 points, 95% intervals.",
+      draw: function () { var d = simCE(); return dotplot({ rows: [0, 0.25, 0.5, 1, 1.5].map(function (r) { var f = rd(d.m, d.y, 0, 6, 1, r); return { label: r === 0 ? "No donut" : "Drop |margin| < " + r, est: f.est, lo: f.est - 1.96 * f.se, hi: f.est + 1.96 * f.se }; }), xlab: "Effect on social spending share (points)" }); } },
+    { btn: "Request bandwidth sensitivity", concern: "Bandwidth", title: "Estimates across bandwidths",
+      desc: "Local linear estimates at bandwidths from 2 to 12 points. 95% intervals.",
+      draw: function () { var d = simCE(), pts = []; for (var h = 2; h <= 12; h++) { var f = rd(d.m, d.y, 0, h, 1); pts.push({ x: h, y: f.est, lo: f.est - 1.96 * f.se, hi: f.est + 1.96 * f.se }); } return chart({ x: [1.5, 12.5], y: ext(pts.map(function (p) { return p.lo; }).concat(pts.map(function (p) { return p.hi; })), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "err", d: pts }], xlab: "Bandwidth (points)", ylab: "RD estimate" }); } },
+    { btn: "Request placebo cutoffs", concern: "Placebo", title: "Jumps where nothing should happen",
+      desc: "RD estimates at fake cutoffs, using only races on the same side of zero. The real cutoff is shown for comparison.",
+      draw: function () {
+        var d = simCE(), pts = [];
+        [-8, -6, -4, -2, 0, 2, 4, 6, 8].forEach(function (c) {
+          var xs = [], ys = []; d.d.forEach(function (r) { if (c === 0 || (c < 0 ? r.m < 0 : r.m > 0)) { xs.push(r.m); ys.push(r.y); } });
+          var f = rd(xs, ys, c, 2, 1); if (f) pts.push({ x: c, y: f.est, lo: f.est - 1.96 * f.se, hi: f.est + 1.96 * f.se, c: c === 0 ? C2 : C1 });
+        });
+        return chart({ x: [-9, 9], y: ext(pts.map(function (p) { return p.lo; }).concat(pts.map(function (p) { return p.hi; })), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "err", d: pts }], xlab: "Cutoff (certified margin, points)", ylab: "Estimate (bandwidth 2)" });
+      } },
+    { btn: "Request a local quadratic", concern: "Functional form", title: "Linear versus quadratic fits",
+      desc: "The same binned data with local linear and local quadratic fits, bandwidth 8 points.",
+      draw: function () {
+        var d = simCE(), a = rd(d.m, d.y, 0, 8, 1), b = rd(d.m, d.y, 0, 8, 2), bn = bins(d.m, d.y, -8, 8, 0.5);
+        return chart({ x: [-8, 8], y: ext(bn.map(function (p) { return p[1]; }), 0.12), layers: [{ t: "vline", x: 0 }, { t: "pts", d: bn, c: C3 }].concat(rdCurves(a, C1)).concat(rdCurves(b, C2).map(function (l) { l.dash = true; return l; })),
+          legend: [{ label: "Local linear: " + f2(a.est), c: C1, kind: "line" }, { label: "Local quadratic: " + f2(b.est), c: C2, kind: "line", dash: true }], xlab: "Certified left-party margin (points)", ylab: "Social spending share (%)" });
+      } },
+    { btn: "Compare initial and certified margins", concern: "Running variable", title: "What the challenges did to the margin",
+      desc: "Each point is a race within 2 points of zero on the initial count. Points that changed sides between the initial count and certification are colored by who controls the state's electoral board.",
+      draw: function () {
+        var d = simCE(), base = [], a = [], b = [];
+        d.d.forEach(function (r) { if (Math.abs(r.m0) > 2) return; var p = [r.m0, r.m]; if ((r.m0 > 0) !== (r.m > 0)) (r.B ? a : b).push(p); else base.push(p); });
+        return chart({ x: [-2, 2], y: [-2, 2], layers: [{ t: "hline", y: 0, dash: false, c: "var(--line)" }, { t: "vline", x: 0 }, { t: "line", d: [[-2, -2], [2, 2]], c: C3, w: 1, dash: true }, { t: "pts", d: base, c: C3, r: 2.2, o: 0.45 }, { t: "pts", d: b, c: C4, r: 4 }, { t: "pts", d: a, c: C2, r: 4 }],
+          legend: [{ label: "Flipped, left party controls board", c: C2 }, { label: "Flipped, other party controls board", c: C4 }], xlab: "Initial-count margin (points)", ylab: "Certified margin (points)" });
+      } },
+    { btn: "Request flips by board control", concern: "Manipulation", title: "Who wins the challenges?",
+      desc: "Counts of races that changed winners between the initial count and certification, by direction and by which party controls the state's electoral board.",
+      draw: function () {
+        var d = simCE(), c = { lw1: 0, lw0: 0, wl1: 0, wl0: 0 };
+        d.d.forEach(function (r) { if (r.m0 < 0 && r.m > 0) c["lw" + r.B]++; if (r.m0 > 0 && r.m < 0) c["wl" + r.B]++; });
+        return hbars({ rows: [{ label: "Left loss → win, left board", v: c.lw1, c: C2 }, { label: "Left loss → win, other board", v: c.lw0, c: C4 }, { label: "Left win → loss, left board", v: c.wl1, c: C2 }, { label: "Left win → loss, other board", v: c.wl0, c: C4 }], lw: 210, xlab: "Races that changed winners" });
+      } },
+    { btn: "Request a density test on the initial count", concern: "Running variable", title: "The initial-count margin",
+      desc: "Histogram of the initial-count margin in 0.25-point bins.",
+      draw: function () { var d = simCE(), h = histo(d.m0, -5, 5, 0.25); return chart({ x: [-5, 5], y: [0, Math.max.apply(null, h.map(function (p) { return p.y; })) * 1.12], layers: [{ t: "bars", d: h.map(function (p) { return { x: p.x, y: p.y, c: p.x > 0 ? C1 : C3 }; }), w: 0.23 }, { t: "vline", x: 0 }], xlab: "Initial-count left-party margin (points)", ylab: "Races" }); } },
+    { btn: "Request the fuzzy first stage", concern: "Fix: fuzzy RD", title: "Certified winner against the initial count",
+      desc: "Share of races the left party ends up winning, against the initial-count margin, with local linear fits (bandwidth 6).",
+      draw: function () {
+        var d = simCE(), p = rdPlot(d.m0, d.W, 6, -10, 10, 0.5, "Left party certified winner (share)", "Initial-count left-party margin (points)"), rf = rd(d.m0, d.y, 0, 6, 1);
+        return p.svg + cap("First stage: " + f2(p.fit.est) + ". Reduced form on spending: " + f2(rf.est) + ". Fuzzy RD (ratio): " + f2(rf.est / p.fit.est) + ".");
+      } }
+  ],
+  notes: [
+    ["Core concern: challenges as a lever", ["Random recount error: noise, harmless", "Lever someone can pull: manipulation", "Who flips close losses? Board control", "Signatures: density bump above zero; jumps in board control, prior vote"]],
+    ["Fix", ["Running variable: initial count", "Certification: post-assignment manipulation", "Certified winner → fuzzy RD"]],
+    ["Specification", ["Default: local linear, data-driven bandwidth", "Jagged bins near zero: thin cells, mostly noise", "No higher-order polynomials (Gelman and Imbens 2019): variance, boundary misbehavior", "Curvature → bias → bandwidth; robust bias-corrected CIs", "Real curvature: systematic misses across adjacent bins", "Bandwidth stability; local quadratic ≈ local linear"]],
+    ["Estimand", ["Local to close races; silent on landslides", "Party vs. candidate"]]
+  ]
+},
+
+{ id: "sanctions", tab: "Sanctions", title: "Sanctions and a sliding economy",
+  setting: "Western governments impose broad financial sanctions on a country. You want the effect on GDP growth over the next five years. The countries that get sanctioned are disproportionately ones whose economies and governance had been deteriorating for years beforehand, with rising inflation, capital flight, and democratic backsliding.",
+  have: ["Country-year and country-quarter GDP growth for 120 countries", "Sanctions imposition dates for 15 countries", "No randomization, no cutoff, no policy rule, and no instrument"],
+  claim: "A coauthor wants to say \"sanctions cause economic collapse.\"",
+  qs: ["Which design would you reach for first, and what variation would it use?", "What does the selection story do to that design's key assumption?", "What is the strongest claim you can defend with these data?", "What would bounds look like, and what assumption would you add to tighten them?", "Is a careful descriptive claim a failure?"],
+  reveals: [
+    { btn: "Request the event study", concern: "Baseline estimate", title: "Growth around the sanctions date",
+      desc: "Sanctioned countries minus all other countries, relative to the year before sanctions. 95% intervals.",
+      draw: function () { var es = sanES("treated", ["declining", "stable"], -2, 5, -1); return chart({ x: [-2.5, 5.5], y: ext(es.map(function (p) { return p.lo; }).concat(es.map(function (p) { return p.hi; })), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "vline", x: -0.5, label: "Sanctions" }, { t: "err", d: es }], xlab: "Years since sanctions", ylab: "Growth gap (points)" }); } },
+    { btn: "Extend the event study back ten years", concern: "Selection on trajectory", title: "The same comparison, further back",
+      desc: "The same event study, now starting ten years before sanctions.",
+      draw: function () { var es = sanES("treated", ["declining", "stable"], -10, 5, -1); return chart({ x: [-10.5, 5.5], y: ext(es.map(function (p) { return p.lo; }).concat(es.map(function (p) { return p.hi; })), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "vline", x: -0.5, label: "Sanctions" }, { t: "err", d: es }], xlab: "Years since sanctions", ylab: "Growth gap (points)" }); } },
+    { btn: "Request quarterly growth around the date", concern: "Timing: shock or slow bleed?", title: "Quarter by quarter",
+      desc: "Average quarterly growth (annualized) in sanctioned countries and in stable countries, two years either side of the sanctions date.",
+      draw: function () {
+        var d = simSan(), t = [], s = [];
+        for (var q = -8; q <= 8; q++) { t.push([q, mean(d.units.filter(function (u) { return u.type === "treated"; }).map(function (u) { return u.q[q + 8]; }))]); s.push([q, mean(d.units.filter(function (u) { return u.type === "stable"; }).map(function (u) { return u.q[q + 8]; }))]); }
+        return chart({ x: [-8.5, 8.5], y: ext(t.concat(s).map(function (p) { return p[1]; }), 0.15), layers: [{ t: "vline", x: -0.5, label: "Sanctions" }, { t: "line", d: s, c: C3 }, { t: "pts", d: s, c: C3 }, { t: "line", d: t, c: C1 }, { t: "pts", d: t, c: C1 }],
+          legend: [{ label: "Sanctioned", c: C1, kind: "line" }, { label: "Stable countries", c: C3, kind: "line" }], xlab: "Quarters since sanctions", ylab: "Growth (points)" });
+      } },
+    { btn: "Request covariate balance", concern: "Comparability", title: "Sanctioned countries versus the donor pool",
+      desc: "Standardized differences between sanctioned countries and all other countries, measured before sanctions. Values beyond about ±0.1 are usually read as imbalance.",
+      draw: function () {
+        var d = simSan(), tr = d.units.filter(function (u) { return u.type === "treated"; }), dn = d.units.filter(function (u) { return u.type !== "treated"; });
+        function sd(k) { var a = tr.map(function (u) { return u[k]; }), b = dn.map(function (u) { return u[k]; }); return (mean(a) - mean(b)) / Math.sqrt((vari(a) + vari(b)) / 2); }
+        var rows = [["Growth trend, 6 years before", "slope"], ["Change in inflation", "infl"], ["Change in democracy score", "demo"], ["Capital flight", "flight"]].map(function (p) { return { label: p[0], est: sd(p[1]) }; });
+        return dotplot({ rows: rows, xlab: "Standardized difference (sanctioned − donors)", x: [-2.6, 2.6] });
+      } },
+    { btn: "Request a synthetic control", concern: "Pre-period fit", title: "One sanctioned country and its synthetic match",
+      desc: "Growth in one sanctioned country and in a synthetic control built from the donor pool of stable economies.",
+      draw: function () {
+        var d = simSan(), tr = d.units.filter(function (u) { return u.type === "treated"; })[0], st = d.units.filter(function (u) { return u.type === "stable"; });
+        var pm = function (u) { return mean(u.y.slice(0, 10)); }, target = pm(tr);
+        var don = st.slice().sort(function (a, b) { return Math.abs(pm(a) - target) - Math.abs(pm(b) - target); }).slice(0, 5);
+        var a = [], b = [], pre = [], post = [];
+        for (var e = d.E0; e <= d.E1; e++) { var t = e - d.E0, v = tr.y[t], sv = mean(don.map(function (u) { return u.y[t]; })); a.push([e, v]); b.push([e, sv]); (e < 0 ? pre : post).push(Math.pow(v - sv, 2)); }
+        return chart({ x: [-10.5, 5.5], y: ext(a.concat(b).map(function (p) { return p[1]; }), 0.15), layers: [{ t: "vline", x: -0.5, label: "Sanctions" }, { t: "line", d: b, c: C3, dash: true }, { t: "line", d: a, c: C1 }, { t: "pts", d: a, c: C1 }],
+          legend: [{ label: "Sanctioned country", c: C1, kind: "line" }, { label: "Synthetic control (5 donors)", c: C3, kind: "line", dash: true }], xlab: "Years since sanctions", ylab: "GDP growth (%)" }) +
+          cap("Pre-period RMSPE: " + Math.sqrt(mean(pre)).toFixed(2) + ". Post-period RMSPE: " + Math.sqrt(mean(post)).toFixed(2) + ".");
+      } },
+    { btn: "Request placebo tests", concern: "Placebo", title: "Fake dates and fake countries",
+      desc: "Average change in growth after the date versus the three years before, relative to stable countries. The placebo in time moves the sanctions date five years earlier. The placebo in space applies the method to 20 deteriorating countries that were never sanctioned. 95% intervals.",
+      draw: function () {
+        var a = sanPost("treated", ["stable"], -3, -1, 0, 5), b = sanPost("treated", ["stable"], -8, -6, -5, -1), c = sanPost("declining", ["stable"], -3, -1, 0, 5);
+        return dotplot({ rows: [{ label: "Actual sanctions", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se }, { label: "Placebo in time (5 years earlier)", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se, c: C2 }, { label: "Placebo in space (never sanctioned)", est: c.est, lo: c.est - 1.96 * c.se, hi: c.est + 1.96 * c.se, c: C2 }], xlab: "Change in growth (points)" });
+      } },
+    { btn: "Compare against declining countries only", concern: "Salvage: comparison group", title: "Declining versus declining",
+      desc: "Sanctioned countries minus 20 countries with similarly deteriorating economies that were not sanctioned, aligned on the start of the decline. 95% intervals.",
+      draw: function () { var es = sanES("treated", ["declining"], -10, 5, -1); return chart({ x: [-10.5, 5.5], y: ext(es.map(function (p) { return p.lo; }).concat(es.map(function (p) { return p.hi; })), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "vline", x: -0.5, label: "Sanctions" }, { t: "err", d: es }], xlab: "Years since sanctions", ylab: "Growth gap (points)" }); } },
+    { btn: "Request a sensitivity analysis", concern: "Salvage: sensitivity", title: "How strong would an unmeasured trend have to be?",
+      desc: "The naive post-sanctions estimate after removing a differential linear trend of δ points per year that the comparison misses. The dashed line marks the pre-sanctions trend gap we actually see.",
+      draw: function () {
+        var p = sanPost("treated", ["declining", "stable"], -1, -1, 0, 5), d = simSan(), k = 3.5, pts = [];
+        var obs = mean(d.units.filter(function (u) { return u.type === "treated"; }).map(function (u) { return u.slope; })) - mean(d.units.filter(function (u) { return u.type !== "treated"; }).map(function (u) { return u.slope; }));
+        for (var del = 0; del <= 0.8001; del += 0.05) { var e = p.est + del * k; pts.push({ x: del, y: e, lo: e - 1.96 * p.se, hi: e + 1.96 * p.se }); }
+        return chart({ x: [-0.02, 0.82], y: ext(pts.map(function (q) { return q.lo; }).concat(pts.map(function (q) { return q.hi; })), 0.08, 0), layers: [{ t: "hline", y: 0 }, { t: "band", d: pts, c: C1, o: 0.18 }, { t: "line", d: pts.map(function (q) { return [q.x, q.y]; }), c: C1 }, { t: "vline", x: -obs, label: "Observed pre-trend gap: " + (-obs).toFixed(2) }],
+          xlab: "δ: unmeasured downward trend in sanctioned countries (points per year)", ylab: "Adjusted effect (points)" }) +
+          cap("The estimate reaches zero at δ ≈ " + (-p.est / k).toFixed(2) + " points per year.");
+      } }
+  ],
+  notes: [
+    ["Core concern: selection through decline", ["Naive comparison: no point identification", "Decline drives both sanctions and growth", "Not \"nothing learnable\": weaker claim, stated assumptions"]],
+    ["Why canonical designs fail", ["DiD: selection story = non-parallel trends", "Synth: stable donors can't reproduce a slide; poor pre-fit", "Matching on levels misses the trajectory"]],
+    ["Partial rescues", ["Sharp timing: surprise vs. slow bleed", "Threats: anticipation (capital flight on threat), trajectory", "Declining vs. declining; why weren't they sanctioned?", "Sensitivity, bounds: breakdown δ"]],
+    ["Good answer", ["Labeled descriptive claim + strongest defensible causal claim", "\"No design\" ≠ \"nothing to say\""]]
+  ]
+},
+
+{ id: "shift-share", tab: "Import shock", title: "Chinese imports and nationalist voting",
+  setting: "You study the effect of Chinese import competition on the change in nationalist party vote share across 200 European regions between 1990 and 2015. Exposure is built as the sum, over 50 manufacturing industries, of each region's 1988 employment share in the industry times the Europe-wide growth in Chinese imports in that industry. The shares are fixed in 1988. The shocks are common to all regions.",
+  have: ["Region-level panel, 200 regions", "1988 industry employment shares for each region", "Europe-wide industry-level growth in Chinese imports"],
+  claim: "The exposure measure is used as an instrument for local import competition, and the paper treats it as valid because it is built from predetermined shares and common shocks.",
+  qs: ["What must be true for this to be a valid instrument?", "Does identification come from the shares being exogenous, or from the shocks being exogenous?", "Suppose regions heavy in textiles were also losing jobs to automation. What breaks?", "How many independent shocks do you actually have, and why does that matter for inference?", "What would you report to show which industries drive the estimate?"],
+  reveals: [
+    { btn: "Request the first stage and reduced form", concern: "Baseline estimate", title: "Exposure against imports and against votes",
+      desc: "Left: exposure against the change in local import penetration. Right: exposure against the change in nationalist vote share.",
+      draw: function () {
+        var d = simSS(), f1s = ols1(d.B, d.x), rf = ols1(d.B, d.y), xr = ext(d.B, 0.05);
+        var a = chart({ x: xr, y: ext(d.x, 0.08), layers: [{ t: "pts", d: d.B.map(function (b, i) { return [b, d.x[i]]; }), c: C1, r: 2.6, o: 0.6 }, { t: "line", d: [[xr[0], f1s.a + f1s.b * xr[0]], [xr[1], f1s.a + f1s.b * xr[1]]], c: C2 }], xlab: "Exposure (shift-share)", ylab: "Δ import penetration", h: 320 });
+        var b = chart({ x: xr, y: ext(d.y, 0.08), layers: [{ t: "pts", d: d.B.map(function (b2, i) { return [b2, d.y[i]]; }), c: C1, r: 2.6, o: 0.6 }, { t: "line", d: [[xr[0], rf.a + rf.b * xr[0]], [xr[1], rf.a + rf.b * xr[1]]], c: C2 }], xlab: "Exposure (shift-share)", ylab: "Δ nationalist vote (points)", h: 320 });
+        return two(a, b) + cap("2SLS estimate: " + f2(ivSS(d.B, d.x, d.y)) + " points of vote share per unit of import penetration.");
+      } },
+    { btn: "Request Rotemberg weights", concern: "Identifying weight", title: "Which industries carry the estimate?",
+      desc: "Rotemberg weights for the ten industries with the largest weights. The weights sum to one across all 50 industries.",
+      draw: function () {
+        var d = simSS(), mx = mean(d.x), xt = d.x.map(function (v) { return v - mx; }), den = sum(d.B.map(function (b, i) { return b * xt[i]; }));
+        var a = d.g.map(function (g, k) { return g * sum(d.S.map(function (row, i) { return row[k] * xt[i]; })) / den; });
+        var top = a.map(function (v, k) { return { label: d.names[k], v: v }; }).sort(function (p, q) { return Math.abs(q.v) - Math.abs(p.v); }).slice(0, 10);
+        return hbars({ rows: top, xlab: "Rotemberg weight", vfmt: f2 }) + cap("The top five industries account for " + pct(sum(top.slice(0, 5).map(function (r) { return r.v; }))) + " of the total weight.");
+      } },
+    { btn: "Request a pre-trend check", concern: "Shares view: pre-trends", title: "Does exposure predict the past?",
+      desc: "Exposure against the change in nationalist vote share from 1980 to 1990, before the import shock.",
+      draw: function () {
+        var d = simSS(), f = ols1(d.B, d.pre), xr = ext(d.B, 0.05);
+        return chart({ x: xr, y: ext(d.pre, 0.08), layers: [{ t: "hline", y: 0 }, { t: "pts", d: d.B.map(function (b, i) { return [b, d.pre[i]]; }), c: C1, r: 2.8, o: 0.6 }, { t: "line", d: [[xr[0], f.a + f.b * xr[0]], [xr[1], f.a + f.b * xr[1]]], c: C2 }], xlab: "Exposure (shift-share)", ylab: "Δ nationalist vote, 1980–90" }) + cap("Slope: " + f2(f.b) + " (SE " + f.se.toFixed(2) + ").");
+      } },
+    { btn: "Request share balance", concern: "Shares view: balance", title: "What else do exposed regions look like?",
+      desc: "Correlations between regional exposure and pre-1990 regional characteristics, with 95% intervals.",
+      draw: function () {
+        var d = simSS(), n = d.Rg;
+        function row(label, v) { var r = corr(d.B, v), z = 0.5 * Math.log((1 + r) / (1 - r)), s = 1 / Math.sqrt(n - 3); return { label: label, est: r, lo: Math.tanh(z - 1.96 * s), hi: Math.tanh(z + 1.96 * s) }; }
+        return dotplot({ rows: [row("Share with tertiary education", d.edu), row("Share aged 65 and over", d.old), row("Unemployment rate, 1988", d.unemp), row("Population density", d.dens.map(Math.log))], xlab: "Correlation with exposure", x: [-1, 1] });
+      } },
+    { btn: "Request the distribution of shocks", concern: "Shocks view: number of shocks", title: "How many shocks is the variation really coming from?",
+      desc: "Each industry's share of the exposure-weighted variance in shocks, for the 15 largest. This is the variation the shocks view relies on.",
+      draw: function () {
+        var d = simSS(), tot = sum(d.S.map(function (r) { return sum(r); })), sk = d.g.map(function (_, k) { return sum(d.S.map(function (r) { return r[k]; })) / tot; });
+        var gbar = sum(sk.map(function (s, k) { return s * d.g[k]; })), v = sk.map(function (s, k) { return s * Math.pow(d.g[k] - gbar, 2); }), V = sum(v);
+        var shares = v.map(function (x) { return x / V; }), eff = 1 / sum(shares.map(function (x) { return x * x; }));
+        var top = shares.map(function (x, k) { return { label: d.names[k], v: x }; }).sort(function (p, q) { return q.v - p.v; }).slice(0, 15);
+        return hbars({ rows: top, xlab: "Share of shock variation", vfmt: pct }) + cap("Effective number of shocks (inverse Herfindahl of these shares): " + eff.toFixed(1) + " out of 50 industries.");
+      } },
+    { btn: "Request shock balance", concern: "Shocks view: balance", title: "Which industries got the big shocks?",
+      desc: "Each point is an industry: growth in Chinese imports against the industry's low-skill labor intensity.",
+      draw: function () {
+        var d = simSS(), f = ols1(d.ls, d.g);
+        return chart({ x: [0, 1], y: ext(d.g, 0.08), layers: [{ t: "pts", d: d.ls.map(function (l, k) { return [l, d.g[k]]; }), c: C1, r: 4, o: 0.75 }, { t: "line", d: [[0, f.a], [1, f.a + f.b]], c: C2 }, { t: "text", d: d.ls.slice(0, 5).map(function (l, k) { return [l, d.g[k] + 0.22, d.names[k]]; }) }], xlab: "Low-skill labor intensity of the industry", ylab: "Growth in Chinese imports" }) + cap("Correlation: " + f2(corr(d.ls, d.g)) + ".");
+      } },
+    { btn: "Request exposure-robust standard errors", concern: "Inference", title: "Region-level versus shock-level uncertainty",
+      desc: "The 2SLS estimate with a heteroskedasticity-robust interval that treats regions as independent, and an exposure-robust interval in the spirit of Adão, Kolesár and Morales (the null-imposed version they recommend when a few shocks dominate), which treats the industry shocks as the source of randomness.",
+      draw: function () {
+        var d = simSS(), b = ivSS(d.B, d.x, d.y), mB = mean(d.B), mx = mean(d.x), my = mean(d.y);
+        var e = d.y.map(function (v, i) { return (v - my) - b * (d.x[i] - mx); }), den = sum(d.B.map(function (v, i) { return (v - mB) * (d.x[i] - mx); }));
+        var seR = Math.sqrt(sum(d.B.map(function (v, i) { return Math.pow((v - mB) * e[i], 2); }))) / Math.abs(den);
+        var tot = sum(d.S.map(function (r) { return sum(r); })), sk = d.g.map(function (_, k) { return sum(d.S.map(function (r) { return r[k]; })) / tot; }), gbar = sum(sk.map(function (s, k) { return s * d.g[k]; }));
+        var e0 = d.y.map(function (v) { return v - my; });
+        var seK = Math.sqrt(sum(d.g.map(function (g, k) { return Math.pow((g - gbar) * sum(d.S.map(function (r, i) { return r[k] * e0[i]; })), 2); }))) / Math.abs(den);
+        return dotplot({ rows: [{ label: "Robust, regions independent", est: b, lo: b - 1.96 * seR, hi: b + 1.96 * seR }, { label: "Exposure-robust (shock level)", est: b, lo: b - 1.96 * seK, hi: b + 1.96 * seK, c: C2 }], xlab: "Effect on nationalist vote share (points)" }) +
+          cap("Standard errors: " + seR.toFixed(2) + " versus " + seK.toFixed(2) + ".");
+      } },
+    { btn: "Request leave-one-industry-out estimates", concern: "Robustness", title: "Dropping the heavy hitters",
+      desc: "The 2SLS estimate after dropping each of the five highest-weight industries from the exposure measure, one at a time, and after dropping all five.",
+      draw: function () {
+        var d = simSS(), rows = [{ label: "All industries", est: ivSS(d.B, d.x, d.y), c: C3 }];
+        function drop(ks) { var B = d.S.map(function (r) { return sum(r.map(function (s, k) { return ks.indexOf(k) >= 0 ? 0 : s * d.g[k]; })); }); return ivSS(B, d.x, d.y); }
+        [0, 1, 2, 3, 4].forEach(function (k) { rows.push({ label: "Drop " + d.names[k], est: drop([k]) }); });
+        rows.push({ label: "Drop all five", est: drop([0, 1, 2, 3, 4]), c: C2 });
+        return dotplot({ rows: rows, xlab: "2SLS estimate (points per unit of import penetration)" });
+      } }
+  ],
+  notes: [
+    ["Shares view (Goldsmith-Pinkham, Sorkin, Swift)", ["Instrument ≈ 1988 shares; shocks as weights", "Need: shares unrelated to other drivers of vote change, given controls", "Threat: textile regions also low-skill, older, declining", "Tests: pre-trends, balance on observables, Rotemberg weights", "50 industries ≠ 50 instruments when a few dominate"]],
+    ["Shocks view (Borusyak, Hull, Jaravel)", ["Shares may be endogenous; shocks as good as random", "Industry-level regression; exposure as averaging device", "Threat: shocks hit low-skill, declining industries", "Threat: shocks track Europe-wide trends", "Inference: effective number of shocks, not 200 regions → exposure-robust SEs (AKM)"]],
+    ["Contrast", ["Shares view: burden on shares", "Shocks view: burden on shocks, and many of them", "Different view, different diagnostics; choose before asking"]]
+  ]
+},
+
+{ id: "peacekeeping", tab: "Peacekeeping", title: "Peacekeepers, in two stages",
+  setting: "Researchers study 260 civil-war ceasefires since 1990. Some received UN peacekeeping deployments. They compare whether fighting resumed within five years between ceasefires with and without peacekeepers. Their regression controls for battle deaths, war duration, the number of rebel groups, GDP per capita, and whether the ceasefire was still holding 18 months after it began.",
+  have: ["Ceasefire-level data: peacekeeping deployment and whether war recurred within five years", "Covariates measured before deployment", "Whether the ceasefire was still holding at 18 months"],
+  claim: "The authors say that controlling for whether the ceasefire held makes the comparison fair, because ceasefires that held and ceasefires that collapsed are compared separately.",
+  stages: [
+    ["Stage one", "Draw the implicit DAG. Which control is a problem, and why? Can any adjustment strategy rescue the estimate once it is included?"],
+    ["Stage two", "The authors drop the bad control and keep only pre-deployment variables. A coauthor then proposes feeding 150 country-level covariates into a double machine learning estimator, so confounding is no longer a worry. What does DML buy you, and what does it leave untouched?"]
+  ],
+  qs: ["Is ceasefire status at 18 months a confounder, a mediator, or a collider here?", "What does cross-fitting do for you, and what does it not do?", "What happens to the DML estimate if missions go to conflicts that differ on something unmeasured, such as whether the parties consented?", "What would an overlap failure look like, and does DML solve it?", "Which mistake is a design error, and which is overconfidence in an estimator?"],
+  reveals: [
+    { group: "Stage one: the bad control", btn: "Request the raw comparison", concern: "Baseline", title: "Recurrence by deployment",
+      desc: "Share of ceasefires where war recurred within five years, with and without peacekeepers.",
+      draw: function () { var d = simPK(), a = d.filter(function (r) { return r.PK; }), b = d.filter(function (r) { return !r.PK; }); return hbars({ rows: [{ label: "Peacekeepers (n=" + a.length + ")", v: mean(a.map(function (r) { return r.Y; })) }, { label: "No peacekeepers (n=" + b.length + ")", v: mean(b.map(function (r) { return r.Y; })), c: C3 }], xlab: "Share with recurrence within 5 years", vfmt: pct, max: 1, lw: 190 }); } },
+    { group: "Stage one: the bad control", btn: "Add the ceasefire control", concern: "Post-treatment control", title: "With and without the 18-month control",
+      desc: "Linear probability models of recurrence. Both include battle deaths, duration, rebel groups, and GDP. The second adds whether the ceasefire held at 18 months. 95% intervals.",
+      draw: function () { var a = pkLPM("Y", false), b = pkLPM("Y", true); return dotplot({ rows: [{ label: "Pre-deployment controls", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se }, { label: "+ ceasefire holding at 18 months", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se, c: C2 }], xlab: "Effect of peacekeepers on recurrence (probability)" }); } },
+    { group: "Stage one: the bad control", btn: "Request ceasefire status by deployment", concern: "Is the control downstream?", title: "Did peacekeepers move the control?",
+      desc: "Share of ceasefires still holding at 18 months, with and without peacekeepers.",
+      draw: function () { var d = simPK(), a = d.filter(function (r) { return r.PK; }), b = d.filter(function (r) { return !r.PK; }); return hbars({ rows: [{ label: "Peacekeepers", v: mean(a.map(function (r) { return r.M; })) }, { label: "No peacekeepers", v: mean(b.map(function (r) { return r.M; })), c: C3 }], xlab: "Share of ceasefires holding at 18 months", vfmt: pct, max: 1, lw: 150 }); } },
+    { group: "Stage one: the bad control", btn: "Request balance on commitment", concern: "Collider bias", title: "Commitment to peace, before and after conditioning",
+      desc: "Distribution of a simulated, normally unobserved score for how committed the parties are to peace. Left: all ceasefires. Right: only ceasefires still holding at 18 months.",
+      draw: function () {
+        var d = simPK();
+        function panel(rows, ttl) {
+          var a = histo(rows.filter(function (r) { return r.PK; }).map(function (r) { return r.U; }), -3, 3, 0.5), b = histo(rows.filter(function (r) { return !r.PK; }).map(function (r) { return r.U; }), -3, 3, 0.5);
+          var na = sum(a.map(function (p) { return p.y; })), nb = sum(b.map(function (p) { return p.y; }));
+          var A = a.map(function (p) { return [p.x, p.y / na]; }), B = b.map(function (p) { return [p.x, p.y / nb]; });
+          var ma = mean(rows.filter(function (r) { return r.PK; }).map(function (r) { return r.U; })), mb = mean(rows.filter(function (r) { return !r.PK; }).map(function (r) { return r.U; }));
+          return chart({ x: [-3, 3], y: [0, 0.4], h: 300, layers: [{ t: "line", d: B, c: C3 }, { t: "line", d: A, c: C1 }, { t: "vline", x: ma, c: C1 }, { t: "vline", x: mb, c: C3 }], legend: [{ label: "Peacekeepers", c: C1, kind: "line" }, { label: "None", c: C3, kind: "line" }], xlab: ttl + ": mean gap " + f2(ma - mb), ylab: "Share" });
+        }
+        return two(panel(d, "All ceasefires"), panel(d.filter(function (r) { return r.M; }), "Holding at 18 months"));
+      } },
+    { group: "Stage one: the bad control", btn: "Request the cross-world table (blank)", concern: "Mediation: cross-world independence", title: "Which potential outcomes can we ever see?",
+      desc: "Potential outcomes for four ceasefires. M(d) is whether the ceasefire holds at 18 months under deployment d. Y(d, m) is recurrence under deployment d with ceasefire status m. Mark which cells could ever be observed.",
+      draw: function () { return xwTable(false); } },
+    { group: "Stage one: the bad control", btn: "Fill in the cross-world table", concern: "Mediation: cross-world independence", title: "Observed, observable in principle, never observable",
+      desc: "The same table, marked. The natural indirect effect for a deployed ceasefire is Y(1, M(1)) − Y(1, M(0)), and the second term is never observed for anyone.",
+      draw: function () { return xwTable(true); } },
+    { group: "Stage one: the bad control", btn: "Request a mediation sensitivity analysis", concern: "Mediation: sensitivity", title: "How fragile is the mediated effect?",
+      desc: "Estimated indirect effect through ceasefire status as the correlation ρ between the errors of the mediator and outcome models moves away from zero, in the spirit of Imai, Keele and Yamamoto. The curve is illustrative.",
+      draw: function () {
+        var d = simPK(), X = d.map(function (r) { return [r.PK].concat(pkX(r, false)); }), aM = wls(X, d.map(function (r) { return r.M; })).b[0];
+        var bY = wls(d.map(function (r) { return [r.M, r.PK].concat(pkX(r, false)); }), d.map(function (r) { return r.Y; })).b[0], acme = aM * bY, rs = 0.3, pts = [];
+        for (var rho = -0.5; rho <= 0.5001; rho += 0.05) pts.push([rho, acme * (1 - rho / rs)]);
+        return chart({ x: [-0.52, 0.52], y: ext(pts.map(function (p) { return p[1]; }), 0.1, 0), layers: [{ t: "hline", y: 0 }, { t: "line", d: pts, c: C1, w: 2.5 }, { t: "vline", x: 0 }, { t: "vline", x: rs, label: "ρ = " + rs }], xlab: "ρ: correlation between mediator and outcome errors", ylab: "Indirect effect via ceasefire" }) + cap("At ρ = 0 the indirect effect is " + f2(acme) + ". It vanishes at ρ = " + rs + ".");
+      } },
+    { group: "Stage two: DML", btn: "Request DML next to OLS", concern: "Baseline", title: "Same covariates, two estimators",
+      desc: "OLS (linear probability) and a cross-fitted augmented IPW estimator standing in for DML, with the same pre-deployment covariates. 95% intervals.",
+      draw: function () { var a = pkLPM("Y", false), b = pkAIPW("Y", false); return dotplot({ rows: [{ label: "OLS, pre-deployment covariates", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se, c: C3 }, { label: "DML (cross-fitted AIPW)", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se }], xlab: "Effect of peacekeepers on recurrence (probability)" }); } },
+    { group: "Stage two: DML", btn: "Request a propensity score overlap plot", concern: "Overlap", title: "Who could plausibly have gotten peacekeepers?",
+      desc: "Estimated propensity scores by deployment status.",
+      draw: function () {
+        var d = simPK(), ps = pkAIPW("Y", false).ps, a = histo(ps.filter(function (_, i) { return d[i].PK; }), 0, 1, 0.05), b = histo(ps.filter(function (_, i) { return !d[i].PK; }), 0, 1, 0.05);
+        return chart({ x: [0, 1], y: [0, Math.max.apply(null, a.concat(b).map(function (p) { return p.y; })) * 1.1], layers: [{ t: "bars", d: b, c: C3, w: 0.045, o: 0.6 }, { t: "bars", d: a, c: C1, w: 0.045, o: 0.6 }], legend: [{ label: "Peacekeepers", c: C1 }, { label: "None", c: C3 }], xlab: "Estimated propensity score", ylab: "Ceasefires" });
+      } },
+    { group: "Stage two: DML", btn: "Request the distribution of weights", concern: "Overlap", title: "How much does each ceasefire count?",
+      desc: "Inverse propensity weights implied by the estimator, on a log scale.",
+      draw: function () {
+        var d = simPK(), ps = pkAIPW("Y", false).ps, w = ps.map(function (e, i) { return d[i].PK ? 1 / e : 1 / (1 - e); }), lw = w.map(Math.log10), h = histo(lw, 0, 2.5, 0.125);
+        var top = w.slice().sort(function (a, b) { return b - a; }), share = sum(top.slice(0, 5)) / sum(w);
+        return chart({ x: [0, 2.5], y: [0, Math.max.apply(null, h.map(function (p) { return p.y; })) * 1.1], xticks: [0, 0.5, 1, 1.5, 2, 2.5], xfmt: function (v) { return fmt(Math.pow(10, v)); }, layers: [{ t: "bars", d: h, c: C1, w: 0.11 }], xlab: "Weight (log scale)", ylab: "Ceasefires" }) + cap("The five largest weights account for " + pct(share) + " of the total weight across " + d.length + " ceasefires.");
+      } },
+    { group: "Stage two: DML", btn: "Request variable importance", concern: "Unmeasured confounding", title: "What the machine learning models lean on",
+      desc: "Relative importance of the top ten covariates in the propensity model (illustrative). Nothing in the 150 measures consent or the parties' commitment.",
+      draw: function () { var n = ["Battle deaths (log)", "War duration", "Prior ceasefires", "GDP per capita", "Rebel groups", "Ethnic fractionalization", "Mountainous terrain", "Neighbor at war", "Polity score", "Oil exports"], v = [0.31, 0.14, 0.11, 0.09, 0.08, 0.06, 0.05, 0.04, 0.03, 0.03]; return hbars({ rows: n.map(function (x, i) { return { label: x, v: v[i] }; }), xlab: "Relative importance", vfmt: f2, lw: 180 }); } },
+    { group: "Stage two: DML", btn: "Request a negative control outcome", concern: "Unmeasured confounding", title: "An effect on something that came first",
+      desc: "The same estimator applied to an outcome that peacekeepers cannot have caused: whether fighting flared in the year before the ceasefire. It should be zero. 95% intervals.",
+      draw: function () { var a = pkAIPW("Y", false), b = pkAIPW("Ypre", false); return dotplot({ rows: [{ label: "Recurrence within 5 years", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se }, { label: "Negative control: fighting before", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se, c: C2 }], xlab: "Estimated \"effect\" of peacekeepers (probability)" }); } },
+    { group: "Stage two: DML", btn: "Request a sensitivity contour", concern: "Sensitivity", title: "How strong would a hidden confounder need to be?",
+      desc: "Cinelli and Hazlett style: the curve shows combinations of a confounder's partial R² with deployment and with recurrence that would push the OLS estimate to zero. Points benchmark a confounder 1, 2, and 3 times as strong as battle deaths.",
+      draw: function () {
+        var d = simPK(), a = pkLPM("Y", false), df = d.length - 6, t = a.est / a.se, fq = Math.abs(t) / Math.sqrt(df), rv = 0.5 * (Math.sqrt(Math.pow(fq, 4) + 4 * fq * fq) - fq * fq), pts = [];
+        for (var r2d = 0.005; r2d <= 0.6; r2d += 0.005) { var r2y = a.est * a.est * (1 - r2d) / (a.se * a.se * df * r2d); if (r2y <= 1) pts.push([r2d, r2y]); }
+        var Xd = d.map(function (r) { return pkX(r, false); }), fd = wls(Xd, d.map(function (r) { return r.PK; })), td = fd.b[1] / fd.se[1], R2dx = td * td / (td * td + df);
+        var tY = a.fit.b[2] / a.fit.se[2], R2yx = tY * tY / (tY * tY + df), bench = [1, 2, 3].map(function (k) { return [k * R2dx / (1 - R2dx), Math.min(0.95, k * R2yx / (1 - R2dx)), k + "× deaths"]; });
+        return chart({ x: [0, 0.6], y: [0, 0.6], layers: [{ t: "line", d: pts, c: C2, w: 2.5 }, { t: "pts", d: bench, c: C1, r: 5 }, { t: "text", d: bench.map(function (b) { return [b[0] + 0.04, b[1] + 0.02, b[2]]; }) }], xlab: "Partial R² of confounder with deployment", ylab: "Partial R² with recurrence" }) + cap("Robustness value: " + rv.toFixed(2) + ". A confounder explaining " + pct(rv) + " of the residual variation in both deployment and recurrence would erase the estimate.");
+      } },
+    { group: "Stage two: DML", btn: "Add the ceasefire control to DML", concern: "Post-treatment control", title: "Cross-fitting with the bad control back in",
+      desc: "The same estimator with and without ceasefire status at 18 months among the covariates. 95% intervals.",
+      draw: function () { var a = pkAIPW("Y", false), b = pkAIPW("Y", true); return dotplot({ rows: [{ label: "DML, pre-deployment covariates", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se }, { label: "DML, + ceasefire at 18 months", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se, c: C2 }], xlab: "Effect of peacekeepers on recurrence (probability)" }); } }
+  ],
+  notes: [
+    ["Stage one: bad control", ["Ceasefire at 18 months: post-treatment", "Mediator: PK → ceasefire → recurrence", "Collider: PK → ceasefire ← commitment", "Conditioning: blocks indirect path, opens spurious one", "Among held ceasefires: PK cases less committed", "Bias unsignable; no post-treatment covariate fixes it", "Fix: drop it, or reframe as mediation"]],
+    ["Mediation: cross-world independence", ["Sequential ignorability (Imai, Keele, Yamamoto; Sept 2)", "NIE needs Y(1, M(0)): never observed", "Part 1: D ignorable | X. Part 2: M ignorable | D, X (the hard one)", "Untestable; randomizing D doesn't randomize M", "IKY sensitivity in ρ", "Controlled direct effect: weaker, no cross-world term", "Stretch answer; total effect the stronger move"]],
+    ["Cross-world table", ["Ceasefire A: holds either way; two cells observable in principle, one observed", "Cross-world cell: PK with no-PK ceasefire status", "NIE = Y(1, M(1)) − Y(1, M(0))", "Blank version first; students mark cells, then name the assumption"]],
+    ["Stage two: DML", ["Buys: functional form, many covariates, valid inference with ML nuisances (cross-fitting, Neyman orthogonality)", "Doesn't buy: unmeasured confounding (consent), overlap, post-treatment covariates among the 150", "Functional form: fine. Confounding: not", "Stage one: what you condition on. Stage two: what an estimator can fix"]]
+  ]
+},
+
+{ id: "judges", tab: "Judges", title: "Random judges and pretrial detention",
+  setting: "Defendants in a county court are assigned to judges by a rotating schedule. Judges differ in how often they order pretrial detention. You want the effect of pretrial detention on later conviction.",
+  have: ["Case-level data with the assigned judge", "Detention decision and conviction outcome", "Judge stringency measured as the leave-one-out detention rate"],
+  claim: "The paper uses judge stringency as an instrument for detention and reports a large effect of detention on conviction, interpreted as the effect of detention for defendants in general.",
+  qs: ["Which of independence, exclusion, relevance, and monotonicity is most contestable here?", "A judge can also set bail conditions and influence plea offers. Does that threaten exclusion?", "What does monotonicity mean for judges who are strict on some defendants and lenient on others?", "Whose effect does the estimate describe?", "Would bounds be a more honest report than a point estimate?"],
+  reveals: [
+    { btn: "Request the first stage and reduced form", concern: "Baseline / relevance", title: "Detention and conviction against judge stringency",
+      desc: "Binned means (20 quantile bins) of detention (left) and conviction (right) against the leave-one-out stringency of the assigned judge, net of court averages.",
+      draw: function () {
+        var d = simJ().D, z = d.map(function (r) { return r.loo_t; }), a = quantileBins(z, d.map(function (r) { return r.D; }), 20), b = quantileBins(z, d.map(function (r) { return r.Y; }), 20), fa = ols1(z, d.map(function (r) { return r.D; })), fb = ols1(z, d.map(function (r) { return r.Y; }));
+        var xr = ext(a.map(function (p) { return p[0]; }), 0.08);
+        var A = chart({ x: xr, y: ext(a.map(function (p) { return p[1]; }), 0.15), h: 300, layers: [{ t: "pts", d: a, c: C1, r: 4 }, { t: "line", d: [[xr[0], fa.a + fa.b * xr[0]], [xr[1], fa.a + fa.b * xr[1]]], c: C2 }], xlab: "Judge stringency", ylab: "Detained (share)" });
+        var B = chart({ x: xr, y: ext(b.map(function (p) { return p[1]; }), 0.15), h: 300, layers: [{ t: "pts", d: b, c: C1, r: 4 }, { t: "line", d: [[xr[0], fb.a + fb.b * xr[0]], [xr[1], fb.a + fb.b * xr[1]]], c: C2 }], xlab: "Judge stringency", ylab: "Convicted (share)" });
+        var iv = jIV("loo");
+        return two(A, B) + cap("First stage slope: " + f2(fa.b) + ". IV estimate: " + f2(iv.est) + " (SE " + iv.se.toFixed(2) + ").");
+      } },
+    { btn: "Request a randomization check", concern: "Independence", title: "Are defendants balanced across judges?",
+      desc: "Slope of each standardized defendant characteristic on judge stringency, within court. 95% intervals.",
+      draw: function () {
+        var d = simJ().D;
+        function row(lbl, f) { var v = d.map(f), m = mean(v), s = Math.sqrt(vari(v)), r = jSlope(d, function (x) { return (f(x) - m) / s; }); return { label: lbl, est: r.b, lo: r.b - 1.96 * r.se, hi: r.b + 1.96 * r.se }; }
+        return dotplot({ rows: [row("Prior record", function (r) { return r.pr; }), row("Violent charge", function (r) { return r.ch === 2 ? 1 : 0; }), row("Drug charge", function (r) { return r.ch === 0 ? 1 : 0; }), row("Age", function (r) { return r.age; })], xlab: "Slope on stringency (SD units)", x: [-1.2, 1.2] });
+      } },
+    { btn: "Request judge caseloads", concern: "Weak or noisy instrument", title: "How many cases does each judge hear?",
+      desc: "Histogram of caseloads across the 40 judges.",
+      draw: function () { var J = simJ().J, h = histo(J.map(function (j) { return j.n; }), 0, 250, 10); return chart({ x: [0, 250], y: [0, Math.max.apply(null, h.map(function (p) { return p.y; })) * 1.15], layers: [{ t: "bars", d: h, c: C1, w: 9 }], xlab: "Cases per judge", ylab: "Judges" }) + cap("Smallest caseload: " + Math.min.apply(null, J.map(function (j) { return j.n; })) + " cases. Median: " + J.map(function (j) { return j.n; }).sort(function (a, b) { return a - b; })[Math.floor(J.length / 2)] + ", across " + J.length + " judges."); } },
+    { btn: "Compare leave-one-out and full-sample stringency", concern: "Own-observation bias", title: "Does the instrument include the defendant's own case?",
+      desc: "OLS of conviction on detention within court, and IV using stringency built with and without the defendant's own case. 95% intervals.",
+      draw: function () {
+        var d = simJ().D, o = ols1(d.map(function (r) { return r.D_t; }), d.map(function (r) { return r.Y_t; })), a = jIV("full"), b = jIV("loo");
+        return dotplot({ rows: [{ label: "OLS (within court)", est: o.b, lo: o.b - 1.96 * o.se, hi: o.b + 1.96 * o.se, c: C3 }, { label: "IV, full-sample stringency", est: a.est, lo: a.est - 1.96 * a.se, hi: a.est + 1.96 * a.se, c: C2 }, { label: "IV, leave-one-out stringency", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se }], xlab: "Effect of detention on conviction (probability)" });
+      } },
+    { btn: "Request stringency by charge type", concern: "Monotonicity", title: "Do judges rank the same way for every charge?",
+      desc: "Each point is a judge: detention rate for drug charges against detention rate for violent charges, both net of court averages. If one ranking held for every charge, the points would line up along an upward slope.",
+      draw: function () {
+        var s = simJ(), pts = [], cross = [];
+        s.J.forEach(function (j, ji) {
+          if (j.n < 30) return;
+          var rows = s.D.filter(function (r) { return r.j === ji; }), cm = function (ch) { var c = s.D.filter(function (r) { return r.c === j.court && r.ch === ch; }); return mean(c.map(function (r) { return r.D; })); };
+          var a = mean(rows.filter(function (r) { return r.ch === 0; }).map(function (r) { return r.D; })) - cm(0), b = mean(rows.filter(function (r) { return r.ch === 2; }).map(function (r) { return r.D; })) - cm(2);
+          if (isFinite(a) && isFinite(b)) (j.dz ? cross : pts).push([a, b]);
+        });
+        var all = pts.concat(cross), r = ext(all.map(function (p) { return p[0]; }).concat(all.map(function (p) { return p[1]; })), 0.1);
+        return chart({ x: r, y: r, layers: [{ t: "hline", y: 0, dash: false, c: "var(--line)" }, { t: "vline", x: 0 }, { t: "line", d: [[r[0], r[0]], [r[1], r[1]]], c: C3, dash: true, w: 1 }, { t: "pts", d: pts, c: C1, r: 5 }, { t: "pts", d: cross, c: C2, r: 5 }], legend: [{ label: "Same strictness across charges", c: C1 }, { label: "Strict on one charge, lenient on the other", c: C2 }], xlab: "Stringency on drug charges", ylab: "Stringency on violent charges" }) +
+          cap("Only the " + all.length + " judges with at least 30 cases are shown. Colors come from the simulation, which knows each judge's true pattern; real data would not.");
+      } },
+    { btn: "Request first stages by subgroup", concern: "Monotonicity: defiers", title: "Does stringency move detention for everyone?",
+      desc: "First-stage slope of detention on judge stringency, estimated within each group of defendants. 95% intervals.",
+      draw: function () {
+        var d = simJ().D, gs = [["Drug charges", function (r) { return r.ch === 0; }], ["Property charges", function (r) { return r.ch === 1; }], ["Violent charges", function (r) { return r.ch === 2; }], ["Prior record", function (r) { return r.pr; }], ["No prior record", function (r) { return !r.pr; }]];
+        return dotplot({ rows: gs.map(function (g) { var f = jSlope(d.filter(g[1]), "D"); return { label: g[0], est: f.b, lo: f.b - 1.96 * f.se, hi: f.b + 1.96 * f.se }; }), xlab: "First-stage slope" });
+      } },
+    { btn: "Request a complier profile", concern: "Whose effect?", title: "Who are the compliers?",
+      desc: "Share of defendants in each group who would be detained by a strict judge but released by a lenient one. Computed from the simulated potential outcomes, which we would never see in real data.",
+      draw: function () {
+        var d = simJ().D, gs = [["Drug, no prior", 0, 0], ["Drug, prior", 0, 1], ["Property, no prior", 1, 0], ["Property, prior", 1, 1], ["Violent, no prior", 2, 0], ["Violent, prior", 2, 1]];
+        return hbars({ rows: gs.map(function (g) { var rs = d.filter(function (r) { return r.ch === g[1] && r.pr === g[2]; }); return { label: g[0], v: mean(rs.map(function (r) { return r.comp ? 1 : 0; })) }; }), xlab: "Share of compliers", vfmt: pct, max: 0.6 }) + cap("Compliers overall: " + pct(mean(d.map(function (r) { return r.comp ? 1 : 0; }))) + " of defendants.");
+      } },
+    { btn: "Request bail and plea outcomes", concern: "Exclusion", title: "Do strict judges do anything else?",
+      desc: "Each point is a judge. Left: average bail set (in $1,000s). Right: share of cases with a plea offer. Both against the judge's stringency, net of court averages.",
+      draw: function () {
+        var s = simJ(), pts1 = [], pts2 = [];
+        s.J.forEach(function (j, ji) { var rows = s.D.filter(function (r) { return r.j === ji; }), z = mean(rows.map(function (r) { return r.full_t; })); pts1.push([z, mean(rows.map(function (r) { return r.bail; }))]); pts2.push([z, mean(rows.map(function (r) { return r.plea; }))]); });
+        var xr = ext(pts1.map(function (p) { return p[0]; }), 0.08);
+        return two(chart({ x: xr, y: ext(pts1.map(function (p) { return p[1]; }), 0.15), h: 300, layers: [{ t: "pts", d: pts1, c: C1, r: 4.5 }], xlab: "Judge stringency", ylab: "Average bail ($1,000s)" }), chart({ x: xr, y: ext(pts2.map(function (p) { return p[1]; }), 0.15), h: 300, layers: [{ t: "pts", d: pts2, c: C1, r: 4.5 }], xlab: "Judge stringency", ylab: "Plea offer rate" }));
+      } },
+    { btn: "Request bounds", concern: "What to report", title: "Point estimate versus bounds",
+      desc: "The leave-one-out IV estimate next to bounds that relax monotonicity and, at the extreme, Manski-style worst-case bounds. The bounds are illustrative.",
+      draw: function () { var b = jIV("loo"); return dotplot({ rows: [{ label: "IV, leave-one-out", est: b.est, lo: b.est - 1.96 * b.se, hi: b.est + 1.96 * b.se }, { label: "Bounds, monotonicity relaxed", est: b.est, lo: b.est - 0.22, hi: b.est + 0.17, c: C2 }, { label: "Worst-case bounds", est: b.est, lo: -0.55, hi: 0.45, c: C3 }], xlab: "Effect of detention on conviction (probability)" }); } }
+  ],
+  notes: [
+    ["Assumptions", ["Independence, exclusion, relevance, monotonicity", "Randomization only within court × period"]],
+    ["Compliers", ["Detained by a strict judge, released by a lenient one", "Always-detained (violent, flight risk), never-detained (minor): no information", "LATE for marginal defendants, not \"defendants in general\"", "Policy-relevant if courts shift stringency", "Complier characterization: covariate means vs. full sample", "For the room: apply to the always-detained?"]],
+    ["Monotonicity", ["Stronger than binary-instrument monotonicity", "One judge ranking, every defendant", "Fails: lenient on drugs and harsh on violence, and vice versa", "Check: within-charge rankings; stratify if they cross", "Average monotonicity → possible negative weights", "Doubtful → bounds"]],
+    ["Own-observation bias", ["Full-sample stringency includes own case → bias toward OLS (JIVE; Angrist, Imbens, Krueger)", "Overfit: own case, not the judge", "Leave-one-out: mechanical negative correlation → condition on court × time", "Ask: how built? focal case included?", "Small caseloads: noisy, weak instrument", "Continuous Z: weighted average of effects"]],
+    ["Exclusion", ["Bail conditions, plea offers: second channel"]]
+  ]
+},
+
+{ id: "debrief", tab: "Debrief", title: "Putting the designs side by side", setting: null,
+  body: [
+    ["Compare the cases", "<ul><li>In each scenario, what was the one assumption the whole claim rested on?</li><li>Which diagnostic changed your mind, and which concern did it speak to?</li><li>Which assumptions had a diagnostic at all, and which had none?</li><li>Where did a diagnostic actually help, and where did a robustness check only look like one?</li></ul>"],
+    ["Where the uncertainty comes from", "<p>Think back to the Rambachan and Roth reading. For each design, which sources of uncertainty do the standard errors pick up, and which do they miss, such as a violated assumption or the way treatment was actually assigned? The Medicaid, Import shock, and Judges cases each had a diagnostic about inference. What did the default standard errors leave out in each?</p>"],
+    ["Across fields", "<p>We mixed American, comparative, and international cases. Which threats showed up regardless of the field, and which came from having countries or regions as the units?</p>"],
+    ["Bring it back to your audit", "<ul><li>Which scenario is closest to the paper you chose?</li><li>What is the one assumption you will test hardest, and which diagnostic would you ask for first?</li><li>What is the strongest causal conclusion you think the evidence supports?</li></ul>"]
+  ],
+  notes: [
+    ["Target", ["Per student: one sentence on what would change your mind about your audit paper", "Not a ranking of designs", "How much rests on uncheckable assumptions"]],
+    ["Patterns", ["First diagnostic usually clean", "Targeted beats generic (board control, Rotemberg weights)", "No diagnostic at all: dormant factor, judge exclusion, cross-world independence → sensitivity", "Smaller claims, not no claims: declining vs. declining, fuzzy RD, total effect"]],
+    ["Across fields", ["Same designs, different threats", "Countries: few treated, chosen timing, hard inference (Treaties, Sanctions)", "Many small units: manipulation, sorting (Close elections, Judges)"]]
+  ]
+}
+];
+
+/* Cross-world table for the peacekeeping case */
+function xwTable(filled) {
+  var rows = [["A", 1, "1", "1"], ["B", 1, "0", "1"], ["C", 0, "1", "1"], ["D", 0, "0", "0"]];
+  var cols = ["M(0)", "M(1)", "Y(0, M(0))", "Y(1, M(1))", "Y(1, M(0))", "Y(0, M(1))"];
+  function kind(dep, col) {
+    var obs = dep ? ["M(1)", "Y(1, M(1))"] : ["M(0)", "Y(0, M(0))"], inp = dep ? ["M(0)", "Y(0, M(0))"] : ["M(1)", "Y(1, M(1))"];
+    return obs.indexOf(col) >= 0 ? "obs" : inp.indexOf(col) >= 0 ? "inp" : "cw";
+  }
+  var lab = { obs: "Observed", inp: "Other arm", cw: "Cross-world" };
+  var h = '<div class="xwrap"><table class="xw"><thead><tr><th>Ceasefire</th><th>Peacekeepers</th>' + cols.map(function (c) { return "<th>" + c + "</th>"; }).join("") + "</tr></thead><tbody>";
+  rows.forEach(function (r) {
+    h += "<tr><td>" + r[0] + "</td><td>" + (r[1] ? "Yes" : "No") + "</td>" + cols.map(function (c) { var k = kind(r[1], c); return filled ? '<td class="' + k + '">' + lab[k] + "</td>" : "<td>?</td>"; }).join("") + "</tr>";
+  });
+  h += "</tbody></table></div>";
+  if (filled) h += cap("Blue: observed. Grey: would be observed if the ceasefire had the other deployment status. Orange: never observable for anyone, because it mixes the two deployment states. The natural indirect effect needs an orange cell, so it rests on sequential ignorability.");
+  else h += cap("Ceasefire A got peacekeepers and would have held either way. Ceasefire B got peacekeepers and held only because of them. C and D got none.");
+  return h;
+}
+
+/* ======================================================================
+   Rendering
+   ====================================================================== */
+var NOTE_TITLE = "jimbo's notes";
+var tabs = document.getElementById("tabs"), panel = document.getElementById("panel");
+var sw = document.getElementById("noteSwitch"), label = document.getElementById("noteLabel");
+var showNotes = false, current = "format", shown = {}, cache = {};
+
+function list(items, tag) { return "<" + tag + ">" + items.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</" + tag + ">"; }
+function sec(h, inner) { return '<div class="section">' + (h ? "<h3>" + esc(h) + "</h3>" : "") + inner + "</div>"; }
+
+function revealCard(s, i) {
+  var r = s.reveals[i], key = s.id + ":" + i, body;
+  if (!cache[key]) { try { cache[key] = r.draw(); } catch (e) { cache[key] = cap("This plot could not be drawn: " + esc(e.message)); } }
+  body = cache[key];
+  return '<div class="card" id="card-' + s.id + "-" + i + '"><div class="chead"><span class="rnum">' + (i + 1) + "</span><b>" + esc(r.title) + '</b><span class="chip">' + esc(r.concern) + '</span><span class="sim">Simulated data</span></div><p class="cdesc">' + esc(r.desc) + "</p>" + body + "</div>";
+}
+
+function revealsHTML(s) {
+  var set = shown[s.id] || {}, h = '<div class="reveals"><p class="rhint">Diagnostics, ordered from least to most damning. Each one appears only when requested.</p>', lastGroup = null;
+  s.reveals.forEach(function (r, i) {
+    if (r.group && r.group !== lastGroup) { h += (lastGroup ? "</div>" : "") + '<p class="rgroup">' + esc(r.group) + '</p><div class="rbtns">'; lastGroup = r.group; }
+    else if (i === 0) h += '<div class="rbtns">';
+    h += '<button type="button" class="rbtn" data-i="' + i + '" aria-pressed="' + (set[i] ? "true" : "false") + '"><span class="rnum">' + (i + 1) + '</span><span class="lbl">' + esc(r.btn) + '</span><span class="chip">' + esc(r.concern) + "</span></button>";
+    if (set[i]) h += revealCard(s, i);
+  });
+  h += '</div><div class="rtools"><button type="button" class="tbtn" data-act="next">Reveal next</button><button type="button" class="tbtn" data-act="reset">Hide all</button></div></div>';
+  return h;
+}
+
+function render(id) {
+  var s = S.filter(function (x) { return x.id === id; })[0] || S[0];
+  current = s.id;
+  var html = "<h2>" + esc(s.title) + "</h2>";
+  if (s.setting) html += sec("The Setting", "<p>" + esc(s.setting) + "</p>");
+  if (s.have) html += '<div class="have section"><h3>The Data</h3>' + list(s.have, "ul") + "</div>";
+  if (s.claim) html += sec("The claim", "<p>" + esc(s.claim) + "</p>");
+  if (s.stages) html += sec("Two stages", list(s.stages.map(function (p) { return p[0] + ". " + p[1]; }), "ul"));
+  if (s.body) s.body.forEach(function (b) { html += sec(b[0], b[1]); });
+  if (s.qs) {
+    html += sec("The Design", list(COMMON_STEPS, "ol"));
+    html += sec("Questions to think about", list(s.qs, "ul") + '<p class="own">What would you ask that isn\'t on this list? Add at least one of your own.</p>');
+  }
+  if (s.reveals) html += sec("Diagnostics", '<div id="revealBox">' + revealsHTML(s) + "</div>");
+  html += '<div class="note" id="note"' + (showNotes ? "" : " hidden") + "><h3>" + esc(NOTE_TITLE) + "</h3>" +
+    s.notes.map(function (g) { return "<div><h4>" + esc(g[0]) + "</h4>" + list(g[1], "ul") + "</div>"; }).join("") + "</div>";
+  panel.innerHTML = html;
+  Array.prototype.forEach.call(tabs.children, function (b) {
+    var on = b.dataset.id === current;
+    b.setAttribute("aria-selected", on ? "true" : "false");
+    b.tabIndex = on ? 0 : -1;
+  });
+}
+
+function refreshReveals(focusCard) {
+  var s = S.filter(function (x) { return x.id === current; })[0], box = document.getElementById("revealBox");
+  if (!s || !box) return;
+  box.innerHTML = revealsHTML(s);
+  if (focusCard != null) { var c = document.getElementById("card-" + s.id + "-" + focusCard); if (c) c.scrollIntoView({ behavior: "smooth", block: "nearest" }); }
+}
+
+panel.addEventListener("click", function (e) {
+  var s = S.filter(function (x) { return x.id === current; })[0]; if (!s || !s.reveals) return;
+  var set = shown[s.id] = shown[s.id] || {};
+  var b = e.target.closest(".rbtn");
+  if (b) { var i = +b.dataset.i; set[i] = !set[i]; refreshReveals(set[i] ? i : null); return; }
+  var t = e.target.closest(".tbtn");
+  if (t && t.dataset.act === "reset") { shown[s.id] = {}; refreshReveals(); }
+  if (t && t.dataset.act === "next") { for (var k = 0; k < s.reveals.length; k++) if (!set[k]) { set[k] = true; refreshReveals(k); return; } }
+});
+
+S.forEach(function (s) {
+  var b = document.createElement("button");
+  b.className = "tab"; b.type = "button"; b.setAttribute("role", "tab"); b.dataset.id = s.id; b.id = "tab-" + s.id;
+  b.textContent = s.tab;
+  b.addEventListener("click", function () { go(s.id); });
+  tabs.appendChild(b);
+});
+tabs.addEventListener("keydown", function (e) {
+  var ids = S.map(function (x) { return x.id; }), i = ids.indexOf(current);
+  if (e.key === "ArrowRight") i = (i + 1) % ids.length;
+  else if (e.key === "ArrowLeft") i = (i - 1 + ids.length) % ids.length;
+  else return;
+  e.preventDefault(); go(ids[i]); document.getElementById("tab-" + ids[i]).focus();
+});
+function go(id) { render(id); try { history.replaceState(null, "", "#" + id); } catch (e) {} }
+
+sw.addEventListener("click", function () {
+  showNotes = !showNotes;
+  sw.setAttribute("aria-pressed", showNotes ? "true" : "false");
+  label.textContent = NOTE_TITLE + ": " + (showNotes ? "on" : "off");
+  var n = document.getElementById("note"); if (n) n.hidden = !showNotes;
+});
+window.addEventListener("hashchange", function () { render(location.hash.slice(1)); });
+render(location.hash.slice(1) || "format");
+</script>
+</body>
+</html>

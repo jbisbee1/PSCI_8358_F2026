@@ -293,8 +293,6 @@ The final project is an **independent causal audit** of a published observationa
 
 **Replication Problem Set 2B due**
 
-**Replication Problem Set 3 assigned: Difference-in-differences**
-
 **Student presentation:** Goodman-Bacon (2021)
 
 ---
@@ -347,10 +345,6 @@ The final project is an **independent causal audit** of a published observationa
 
 **Central question:** Why does being just above versus just below a threshold approximate an experiment?
 
-**Replication Problem Set 3 due**
-
-**Replication Problem Set 4 assigned: Synthetic control and panel counterfactuals**
-
 **Student presentation:** Cattaneo & Titiunik (2022)
 
 ---
@@ -383,7 +377,9 @@ The final project is an **independent causal audit** of a published observationa
 
 ## November 18 — Comparing Designs and Triangulating Evidence
 
-<!-- MATERIALS:13 --><!-- /MATERIALS:13 -->
+<!-- MATERIALS:13 -->
+<div class="readings"><strong>Materials:</strong><ul><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Lectures/lecture12/lecture12_design_workshop.html">Lecture 12: Causal Design Workshop</a></li><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Psets/PS3/PS3_panel_discontinuity_designs.html">Problem Set 3: Panel and Discontinuity Designs (due Dec 9)</a></li></ul></div>
+<!-- /MATERIALS:13 -->
 
 <!-- READINGS:13 -->
 <div class="readings"><strong>Readings:</strong><ul><li><a href="https://www.jamesbisbee.com/PSCI_8358_F2026/Readings/rambachan_roth_2025_design_based_uncertainty_quasi_experiments.pdf">Rambachan Roth 2025 Design Based Uncertainty Quasi Experiments</a></li></ul></div>
@@ -402,9 +398,7 @@ The final project is an **independent causal audit** of a published observationa
 
 **Workshop:** Students receive several short empirical research scenarios and must select and defend an identification strategy—or explain why none of the canonical designs supports a credible causal claim.
 
-**Replication Problem Set 4 due**
-
-**Replication Problem Set 5 assigned: Regression discontinuity**
+**Replication Problem Set 3 assigned: Panel and discontinuity designs (dealer's choice: difference-in-differences, synthetic control, or regression discontinuity)**
 
 **Independent Causal Audit assigned**
 
@@ -423,8 +417,6 @@ The final project is an **independent causal audit** of a published observationa
 <!-- MATERIALS:15 --><!-- /MATERIALS:15 -->
 
 <!-- READINGS:15 --><!-- /READINGS:15 -->
-
-**Replication Problem Set 5 due**
 
 Students workshop their independent causal audits.
 
@@ -450,15 +442,17 @@ Peer review will be structured as a mock journal-review process.
 
 <!-- READINGS:16 --><!-- /READINGS:16 -->
 
+**Replication Problem Set 3 due**
+
 Students present and orally defend their independent causal audits.
 
 The defense emphasizes methodological judgment rather than presentation polish. Students should be prepared to explain why the original design does or does not identify its claimed effect, defend their reanalysis choices, distinguish identification problems from estimation or inference problems, and state precisely how strongly they believe the evidence supports the original causal claim.
 
 # Major Assessments
 
-### Replication Problem Sets — 55%
+### Replication Problem Sets — 36%
 
-Six replication-based assignments, approximately 9% each. Assignment 0, a short reading-based exercise due in Week 2, is graded within the participation component rather than as a sixth problem set.
+Four replication-based assignments, approximately 9% each. In Problem Set 3, students choose one of difference-in-differences, synthetic control, or regression discontinuity. Assignment 0, a short reading-based exercise due in Week 2, is graded within the participation component rather than as a separate problem set.
 
 Each assignment combines implementation and critical evaluation. A typical assignment begins with a published article and replication dataset and asks students to reproduce a central table or figure before interrogating the design with tools developed in class.
 
@@ -469,7 +463,7 @@ Grading should place approximately equal weight on:
 
 Correct code with an incorrect causal interpretation is not a successful analysis. Conversely, a persuasive conceptual critique without the ability to demonstrate the issue empirically is incomplete.
 
-### Independent Causal Audit — 25%
+### Independent Causal Audit — 44%
 
 Students select a published observational causal study outside the papers used for the replication problem sets. The final submission includes:
 
